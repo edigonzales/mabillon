@@ -149,28 +149,46 @@ The Java-API migration must prove at least:
 
 The full semantic export -> fresh DB -> import roundtrip remains a separate hard gate and must run through these Java-API adapters.
 
+## Continuous integration baseline (11.CI)
+
+Phase 11 must establish a minimal GitHub Actions CI before adding more closure work. The purpose is to make every subsequent Phase-11 change verifiable instead of accumulating unexecuted test code.
+
+The baseline workflow must:
+
+- run on pushes to `main` and `agent/**` branches and on pull requests to `main`;
+- use the project's Java 25 toolchain;
+- execute `./gradlew test` on an Ubuntu GitHub-hosted runner;
+- allow Testcontainers to use the runner's Docker daemon for PostgreSQL/PostGIS integration tests;
+- cache Gradle dependencies through the standard Java/Gradle setup rather than custom cache logic;
+- upload Gradle test reports when tests fail, so diagnosis does not depend on reproducing the runner locally;
+- contain no repository secrets or production credentials.
+
+The workflow is accepted only when a real GitHub Actions run reaches the Gradle tests. If existing tests fail because they still depend on external INTERLIS CLI installations, that failure is treated as concrete evidence for the already planned 11.5 Java-API migration; the CI workflow itself must not introduce a permanent second INTERLIS installation/version mechanism merely to preserve the obsolete runtime architecture.
+
 ## Revised Phase-11 work order
 
 1. **11.1 Security default-deny** – protect every fachliche route by default.
 2. **11.2 Identity & audit** – deterministic authenticated-principal to fachlicher Benutzer mapping; remove silent person fallback.
-3. **11.3 DB/storage consistency** – implement the specified staging/DB/storage ordering and tested compensation.
-4. **11.4 Test isolation** – remove shared mutable persistent state between test methods.
-5. **11.5 INTERLIS Java-API integration** – replace ProcessBuilder runtime adapters, move dependencies to `jars.interlis.ch`, use ili2pg 5.5.1, prove dependency convergence, review whether `createMandatoryChecks` is required, remove `SchemaConstraintRepair` if it is not, and update the binding specification.
-6. **11.6 Missing UI use cases** – complete the reachable web flows, especially participants, tasks, catalog/master-data and registraturplan administration.
-7. **11.7 Unterlage lifecycle** – metadata update, assign/unassign, finalize, register as aktenrelevant, cancel and transition rules.
-8. **11.8 Business rules / data quality** – DQ-007, participation date validation, duplicate warning and remaining rule gaps.
-9. **11.9 Search correctness** – valid result routes and explicit type-specific filtering.
-10. **11.10 Validation/error model** – structured field/domain errors rather than generic failures.
-11. **11.11 INTERLIS semantic roundtrip** – Java API export -> validation -> fresh PostgreSQL -> Java API import -> semantic graph comparison.
-12. **11.12 Real Playwright golden path** – actual Playwright Java E2E test against PostgreSQL and the real application.
-13. **11.13 DB-side search/pagination** – move relevant full scans/filter/sort/page operations into Cayenne/PostgreSQL.
-14. **11.14 Dev/prod security separation** – no production startup with development credentials.
-15. **11.15 Final specification verification** – rerun the closure matrix and allow no unresolved mandatory requirement.
+3. **11.CI Continuous integration baseline** – GitHub Actions with Java 25, Testcontainers/Docker and `./gradlew test`; keep it as the verification gate for all following work.
+4. **11.3 DB/storage consistency** – implement the specified staging/DB/storage ordering and tested compensation.
+5. **11.4 Test isolation** – remove shared mutable persistent state between test methods.
+6. **11.5 INTERLIS Java-API integration** – replace ProcessBuilder runtime adapters, move dependencies to `jars.interlis.ch`, use ili2pg 5.5.1, prove dependency convergence, review whether `createMandatoryChecks` is required, remove `SchemaConstraintRepair` if it is not, and update the binding specification.
+7. **11.6 Missing UI use cases** – complete the reachable web flows, especially participants, tasks, catalog/master-data and registraturplan administration.
+8. **11.7 Unterlage lifecycle** – metadata update, assign/unassign, finalize, register as aktenrelevant, cancel and transition rules.
+9. **11.8 Business rules / data quality** – DQ-007, participation date validation, duplicate warning and remaining rule gaps.
+10. **11.9 Search correctness** – valid result routes and explicit type-specific filtering.
+11. **11.10 Validation/error model** – structured field/domain errors rather than generic failures.
+12. **11.11 INTERLIS semantic roundtrip** – Java API export -> validation -> fresh PostgreSQL -> Java API import -> semantic graph comparison.
+13. **11.12 Real Playwright golden path** – actual Playwright Java E2E test against PostgreSQL and the real application.
+14. **11.13 DB-side search/pagination** – move relevant full scans/filter/sort/page operations into Cayenne/PostgreSQL.
+15. **11.14 Dev/prod security separation** – no production startup with development credentials.
+16. **11.15 Final specification verification** – rerun the closure matrix and allow no unresolved mandatory requirement.
 
 ## Phase-11 final gate additions
 
 In addition to the gates in `PHASE_11_SPEC_MATRIX.md`, Phase 11 is not complete until:
 
+- a GitHub Actions CI workflow runs `./gradlew test` for pushes/PRs and provides an actual automated verification gate;
 - Spring Boot uses ili2pg, ilivalidator and ili2c via Java APIs, not `ProcessBuilder`;
 - ili2pg is aligned to 5.5.1 as the selected compatibility baseline;
 - Gradle resolves a reviewed, coherent set of shared INTERLIS libraries;
