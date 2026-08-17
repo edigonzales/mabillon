@@ -163,10 +163,8 @@ public final class GlobalSearchService {
         return or(
                 Dossier.DOSSIERNUMMER.containsIgnoreCase(text),
                 Dossier.TITEL.containsIgnoreCase(text),
-                Dossier.BESCHREIBUNG.containsIgnoreCase(text),
                 dossierHasBusinessField(Geschaeft.GESCHAEFTSNUMMER, text),
                 dossierHasBusinessField(Geschaeft.TITEL, text),
-                dossierHasBusinessField(Geschaeft.KURZBESCHREIBUNG, text),
                 dossierHasBusinessField(Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE), text),
                 dossierHasBusinessField(Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ANAME), text),
                 dossierHasBusinessField(Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE), text),
@@ -184,7 +182,6 @@ public final class GlobalSearchService {
         return or(
                 Geschaeft.GESCHAEFTSNUMMER.containsIgnoreCase(text),
                 Geschaeft.TITEL.containsIgnoreCase(text),
-                Geschaeft.KURZBESCHREIBUNG.containsIgnoreCase(text),
                 Geschaeft.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(text),
                 Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE).containsIgnoreCase(text),
                 Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ANAME).containsIgnoreCase(text),
@@ -206,7 +203,6 @@ public final class GlobalSearchService {
         expressions.add(Beteiligter.ORGANISATION.containsIgnoreCase(text));
         expressions.add(Beteiligter.EMAIL.containsIgnoreCase(text));
         expressions.add(Beteiligter.TELEFON.containsIgnoreCase(text));
-        expressions.add(Beteiligter.ADRESSE.containsIgnoreCase(text));
         expressions.add(Beteiligter.EXTERNEREFERENZ.containsIgnoreCase(text));
         addUuidExpression(expressions, Beteiligter.T_ILI_TID, text);
         return or(expressions.toArray(Expression[]::new));
@@ -218,7 +214,6 @@ public final class GlobalSearchService {
         }
         List<Expression> expressions = new ArrayList<>(List.of(
                 Unterlage.TITEL.containsIgnoreCase(text),
-                Unterlage.BEMERKUNGEN.containsIgnoreCase(text),
                 Unterlage.DATEINAME.containsIgnoreCase(text),
                 Unterlage.MIMETYPE.containsIgnoreCase(text),
                 Unterlage.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER).containsIgnoreCase(text),
@@ -236,7 +231,6 @@ public final class GlobalSearchService {
                 Fachsystemreferenz.OBJEKTTYP.containsIgnoreCase(text),
                 Fachsystemreferenz.OBJEKTID.containsIgnoreCase(text),
                 Fachsystemreferenz.MUTATIONID.containsIgnoreCase(text),
-                Fachsystemreferenz.BESCHREIBUNG.containsIgnoreCase(text),
                 Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER).containsIgnoreCase(text),
                 Fachsystemreferenz.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(text),
                 Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.DOSSIER).dot(Dossier.DOSSIERNUMMER)
