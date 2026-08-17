@@ -28,7 +28,7 @@ The relevant dimensions are application/domain service, business rules and persi
 | X-TEST-01 | P1 | OPEN | Specification requires a real Playwright Java golden path. | 11.12. |
 | X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` restores a pristine PostgreSQL baseline and filesystem state before every method. | Keep order independence covered. |
 | X-VAL-01 | P1 | OPEN | Web layer still primarily uses raw request parameters/exceptions rather than the specified structured validation/error model. | 11.10. |
-| X-DQ-01 | P1 | OPEN | Mandatory DQ-007 (`geschlossenes Dossier mit offenem Geschäft`) is missing. | 11.8. |
+| X-DQ-01 | P1 | IMPLEMENTED | DQ-007 now reports an ERROR for a terminal dossier containing a non-terminal business and is exposed by dossier and business quality checks; focused PostgreSQL evidence is green in Run #113. | Keep DQ-001 through DQ-013 covered by the final acceptance gate. |
 | X-SEARCH-01 | P1 | OPEN | Participant and Unterlage detail routes now exist; the remaining gap is type-specific global-search matching rather than broken result URLs. | 11.9. |
 | X-PERF-01 | P2 | OPEN | Several searches materialize/filter/page in Java. | 11.13. |
 
@@ -47,8 +47,8 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-009 | Geschäft bearbeiten | PARTIAL | Update service/UI exist; structured validation remains 11.10. |
 | UC-010 | Prozessstatus ändern | PARTIAL | Service/UI and catalog validation exist; final permission/integration mapping remains. |
 | UC-011 | Geschäftsergebnis erfassen | PARTIAL | Service/UI exist; structured validation/final evidence remain. |
-| UC-012 | Beteiligten erfassen | PARTIAL | 11.6 adds participant list/create/detail/edit routes and forms. Duplicate-warning behavior remains 11.8. |
-| UC-013 | Beteiligten einem Geschäft zuordnen | PARTIAL | Add/update/end actions are reachable in 11.6; add-date validation remains 11.8. |
+| UC-012 | Beteiligten erfassen | PARTIAL | Participant list/create/detail/edit routes exist; 11.8 adds a non-blocking duplicate warning with explicit `Trotzdem erfassen` confirmation. Structured validation/final acceptance mapping remain. |
+| UC-013 | Beteiligten einem Geschäft zuordnen | PARTIAL | Add/update/end are reachable; 11.8 enforces date ordering and prevents participation mutation after business completion. Final acceptance mapping remains. |
 | UC-014 | Unterlage registrieren | PARTIAL | Upload/storage/compensation plus complete status lifecycle are implemented and PostgreSQL-tested; structured validation/final acceptance mapping remain. |
 | UC-015 | Unterlage einem Geschäft zuordnen | PARTIAL | 11.7 adds assign/unassign web flows; same-dossier consistency and persistence are covered by integration tests. Final acceptance mapping remains. |
 | UC-016 | Eingegangene E-Mail registrieren | PARTIAL | Specialized service exists; dedicated UI/evidence remain incomplete. |
@@ -60,8 +60,8 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-022 | Eigene Aufgaben verwalten | PARTIAL | 11.6 exposes own-task list/detail/edit/delegate flows; final acceptance evidence remains. |
 | UC-023 | Fachsystemreferenz erfassen | PARTIAL | Dossier/business add flows exist; final removal/audit acceptance remains. |
 | UC-024 | Journal eines Geschäfts anzeigen | PARTIAL | Detail view shows journal with deterministic actor attribution; final event coverage remains. |
-| UC-025 | Geschäft abschliessen | PARTIAL | Close service/UI and major rules exist; remaining rule evidence is handled later in Phase 11. |
-| UC-026 | Dossier abschliessen | PARTIAL | Close service/UI exist; DQ-007 blocks strict closure. |
+| UC-025 | Geschäft abschliessen | PARTIAL | Close service/UI and major closure rules exist with positive/negative integration evidence; final acceptance mapping remains. |
+| UC-026 | Dossier abschliessen | PARTIAL | `DossierService.close` rejects non-completed businesses; DQ-007 now also detects persisted/imported terminal dossiers containing non-terminal businesses. Final acceptance mapping remains. |
 | UC-027 | Geschäftsart konfigurieren | PARTIAL | 11.6 adds catalog update UI/service; structured validation/final evidence remain. |
 | UC-028 | Prozessstatus konfigurieren | PARTIAL | 11.6 adds update UI/service alongside activation/deactivation. |
 | UC-029 | Kataloge pflegen | PARTIAL | 11.6 completes create/update/activate/deactivate reachability; final acceptance remains. |
@@ -80,18 +80,18 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-042 | Dossier nach erfolgreicher Ablieferung kennzeichnen | PARTIAL | Acceptance/archive state handling exists; final end-to-end evidence remains. |
 | UC-043 | Systemweite Suche | FAIL | Result routes now exist, but matching remains overly positional/generic and not yet type-specific. 11.9 owns closure. |
 | UC-044 | Geschäftskontrolle / Fristenübersicht | PARTIAL | Functionality and route protection exist; final integration/performance evidence remains. |
-| UC-045 | Datenqualität prüfen | FAIL | DQ-007 is still missing. 11.8 owns closure. |
+| UC-045 | Datenqualität prüfen | PARTIAL | `DataQualityService` now implements the complete DQ-001…DQ-013 rule set including DQ-007; focused DQ-007 positive/negative PostgreSQL evidence is green. Final full acceptance mapping remains. |
 | UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling and fail-closed actor attribution are implemented; final event acceptance coverage remains. |
 
 ## 4. Summary
 
-Strict status after completed 11.7:
+Strict status after completed 11.8:
 
 - **PASS:** 1 use case (`UC-006`)
-- **PARTIAL:** 43 use cases
-- **FAIL:** 2 use cases (`UC-043`, `UC-045`)
+- **PARTIAL:** 44 use cases
+- **FAIL:** 1 use case (`UC-043`)
 
-`PARTIAL` is deliberately conservative: many use cases are functionally complete but remain PARTIAL until their final business-rule, validation, permission or E2E evidence is closed by the later Phase-11 packages.
+`PARTIAL` is deliberately conservative: many use cases are functionally complete but remain PARTIAL until their final validation, permission, E2E, performance or semantic-roundtrip evidence is closed by the later Phase-11 packages.
 
 ## 5. Phase-11 execution status
 
@@ -102,8 +102,9 @@ Strict status after completed 11.7:
 - **11.4 Test isolation:** complete; PostgreSQL/filesystem reset is deterministic.
 - **11.5 INTERLIS Java-API integration:** complete; ili2pg/ili2db 5.5.1, coherent dependency set, no external JAR runtime, no `createMandatoryChecks`, binding spec v0.5 aligned.
 - **11.6 Missing UI use cases:** complete. Participant, task, catalog/master-data and registraturplan maintenance routes/forms are reachable; `Phase11UiReachabilityTest` and the full suite are green in GitHub Actions (Run #97 after the final JTE UUID fix).
-- **11.7 Unterlage lifecycle:** complete. `UnterlageService` implements metadata update, assign/unassign, `In_Arbeit → Final → Registriert`, cancellation and transition guards; `/unterlagen/{tid}` exposes the lifecycle UI. `UnterlageLifecycleIntegrationTest` and the full Gradle suite passed in GitHub Actions Run #102.
-- **Next:** 11.8 Business rules / data quality.
+- **11.7 Unterlage lifecycle:** complete. `UnterlageService` implements metadata update, assign/unassign, `In_Arbeit → Final → Registriert`, cancellation and transition guards; `/unterlagen/{tid}` exposes the lifecycle UI. `UnterlageLifecycleIntegrationTest` and the full Gradle suite passed in GitHub Actions Run #102; final 11.7 head Run #105 is also green.
+- **11.8 Business rules / data quality:** complete. DQ-007, participation date/lifecycle invariants and the non-blocking participant duplicate warning are PostgreSQL/MVC-tested; the full Gradle suite passed in GitHub Actions Run #113.
+- **Next:** 11.9 Search correctness.
 - **X-SEC-02:** intentionally deferred to 11.14.
 
 ## 6. Hard final gate
