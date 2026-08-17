@@ -116,4 +116,9 @@ tasks.withType(Test).configureEach {
     // Child fixture scripts use exactly the runtime classpath already resolved
     // for this build instead of installing or resolving a second toolchain.
     environment 'MABILLON_RUNTIME_CLASSPATH', sourceSets.main.runtimeClasspath.asPath
+    // CI installs Chromium explicitly in the preceding workflow step. Prevent
+    // Playwright.create() from downloading unused Firefox/WebKit binaries.
+    if ('true'.equalsIgnoreCase(System.getenv('CI'))) {
+        environment 'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD', '1'
+    }
 }
