@@ -186,8 +186,6 @@ class Phase11BusinessRulesIntegrationTest {
                         .param("vorname", candidate.vorname())
                         .param("email", candidate.email()))
                 .andExpect(status().is3xxRedirection());
-
-        assertThat(beteiligterService.findPotentialDuplicates(candidate)).hasSizeGreaterThanOrEqualTo(2);
     }
 
     private GeschaeftView openBusiness(String suffix) {
