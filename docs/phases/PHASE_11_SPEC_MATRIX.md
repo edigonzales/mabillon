@@ -29,7 +29,7 @@ The relevant dimensions are application/domain service, business rules and persi
 | X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` restores a pristine PostgreSQL baseline and filesystem state before every method. | Keep order independence covered. |
 | X-VAL-01 | P1 | OPEN | Web layer still primarily uses raw request parameters/exceptions rather than the specified structured validation/error model. | 11.10. |
 | X-DQ-01 | P1 | OPEN | Mandatory DQ-007 (`geschlossenes Dossier mit offenem Geschäft`) is missing. | 11.8. |
-| X-SEARCH-01 | P1 | OPEN | Result-route gaps have been reduced by participant/detail UI; full type-specific search correctness still needs closure. | 11.9. |
+| X-SEARCH-01 | P1 | OPEN | Participant and Unterlage detail routes now exist; the remaining gap is type-specific global-search matching rather than broken result URLs. | 11.9. |
 | X-PERF-01 | P2 | OPEN | Several searches materialize/filter/page in Java. | 11.13. |
 
 ## 3. Use-case closure matrix
@@ -49,11 +49,11 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-011 | Geschäftsergebnis erfassen | PARTIAL | Service/UI exist; structured validation/final evidence remain. |
 | UC-012 | Beteiligten erfassen | PARTIAL | 11.6 adds participant list/create/detail/edit routes and forms. Duplicate-warning behavior remains 11.8. |
 | UC-013 | Beteiligten einem Geschäft zuordnen | PARTIAL | Add/update/end actions are reachable in 11.6; add-date validation remains 11.8. |
-| UC-014 | Unterlage registrieren | PARTIAL | Upload/storage/compensation are implemented and tested; 11.7 completes remaining lifecycle/detail flows. |
-| UC-015 | Unterlage einem Geschäft zuordnen | PARTIAL | Service enforces same-dossier consistency; 11.7 completes assign/unassign lifecycle UI. |
+| UC-014 | Unterlage registrieren | PARTIAL | Upload/storage/compensation plus complete status lifecycle are implemented and PostgreSQL-tested; structured validation/final acceptance mapping remain. |
+| UC-015 | Unterlage einem Geschäft zuordnen | PARTIAL | 11.7 adds assign/unassign web flows; same-dossier consistency and persistence are covered by integration tests. Final acceptance mapping remains. |
 | UC-016 | Eingegangene E-Mail registrieren | PARTIAL | Specialized service exists; dedicated UI/evidence remain incomplete. |
 | UC-017 | Ausgangsschreiben registrieren | PARTIAL | Supported by registration services; dedicated end-to-end evidence remains incomplete. |
-| UC-018 | Unterlage anzeigen/herunterladen | PARTIAL | Download endpoint is tested; 11.7 adds the missing `/unterlagen/{tid}` detail screen. |
+| UC-018 | Unterlage anzeigen/herunterladen | PARTIAL | `/unterlagen/{tid}` detail and download now exist; real MVC/JTE lifecycle rendering and download behavior are automated. Final acceptance mapping remains. |
 | UC-019 | Aufgabe erstellen | PARTIAL | Service and POST flow exist; final acceptance mapping remains. |
 | UC-020 | Aufgabe bearbeiten | PARTIAL | 11.6 adds list/detail/edit/update/delegate web flows on top of the existing service. |
 | UC-021 | Aufgabe erledigen | PARTIAL | Service/controller flow exists; final acceptance mapping remains. |
@@ -78,14 +78,14 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-040 | SIP validieren | PARTIAL | Persistent validation/report behavior exists; final closure remains. |
 | UC-041 | SIP-Ablieferung dokumentieren | PARTIAL | Transfer recording/journal exists; final permission evidence remains. |
 | UC-042 | Dossier nach erfolgreicher Ablieferung kennzeichnen | PARTIAL | Acceptance/archive state handling exists; final end-to-end evidence remains. |
-| UC-043 | Systemweite Suche | FAIL | Search matching remains overly positional/generic and not yet fully type-specific. 11.9 owns closure. |
+| UC-043 | Systemweite Suche | FAIL | Result routes now exist, but matching remains overly positional/generic and not yet type-specific. 11.9 owns closure. |
 | UC-044 | Geschäftskontrolle / Fristenübersicht | PARTIAL | Functionality and route protection exist; final integration/performance evidence remains. |
 | UC-045 | Datenqualität prüfen | FAIL | DQ-007 is still missing. 11.8 owns closure. |
 | UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling and fail-closed actor attribution are implemented; final event acceptance coverage remains. |
 
 ## 4. Summary
 
-Strict status after completed 11.6:
+Strict status after completed 11.7:
 
 - **PASS:** 1 use case (`UC-006`)
 - **PARTIAL:** 43 use cases
@@ -102,8 +102,8 @@ Strict status after completed 11.6:
 - **11.4 Test isolation:** complete; PostgreSQL/filesystem reset is deterministic.
 - **11.5 INTERLIS Java-API integration:** complete; ili2pg/ili2db 5.5.1, coherent dependency set, no external JAR runtime, no `createMandatoryChecks`, binding spec v0.5 aligned.
 - **11.6 Missing UI use cases:** complete. Participant, task, catalog/master-data and registraturplan maintenance routes/forms are reachable; `Phase11UiReachabilityTest` and the full suite are green in GitHub Actions (Run #97 after the final JTE UUID fix).
-- **11.7 Unterlage lifecycle:** IN PROGRESS. Metadata update, assign/unassign, finalize, aktenrelevant registration, cancellation, detail page and transition tests are being added.
-- **Next after 11.7:** 11.8 Business rules / data quality.
+- **11.7 Unterlage lifecycle:** complete. `UnterlageService` implements metadata update, assign/unassign, `In_Arbeit → Final → Registriert`, cancellation and transition guards; `/unterlagen/{tid}` exposes the lifecycle UI. `UnterlageLifecycleIntegrationTest` and the full Gradle suite passed in GitHub Actions Run #102.
+- **Next:** 11.8 Business rules / data quality.
 - **X-SEC-02:** intentionally deferred to 11.14.
 
 ## 6. Hard final gate
