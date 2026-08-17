@@ -67,32 +67,26 @@ public final class FileSystemDocumentStorage implements DocumentStorage {
     }
 
     @Override
-    public StoredDocument commit(StagedDocument staged, StorageTarget target) throws IOException {
+    public StoredDocument describe(StagedDocument staged, StorageTarget target) throws IOException {
         Path source = stagingPath(staged.token());
-        if (!Files.isRegularFile(source)) {
-            throw new IOException("Staged-Datei fehlt: " + staged.token());
-        }
-        if (!staged.sha256().equals(hash(source)) || staged.size() != Files.size(source)) {
-            throw new IOException("Staged-Datei ist beschädigt: " + staged.token());
-        }
-        String first = staged.sha256().substring(0, 2);
-        String second = staged.sha256().substring(2, 4);
-        Path objectDirectory = objectsRoot.resolve(first).resolve(second).normalize();
-        if (!objectDirectory.startsWith(objectsRoot)) {
-            throw new IOException("Ungültiger Ablagepfad.");
-        }
-        Files.createDirectories(objectDirectory);
-        Path destination = objectDirectory.resolve(staged.token()).normalize();
-        if (!destination.startsWith(objectsRoot)) {
-            throw new IOException("Ungültiger Ablagepfad.");
-        }
+        verifyStagedFile(staged, source);
+        Path destination = destinationPath(staged);
+        return new StoredDocument(uriFor(destination), staged.originalFilename(), staged.mimeType(),
+                staged.size(), staged.sha256());
+    }
+
+    @Override
+    public StoredDocument commit(StagedDocument staged, StorageTarget target) throws IOException {
+        StoredDocument planned = describe(staged, target);
+        Path source = stagingPath(staged.token());
+        Path destination = pathForUri(planned.storageUri());
+        Files.createDirectories(destination.getParent());
         try {
             Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException ignored) {
             Files.move(source, destination);
         }
-        return new StoredDocument(uriFor(destination), staged.originalFilename(), staged.mimeType(),
-                staged.size(), staged.sha256());
+        return planned;
     }
 
     @Override
@@ -117,12 +111,31 @@ public final class FileSystemDocumentStorage implements DocumentStorage {
     public void discard(StagedDocument staged) throws IOException {
         Files.deleteIfExists(stagingPath(staged.token()));
         if (staged.sha256() != null && staged.sha256().length() >= 4) {
-            Path committed = objectsRoot.resolve(staged.sha256().substring(0, 2))
-                    .resolve(staged.sha256().substring(2, 4)).resolve(staged.token()).normalize();
-            if (committed.startsWith(objectsRoot)) {
-                Files.deleteIfExists(committed);
-            }
+            Path committed = destinationPath(staged);
+            Files.deleteIfExists(committed);
         }
+    }
+
+    private void verifyStagedFile(StagedDocument staged, Path source) throws IOException {
+        if (!Files.isRegularFile(source)) {
+            throw new IOException("Staged-Datei fehlt: " + staged.token());
+        }
+        if (!staged.sha256().equals(hash(source)) || staged.size() != Files.size(source)) {
+            throw new IOException("Staged-Datei ist beschädigt: " + staged.token());
+        }
+    }
+
+    private Path destinationPath(StagedDocument staged) throws IOException {
+        if (staged.sha256() == null || staged.sha256().length() < 4) {
+            throw new IOException("Ungültiger SHA-256 für Staged-Datei: " + staged.token());
+        }
+        String first = staged.sha256().substring(0, 2);
+        String second = staged.sha256().substring(2, 4);
+        Path destination = objectsRoot.resolve(first).resolve(second).resolve(staged.token()).normalize();
+        if (!destination.startsWith(objectsRoot)) {
+            throw new IOException("Ungültiger Ablagepfad.");
+        }
+        return destination;
     }
 
     private Path stagingPath(String token) {
