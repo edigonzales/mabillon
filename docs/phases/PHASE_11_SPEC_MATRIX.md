@@ -28,9 +28,10 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 
 | ID | Severity | Status | Finding / implementation | Remaining closure |
 |---|---|---|---|---|
-| X-SEC-01 | P0 | IMPLEMENTED | Fachliche routes are default-deny and require a Mabillon role; only health and explicit static assets remain public. Focused MVC security tests cover anonymous, roleless, Sachbearbeiter and Admin access. | Execute the complete test suite in the final verification environment. |
+| X-SEC-01 | P0 | IMPLEMENTED | Fachliche routes are default-deny and require a Mabillon role; only health and explicit static assets remain public. Focused MVC security tests cover anonymous, roleless, Sachbearbeiter and Admin access. The tests execute successfully in GitHub Actions. | Keep the policy covered by the final green Phase-11 verification run. |
 | X-SEC-02 | P0 | OPEN | In-memory development users still use configurable `{noop}` credentials and development defaults. | Dev/test-only identity configuration; production startup must not silently use default credentials. |
-| X-AUDIT-01 | P0 | IMPLEMENTED | `JournalService` no longer falls back to `anna.mueller`. `SpringSecurityCurrentActor` maps the development login aliases deterministically to configured fachliche usernames; an unmapped principal is accepted only under its own username and a writing use case fails if no corresponding fachlicher `Benutzer` exists. Unit and PostgreSQL/Cayenne integration tests cover the mapping and negative case. | Execute the new tests in the final verification environment. |
+| X-AUDIT-01 | P0 | IMPLEMENTED | `JournalService` no longer falls back to `anna.mueller`. `SpringSecurityCurrentActor` maps the development login aliases deterministically to configured fachliche usernames; an unmapped principal is accepted only under its own username and a writing use case fails if no corresponding fachlicher `Benutzer` exists. Unit and PostgreSQL/Cayenne integration tests cover the mapping and negative case. | The PostgreSQL integration test currently cannot initialize in CI because its fixture path still invokes the external ili2pg JAR; close that through 11.5. |
+| X-CI-01 | P0 | IMPLEMENTED | `.github/workflows/ci.yml` now runs Java 25 and `./gradlew test` on pushes to `main`/`agent/**` and pull requests to `main`, using the GitHub-hosted Docker daemon for Testcontainers and uploading Gradle test reports on failure. A real runner reaches and executes the tests. | Current baseline is intentionally red on three tests that still depend on the obsolete external INTERLIS JAR installation. Make the gate green through 11.5 Java-API integration, not by duplicating the old tool installation in CI. |
 | X-STORAGE-01 | P0 | OPEN | `UnterlageService` finalizes storage inside the Cayenne unit-of-work callback, while `CayenneUnitOfWork` commits the DB only afterwards. | Implement and failure-test the specified staging/DB/storage ordering and compensation behavior. |
 | X-TEST-01 | P1 | OPEN | Specification requires Playwright Java; no Playwright dependency/test is present although phase reports describe browser/Playwright verification as passed. | Add real automated Playwright golden-path tests. |
 | X-TEST-02 | P1 | OPEN | `Phase0CompatibilityTest` uses a large shared PostgreSQL fixture/state, conflicting with the rule that tests must not share persistent mutable state between test methods. | Split/restructure integration tests and make their persistent state independent/reproducible. |
@@ -88,7 +89,7 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 | UC-043 | Systemweite Suche | FAIL | Search exists, but result links for at least Beteiligte/Unterlagen are not consistently backed by valid detail routes; generic positional matching can apply filters to wrong semantic fields. |
 | UC-044 | Geschäftskontrolle / Fristenübersicht | PARTIAL | Functionality exists and the page is now covered by default fachliche route protection. Explicit integration/performance acceptance coverage remains incomplete. |
 | UC-045 | Datenqualität prüfen | FAIL | DQ framework and nearly all mandatory rules exist, but DQ-007 is missing. The specification requires all DQ-001…DQ-013. |
-| UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling is pervasive. Silent fallback attribution has been removed; login aliases map deterministically to fachliche usernames, and an unknown actor makes the write fail. Unit and PostgreSQL/Cayenne integration tests were added. Full required event coverage and an executed green verification run remain outstanding. |
+| UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling is pervasive. Silent fallback attribution has been removed; login aliases map deterministically to fachliche usernames, and an unknown actor makes the write fail. Unit and PostgreSQL/Cayenne integration tests were added. The unit tests execute in CI; the integration test awaits the 11.5 removal of the external ili2pg-JAR fixture dependency. |
 
 ## 4. Summary
 
@@ -104,8 +105,9 @@ This deliberately conservative classification reflects the specification's own D
 
 The detailed and current order is maintained in `PHASE_11_WORKPLAN.md`, which supersedes the original work-order list.
 
-- **11.1 Security default-deny:** implementation and focused test code present; final executed verification still required.
-- **11.2 Identity & audit:** deterministic login-to-fachlicher-user mapping and fail-closed journal attribution implemented; unit and PostgreSQL/Cayenne integration tests added; final executed verification still required.
+- **11.1 Security default-deny:** implementation complete; focused security tests execute successfully in GitHub Actions.
+- **11.2 Identity & audit:** deterministic login-to-fachlicher-user mapping and fail-closed journal attribution implemented; unit tests execute successfully in GitHub Actions; the PostgreSQL integration test is blocked only by the old external ili2pg fixture path.
+- **11.CI Continuous integration baseline:** implemented and exercised by real GitHub Actions runs. Java 25 setup, Gradle build, Docker/Testcontainers access and failure-report upload work. The latest baseline executes 18 tests with 3 failures, all tied to the old external INTERLIS JAR integration and therefore assigned to 11.5.
 - **Next:** 11.3 DB/storage consistency (`X-STORAGE-01`).
 - **X-SEC-02:** remains intentionally open and is handled by the later dev/prod security-separation work package.
 
@@ -123,6 +125,7 @@ Phase 11 may be reported `SUCCESS` only when:
 - INTERLIS export/import has a semantic roundtrip test preserving relevant identities and references;
 - no fachlicher page/download is accidentally anonymous;
 - audit attribution cannot silently impersonate another fachlicher user;
-- document storage failure tests demonstrate no accepted silent inconsistency.
+- document storage failure tests demonstrate no accepted silent inconsistency;
+- the GitHub Actions CI gate is green without installing a second independent INTERLIS toolchain.
 
 Only after this gate should the implementation be described as **Mabillon MVP 1.0 / Pilot Candidate** rather than merely a functionally broad technical MVP.
