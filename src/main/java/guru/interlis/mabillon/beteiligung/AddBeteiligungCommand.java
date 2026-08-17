@@ -23,9 +23,9 @@ public record AddBeteiligungCommand(
         if (geschaeftNumber == null) errors.add(new FieldError("geschaeftNumber", "required", "Geschäft ist erforderlich."));
         if (beteiligterTid == null) errors.add(new FieldError("beteiligterTid", "required", "Beteiligter ist erforderlich."));
         if (rollenCode == null || rollenCode.isBlank()) errors.add(new FieldError("rollenCode", "required", "Rolle ist erforderlich."));
-        if (gueltigVon != null && gueltigBis != null && gueltigBis.isBefore(gueltigVon)) {
-            errors.add(new FieldError("gueltigBis", "dateOrder", "Gültig-bis darf nicht vor Gültig-von liegen."));
-        }
         if (!errors.isEmpty()) throw new ValidationException(errors);
+        if (gueltigVon != null && gueltigBis != null && gueltigBis.isBefore(gueltigVon)) {
+            throw new IllegalArgumentException("Gültig-bis darf nicht vor Gültig-von liegen.");
+        }
     }
 }
