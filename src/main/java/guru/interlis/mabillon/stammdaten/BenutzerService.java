@@ -41,13 +41,8 @@ public final class BenutzerService {
             if (find(context, command.username()) != null) {
                 throw new IllegalArgumentException("Username ist bereits vorhanden: " + command.username());
             }
-            Organisationseinheit organisationseinheit = ObjectSelect.query(Organisationseinheit.class)
-                    .where(Organisationseinheit.KUERZEL.eq(command.organisationseinheit()))
-                    .selectFirst(context);
-            if (organisationseinheit == null || !ACTIVE.equalsIgnoreCase(organisationseinheit.getAstatus())) {
-                throw new IllegalArgumentException("Aktive Organisationseinheit fehlt: "
-                        + command.organisationseinheit());
-            }
+            Organisationseinheit organisationseinheit = requireActiveOrganisationseinheit(
+                    context, command.organisationseinheit());
             Benutzer entity = context.newObject(Benutzer.class);
             entity.setUsername(command.username());
             entity.setAname(command.name());
@@ -55,6 +50,22 @@ public final class BenutzerService {
             entity.setAstatus(ACTIVE);
             entity.setTBasket(organisationseinheit.getTBasket());
             entity.setTIliTid(UUID.randomUUID());
+            entity.setOrganisationseinheit(organisationseinheit);
+            return toView(entity);
+        });
+    }
+
+    public BenutzerView update(BenutzerUpdateCommand command) {
+        authorizationService.require(Permission.MANAGE_MASTERDATA);
+        return unitOfWork.write(context -> {
+            Benutzer entity = find(context, command.username());
+            if (entity == null) {
+                throw new IllegalArgumentException("Unbekannter Benutzer: " + command.username());
+            }
+            Organisationseinheit organisationseinheit = requireActiveOrganisationseinheit(
+                    context, command.organisationseinheit());
+            entity.setAname(command.name());
+            entity.setEmail(command.email());
             entity.setOrganisationseinheit(organisationseinheit);
             return toView(entity);
         });
@@ -75,6 +86,16 @@ public final class BenutzerService {
         return ObjectSelect.query(Benutzer.class)
                 .where(Benutzer.USERNAME.eq(username))
                 .selectFirst(context);
+    }
+
+    private Organisationseinheit requireActiveOrganisationseinheit(ObjectContext context, String kuerzel) {
+        Organisationseinheit organisationseinheit = ObjectSelect.query(Organisationseinheit.class)
+                .where(Organisationseinheit.KUERZEL.eq(kuerzel))
+                .selectFirst(context);
+        if (organisationseinheit == null || !ACTIVE.equalsIgnoreCase(organisationseinheit.getAstatus())) {
+            throw new IllegalArgumentException("Aktive Organisationseinheit fehlt: " + kuerzel);
+        }
+        return organisationseinheit;
     }
 
     private BenutzerView toView(Benutzer value) {
