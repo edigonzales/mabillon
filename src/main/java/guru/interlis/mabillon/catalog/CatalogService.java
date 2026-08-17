@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Aufgabentyp;
@@ -67,6 +66,37 @@ public final class CatalogService {
         });
     }
 
+    public CatalogEntryView update(CatalogUpdateCommand command) {
+        authorizationService.require(Permission.MANAGE_CATALOGS);
+        return unitOfWork.write(context -> {
+            Object entity = findEntity(context, command.type(), command.code());
+            setNameAndDescription(entity, command.name(), command.description());
+            switch (entity) {
+                case Geschaeftsart value -> value.setResultaterforderlich(command.resultatErforderlich());
+                case Prozessstatus value -> {
+                    Geschaeftsart geschaeftsart = requireGeschaeftsart(context, command.geschaeftsartCode());
+                    if (command.initial() && countOtherInitialStatuses(context, value, geschaeftsart.getAcode()) > 0) {
+                        throw new IllegalStateException("Eine Geschäftsart darf nur einen Initialstatus haben.");
+                    }
+                    value.setGeschaeftsart(geschaeftsart);
+                    value.setSortierung(command.sortierung());
+                    value.setAinitial(command.initial());
+                    value.setTerminal(command.terminal());
+                }
+                case Resultatstatus value -> {
+                    value.setGeschaeftsart(requireGeschaeftsart(context, command.geschaeftsartCode()));
+                    value.setSortierung(command.sortierung());
+                    value.setTerminal(command.terminal());
+                }
+                case Beteiligungsrolle ignored -> { }
+                case Unterlagentyp ignored -> { }
+                case Aufgabentyp ignored -> { }
+                default -> throw new IllegalArgumentException("Nicht unterstützter Katalogtyp: " + entity.getClass());
+            }
+            return toView(command.type(), entity);
+        });
+    }
+
     public void deactivate(CatalogType type, String code) {
         authorizationService.require(Permission.MANAGE_CATALOGS);
         unitOfWork.write(context -> {
@@ -121,7 +151,7 @@ public final class CatalogService {
                 yield entity;
             }
             case PROZESSSTATUS -> {
-                Geschaeftsart geschaeftsart = findGeschaeftsart(context, command.geschaeftsartCode());
+                Geschaeftsart geschaeftsart = requireGeschaeftsart(context, command.geschaeftsartCode());
                 if (command.initial() && countInitialStatuses(context, command.geschaeftsartCode()) > 0) {
                     throw new IllegalStateException("Eine Geschäftsart darf nur einen Initialstatus haben.");
                 }
@@ -136,7 +166,7 @@ public final class CatalogService {
             case RESULTATSTATUS -> {
                 Resultatstatus entity = context.newObject(Resultatstatus.class);
                 setCommon(entity, command, context);
-                entity.setGeschaeftsart(findGeschaeftsart(context, command.geschaeftsartCode()));
+                entity.setGeschaeftsart(requireGeschaeftsart(context, command.geschaeftsartCode()));
                 entity.setSortierung(command.sortierung());
                 entity.setTerminal(command.terminal());
                 yield entity;
@@ -208,6 +238,18 @@ public final class CatalogService {
         }
     }
 
+    private void setNameAndDescription(Object entity, String name, String description) {
+        switch (entity) {
+            case Geschaeftsart value -> { value.setAname(name); value.setBeschreibung(description); }
+            case Prozessstatus value -> { value.setAname(name); value.setBeschreibung(description); }
+            case Resultatstatus value -> { value.setAname(name); value.setBeschreibung(description); }
+            case Beteiligungsrolle value -> { value.setAname(name); value.setBeschreibung(description); }
+            case Unterlagentyp value -> { value.setAname(name); value.setBeschreibung(description); }
+            case Aufgabentyp value -> { value.setAname(name); value.setBeschreibung(description); }
+            default -> throw new IllegalArgumentException("Unbekannter Katalogeintrag: " + entity);
+        }
+    }
+
     private long catalogBasket(ObjectContext context) {
         Geschaeftsart existing = ObjectSelect.query(Geschaeftsart.class).selectFirst(context);
         return existing == null ? defaultCatalogBasketId : existing.getTBasket();
@@ -232,10 +274,28 @@ public final class CatalogService {
                 .selectFirst(context);
     }
 
+    private Geschaeftsart requireGeschaeftsart(ObjectContext context, String code) {
+        Geschaeftsart value = code == null ? null : findGeschaeftsart(context, code);
+        if (value == null) {
+            throw new IllegalArgumentException("Unbekannte Geschäftsart: " + code);
+        }
+        return value;
+    }
+
     private int countInitialStatuses(ObjectContext context, String geschaeftsartCode) {
         return ObjectSelect.query(Prozessstatus.class).select(context).stream()
                 .filter(status -> status.isAinitial()
                         && status.getGeschaeftsart() != null
+                        && geschaeftsartCode.equals(status.getGeschaeftsart().getAcode()))
+                .mapToInt(ignored -> 1)
+                .sum();
+    }
+
+    private int countOtherInitialStatuses(ObjectContext context, Prozessstatus current, String geschaeftsartCode) {
+        return ObjectSelect.query(Prozessstatus.class).select(context).stream()
+                .filter(status -> status != current)
+                .filter(Prozessstatus::isAinitial)
+                .filter(status -> status.getGeschaeftsart() != null
                         && geschaeftsartCode.equals(status.getGeschaeftsart().getAcode()))
                 .mapToInt(ignored -> 1)
                 .sum();
