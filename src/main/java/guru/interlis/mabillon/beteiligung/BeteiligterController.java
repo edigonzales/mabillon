@@ -1,5 +1,6 @@
 package guru.interlis.mabillon.beteiligung;
 
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,10 +64,23 @@ public final class BeteiligterController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String telefon,
             @RequestParam(required = false) String adresse,
-            @RequestParam(required = false) String externeReferenz) {
-        BeteiligterView created = beteiligterService.create(new CreateBeteiligterCommand(
+            @RequestParam(required = false) String externeReferenz,
+            @RequestParam(defaultValue = "false") boolean duplicateConfirmed,
+            Model model) {
+        CreateBeteiligterCommand command = new CreateBeteiligterCommand(
                 typ, name, blankToNull(vorname), blankToNull(organisation), blankToNull(email),
-                blankToNull(telefon), blankToNull(adresse), blankToNull(externeReferenz)));
+                blankToNull(telefon), blankToNull(adresse), blankToNull(externeReferenz));
+        if (!duplicateConfirmed) {
+            List<BeteiligterView> duplicates = beteiligterService.findPotentialDuplicates(command);
+            if (!duplicates.isEmpty()) {
+                model.addAttribute("title", "Mögliches Duplikat");
+                model.addAttribute("active", "beteiligte");
+                model.addAttribute("command", command);
+                model.addAttribute("duplicates", duplicates);
+                return "beteiligte/duplicate-warning";
+            }
+        }
+        BeteiligterView created = beteiligterService.create(command);
         return "redirect:/beteiligte/" + created.tid();
     }
 
