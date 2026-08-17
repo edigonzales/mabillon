@@ -3,6 +3,7 @@ package guru.interlis.mabillon.aufgabe;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import guru.interlis.mabillon.numbering.GeschaeftNumber;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
@@ -18,6 +19,18 @@ public final class AufgabeQueryService {
 
     public AufgabeQueryService(CayenneUnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
+    }
+
+    public AufgabeView get(UUID tid) {
+        return unitOfWork.read(context -> {
+            Aufgabe task = ObjectSelect.query(Aufgabe.class)
+                    .where(Aufgabe.T_ILI_TID.eq(tid))
+                    .selectFirst(context);
+            if (task == null) {
+                throw new IllegalArgumentException("Unbekannte Aufgabe: " + tid);
+            }
+            return toView(task);
+        });
     }
 
     public List<AufgabeView> forGeschaeft(GeschaeftNumber number) {
