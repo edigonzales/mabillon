@@ -24,7 +24,11 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/actuator", "/actuator/**").hasRole("MABILLON_ADMIN")
                         .requestMatchers("/admin", "/admin/**").hasRole("MABILLON_ADMIN")
-                        .anyRequest().authenticated())
+                        .anyRequest().hasAnyRole(
+                                "MABILLON_SACHBEARBEITER",
+                                "MABILLON_ADMIN",
+                                "MABILLON_GEVER_VERANTWORTLICHER",
+                                "MABILLON_ARCHIVVERANTWORTLICHER"))
                 .httpBasic(httpBasic -> {})
                 .formLogin(form -> form.disable())
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
