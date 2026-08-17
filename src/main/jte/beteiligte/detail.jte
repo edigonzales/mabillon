@@ -8,7 +8,7 @@
         <p class="breadcrumb"><a href="/beteiligte">Beteiligte</a> / ${beteiligter.name()}</p>
         <div class="page-header">
             <div><p class="eyebrow">${beteiligter.typ()}</p><h1>${beteiligter.name()}</h1></div>
-            <a class="button" href="/beteiligte/${beteiligter.tid()}/bearbeiten">Bearbeiten</a>
+            <a class="button" href="/beteiligte/${beteiligter.tid().toString()}/bearbeiten">Bearbeiten</a>
         </div>
         <section class="workspace-card">
             <dl class="detail-grid">
