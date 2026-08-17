@@ -246,7 +246,9 @@ public final class GlobalSearchService {
         return or(expressions.toArray(Expression[]::new));
     }
 
-    private static Expression relatedBusinessString(BaseProperty<String> property, String filter) {
+    private static Expression relatedBusinessString(
+            org.apache.cayenne.exp.property.StringProperty<String> property,
+            String filter) {
         return filter == null ? null : Dossier.GESCHAEFTS.dot(property).containsIgnoreCase(filter).exists();
     }
 
