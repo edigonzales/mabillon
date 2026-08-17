@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -43,6 +44,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
 @SpringBootTest
+@Import(UnterlageStorageConsistencyIntegrationTest.StorageTestConfiguration.class)
 class UnterlageStorageConsistencyIntegrationTest {
 
     private static final Path STORAGE_ROOT = temporaryStorageRoot();
@@ -95,8 +97,9 @@ class UnterlageStorageConsistencyIntegrationTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("endgültig abgelegt");
 
-        assertThat(unitOfWork.read(context -> ObjectSelect.query(Unterlage.class)
-                .where(Unterlage.TITEL.eq(title)).select(context))).isEmpty();
+        List<Unterlage> remaining = unitOfWork.read(context -> ObjectSelect.query(Unterlage.class)
+                .where(Unterlage.TITEL.eq(title)).select(context));
+        assertThat(remaining).isEmpty();
         assertThat(registeredJournalCount()).isEqualTo(journalBefore);
 
         Path staging = STORAGE_ROOT.resolve("staging");
