@@ -39,6 +39,10 @@ import org.w3c.dom.NodeList;
 class InterlisSemanticRoundtripIntegrationTest {
 
     private static final String XTF_INTERLIS_NS = "http://www.interlis.ch/xtf/2.4/INTERLIS";
+    private static final String GOLDEN_BUSINESS_BID = "ada09d02-2110-5e46-afa6-ea7426d960bc";
+    private static final String GOLDEN_DOSSIER_TID = "dd811d7e-1890-5254-9cd9-0a93bb5635a8";
+    private static final String GOLDEN_BUSINESS_TID = "8e2db417-33f6-5818-b052-2b0c91c48f49";
+    private static final String GOLDEN_PARTY_TID = "016af2e9-9dc3-5a2d-b032-81fb7353eb0d";
 
     @Container
     static final PostgreSQLContainer<?> SOURCE = postgres();
@@ -92,10 +96,26 @@ class InterlisSemanticRoundtripIntegrationTest {
                     .as("Semantischer INTERLIS-Graph für %s", scope.label())
                     .isNotEmpty()
                     .isEqualTo(after.entries());
-            assertThat(before.entries().keySet())
-                    .as("TID-tragende Objekte für %s", scope.label())
-                    .anyMatch(key -> key.contains("#"));
+
+            if (scope == ImportScope.BUSINESS_DATA) {
+                assertGoldenPathIdentities(after);
+            }
         }
+    }
+
+    private static void assertGoldenPathIdentities(SemanticGraph graph) {
+        assertThat(graph.entries().keySet())
+                .as("Geschäftsdaten-BID bleibt erhalten")
+                .anyMatch(key -> key.startsWith("basket:") && key.endsWith("#" + GOLDEN_BUSINESS_BID));
+        assertThat(graph.entries().keySet())
+                .as("Dossier-TID bleibt erhalten")
+                .anyMatch(key -> key.startsWith("object:") && key.endsWith("#" + GOLDEN_DOSSIER_TID));
+        assertThat(graph.entries().keySet())
+                .as("Geschäft-TID bleibt erhalten")
+                .anyMatch(key -> key.startsWith("object:") && key.endsWith("#" + GOLDEN_BUSINESS_TID));
+        assertThat(graph.entries().values())
+                .as("REF auf den Beteiligten bleibt erhalten")
+                .anyMatch(value -> value.contains("}ref=" + GOLDEN_PARTY_TID));
     }
 
     private static PostgreSQLContainer<?> postgres() {
