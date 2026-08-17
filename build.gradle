@@ -56,6 +56,24 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+tasks.register('interlisTool', JavaExec) {
+    group = 'verification'
+    description = 'Runs Mabillon INTERLIS tooling through the in-process Java APIs.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'guru.interlis.mabillon.interlis.InterlisToolCli'
+    doFirst {
+        def operation = providers.gradleProperty('interlisOperation').orNull
+        if (operation == null || operation.isBlank()) {
+            throw new GradleException('Missing -PinterlisOperation')
+        }
+        args operation
+        def file = providers.gradleProperty('interlisFile').orNull
+        if (file != null && !file.isBlank()) {
+            args file
+        }
+    }
+}
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
