@@ -1,6 +1,6 @@
 package guru.interlis.mabillon.beteiligung;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -14,6 +14,7 @@ import guru.interlis.mabillon.security.AuthorizationService;
 import guru.interlis.mabillon.security.Permission;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -51,10 +52,12 @@ public final class BeteiligterService {
     public List<BeteiligterView> findPotentialDuplicates(CreateBeteiligterCommand command) {
         authorizationService.require(Permission.EDIT_GESCHAEFT);
         requireType(command.typ());
-        return unitOfWork.read(context -> ObjectSelect.query(Beteiligter.class).select(context).stream()
-                .filter(value -> command.typ().equals(value.getTyp()))
+        return unitOfWork.read(context -> ObjectSelect.query(Beteiligter.class)
+                .where(Beteiligter.TYP.eq(command.typ()))
+                .and(duplicateCandidateExpression(command))
+                .orderBy(Beteiligter.ANAME.asc())
+                .select(context).stream()
                 .filter(value -> isPotentialDuplicate(value, command))
-                .sorted(Comparator.comparing(Beteiligter::getAname))
                 .limit(10)
                 .map(this::toView)
                 .toList());
@@ -136,6 +139,21 @@ public final class BeteiligterService {
         if (!TYPES.contains(type)) {
             throw new IllegalArgumentException("Unbekannter Beteiligtertyp: " + type);
         }
+    }
+
+    private Expression duplicateCandidateExpression(CreateBeteiligterCommand command) {
+        List<Expression> candidates = new ArrayList<>();
+        if (command.externeReferenz() != null && !command.externeReferenz().isBlank()) {
+            candidates.add(Beteiligter.EXTERNEREFERENZ.containsIgnoreCase(command.externeReferenz().trim()));
+        }
+        if (command.email() != null && !command.email().isBlank()) {
+            candidates.add(Beteiligter.EMAIL.containsIgnoreCase(command.email().trim()));
+        }
+        String normalizedName = normalized(command.name());
+        if (!normalizedName.isBlank()) {
+            candidates.add(Beteiligter.ANAME.containsIgnoreCase(normalizedName.split(" ")[0]));
+        }
+        return ExpressionFactory.or(candidates.toArray(Expression[]::new));
     }
 
     private boolean isPotentialDuplicate(Beteiligter value, CreateBeteiligterCommand command) {
