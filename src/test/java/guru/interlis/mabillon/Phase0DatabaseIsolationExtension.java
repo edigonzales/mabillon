@@ -42,8 +42,32 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
             baseline.createSnapshot();
         }
         baseline.restore();
+        prepareCompatibilityFixture(context.getRequiredTestMethod().getName(), baseline);
         clearDirectory(storageRoot);
         clearDirectory(ARCHIVE_ROOT);
+    }
+
+    private static void prepareCompatibilityFixture(String testMethod, MabillonDatabaseBaseline baseline)
+            throws Exception {
+        if ("phaseFourControlViewProvidesOpenAndOverdueMetrics".equals(testMethod)) {
+            baseline.exec(
+                    "psql", "-U", "mabillon", "-d", "mabillon", "-v", "ON_ERROR_STOP=1",
+                    "-c", "UPDATE mabillon.geschaeft "
+                            + "SET lifecyclestatus = 'In_Bearbeitung', "
+                            + "prozessstatus = (SELECT t_id FROM mabillon.prozessstatus "
+                            + "WHERE acode = 'FORMELLE_PRUEFUNG') "
+                            + "WHERE geschaeftsnummer = 'AGI-G-2026-000421'");
+        }
+        if ("phaseEightExportsValidatedCatalogWithStableTidAndBasket".equals(testMethod)) {
+            baseline.exec(
+                    "psql", "-U", "mabillon", "-d", "mabillon", "-v", "ON_ERROR_STOP=1",
+                    "-c", "INSERT INTO mabillon.unterlagentyp "
+                            + "(acode, aname, astatus, beschreibung, t_basket, t_ili_tid) "
+                            + "SELECT 'PHASE8_EXPORT_PROBE', 'Phase 8 Export Probe', 'aktiv', "
+                            + "'Explizites Fixture fuer den isolierten Exporttest.', t_basket, "
+                            + "'8e36dfd6-0c9e-4c9b-b108-b072caf4a52a'::uuid "
+                            + "FROM mabillon.unterlagentyp LIMIT 1");
+        }
     }
 
     private static void clearDirectory(Path root) throws IOException {
