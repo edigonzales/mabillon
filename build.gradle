@@ -76,4 +76,7 @@ tasks.register('interlisTool', JavaExec) {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    // Child fixture scripts use exactly the runtime classpath already resolved
+    // for this build instead of installing or resolving a second toolchain.
+    environment 'MABILLON_RUNTIME_CLASSPATH', sourceSets.main.runtimeClasspath.asPath
 }
