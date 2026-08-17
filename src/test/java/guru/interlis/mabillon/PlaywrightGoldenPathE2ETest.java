@@ -83,7 +83,8 @@ class PlaywrightGoldenPathE2ETest {
             try {
                 page.navigate("/");
                 assertThat(page.title()).contains("Mabillon");
-                assertThat(page.locator("body").innerText()).contains("Meine Arbeit");
+                assertThat(page.locator("body").innerText())
+                        .contains("Meine offenen Aufgaben", "Aktive Geschäfte");
 
                 String dossierNumber = openDossier(page);
                 String businessNumber = openBusiness(page, dossierNumber);
