@@ -19,12 +19,15 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @ControllerAdvice
 public final class WebExceptionHandler {
 
-    @ExceptionHandler({NotFoundException.class, NoResourceFoundException.class})
-    ModelAndView notFound(RuntimeException failure, HttpServletRequest request) {
-        String message = failure instanceof NotFoundException
-                ? failure.getMessage()
-                : "Die angeforderte Seite wurde nicht gefunden.";
-        return error(request, HttpStatus.NOT_FOUND, "Nicht gefunden", message, List.of());
+    @ExceptionHandler(NotFoundException.class)
+    ModelAndView notFound(NotFoundException failure, HttpServletRequest request) {
+        return error(request, HttpStatus.NOT_FOUND, "Nicht gefunden", failure.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    ModelAndView noResourceFound(NoResourceFoundException failure, HttpServletRequest request) {
+        return error(request, HttpStatus.NOT_FOUND, "Nicht gefunden",
+                "Die angeforderte Seite wurde nicht gefunden.", List.of());
     }
 
     @ExceptionHandler(ValidationException.class)
