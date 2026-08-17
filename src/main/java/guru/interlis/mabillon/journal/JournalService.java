@@ -3,24 +3,16 @@ package guru.interlis.mabillon.journal;
 import java.time.ZoneId;
 import java.util.UUID;
 
-import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Benutzer;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
 import guru.interlis.mabillon.persistence.cayenne.Ereignis;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public final class JournalService {
-
-    private final String fallbackUsername;
-
-    public JournalService(@Value("${mabillon.security.journal-fallback-username:anna.mueller}") String fallbackUsername) {
-        this.fallbackUsername = fallbackUsername;
-    }
 
     public void record(ObjectContext context, JournalCommand command) {
         Ereignis event = context.newObject(Ereignis.class);
@@ -34,11 +26,6 @@ public final class JournalService {
         Benutzer actor = ObjectSelect.query(Benutzer.class)
                 .where(Benutzer.USERNAME.eq(command.actorId().value()))
                 .selectFirst(context);
-        if (actor == null) {
-            actor = ObjectSelect.query(Benutzer.class)
-                    .where(Benutzer.USERNAME.eq(fallbackUsername))
-                    .selectFirst(context);
-        }
         if (actor == null) {
             throw new IllegalStateException("Journalakteur ist kein fachlicher Benutzer: " + command.actorId().value());
         }
