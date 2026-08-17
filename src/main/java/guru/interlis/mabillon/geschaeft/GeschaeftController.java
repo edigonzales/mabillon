@@ -10,6 +10,7 @@ import guru.interlis.mabillon.aufgabe.AufgabeQueryService;
 import guru.interlis.mabillon.beteiligung.BeteiligungService;
 import guru.interlis.mabillon.beteiligung.BeteiligterSearchCriteria;
 import guru.interlis.mabillon.beteiligung.BeteiligterService;
+import guru.interlis.mabillon.domain.NotFoundException;
 import guru.interlis.mabillon.dossier.DossierQueryService;
 import guru.interlis.mabillon.dossier.DossierSearchCriteria;
 import guru.interlis.mabillon.fachsystem.AddFachsystemReferenzCommand;
@@ -19,7 +20,6 @@ import guru.interlis.mabillon.numbering.GeschaeftNumber;
 import guru.interlis.mabillon.stammdaten.BenutzerService;
 import guru.interlis.mabillon.stammdaten.OrganisationseinheitService;
 import guru.interlis.mabillon.web.HtmxRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/geschaefte")
@@ -136,7 +135,7 @@ public final class GeschaeftController {
     @GetMapping("/{number}")
     public String detail(@PathVariable String number, HttpServletRequest request, Model model) {
         GeschaeftView geschaeft = queryService.findByNumber(number)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("Unbekanntes Geschäft: " + number));
         model.addAttribute("geschaeft", geschaeft);
         model.addAttribute("processStatuses", geschaeft.geschaeftsartCode() == null
                 ? java.util.List.of()
