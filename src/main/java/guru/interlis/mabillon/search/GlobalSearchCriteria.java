@@ -18,6 +18,16 @@ public record GlobalSearchCriteria(
         if (page < 0 || size < 1) {
             throw new IllegalArgumentException("Ungültige Seitendaten.");
         }
+        text = normalize(text);
+        geschaeftsnummer = normalize(geschaeftsnummer);
+        dossiernummer = normalize(dossiernummer);
+        titel = normalize(titel);
+        beteiligterName = normalize(beteiligterName);
+        organisation = normalize(organisation);
+        geschaeftsartCode = normalize(geschaeftsartCode);
+        processStatusCode = normalize(processStatusCode);
+        unterlagentitel = normalize(unterlagentitel);
+        fachsystemId = normalize(fachsystemId);
     }
 
     public GlobalSearchCriteria(String text, int page, int size) {
@@ -26,5 +36,9 @@ public record GlobalSearchCriteria(
 
     public static GlobalSearchCriteria empty() {
         return new GlobalSearchCriteria(null, 0, 20);
+    }
+
+    private static String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }
