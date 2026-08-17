@@ -49,6 +49,7 @@ public final class DataQualityService {
             }
             List<QualityFinding> findings = new ArrayList<>();
             checkDossierPosition(dossier, findings);
+            checkDossierState(dossier, findings);
             dossier.getGeschaefts().forEach(business -> checkBusiness(business, findings));
             dossier.getUnterlages().forEach(document -> checkDocument(document, dossier, findings));
             ObjectSelect.query(Geschaeft.class).select(context).stream()
@@ -75,6 +76,7 @@ public final class DataQualityService {
             business.getUnterlages().forEach(document -> checkDocument(document, business.getDossier(), findings));
             if (business.getDossier() != null) {
                 checkDossierPosition(business.getDossier(), findings);
+                checkDossierState(business.getDossier(), findings);
             }
             return new QualityReport("Geschaeft", number.value(), findings);
         });
@@ -108,6 +110,13 @@ public final class DataQualityService {
                 || !active(dossier.getOrdnungssystemposition().getOrdnungssystem().getAstatus())) {
             finding(findings, "DQ-001", QualitySeverity.WARNING, "Dossier", dossier.getDossiernummer(),
                     "Dossier hat keine gültige Registraturplanposition.");
+        }
+    }
+
+    private void checkDossierState(Dossier dossier, List<QualityFinding> findings) {
+        if (isDossierClosed(dossier) && dossier.getGeschaefts().stream().anyMatch(business -> !isClosed(business))) {
+            finding(findings, "DQ-007", QualitySeverity.ERROR, "Dossier", dossier.getDossiernummer(),
+                    "Geschlossenes Dossier enthält ein nicht abgeschlossenes Geschäft.");
         }
     }
 
@@ -187,6 +196,12 @@ public final class DataQualityService {
 
     private static boolean active(String status) {
         return status != null && "aktiv".equalsIgnoreCase(status);
+    }
+
+    private static boolean isDossierClosed(Dossier dossier) {
+        return "Geschlossen".equalsIgnoreCase(dossier.getAstatus())
+                || "Archiviert".equalsIgnoreCase(dossier.getAstatus())
+                || "Vernichtet".equalsIgnoreCase(dossier.getAstatus());
     }
 
     private static boolean isClosed(Geschaeft business) {
