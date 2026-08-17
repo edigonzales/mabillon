@@ -15,7 +15,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -32,6 +32,9 @@ jobs:
         with:
           cache-provider: basic
 
+      - name: Install Playwright Chromium
+        run: ./gradlew playwrightInstall --no-daemon
+
       - name: Run tests
         run: ./gradlew test --no-daemon
 
@@ -43,4 +46,5 @@ jobs:
           path: |
             build/reports/tests/test/
             build/test-results/test/
+            build/playwright/
           if-no-files-found: warn
