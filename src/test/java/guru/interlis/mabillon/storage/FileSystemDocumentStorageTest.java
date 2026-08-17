@@ -17,6 +17,30 @@ class FileSystemDocumentStorageTest {
     Path temporaryDirectory;
 
     @Test
+    void describePlansFinalObjectWithoutMovingStagedFile() throws Exception {
+        FileSystemDocumentStorage storage = new FileSystemDocumentStorage(temporaryDirectory.toString(), 1024);
+        byte[] content = "Mabillon storage consistency".getBytes(StandardCharsets.UTF_8);
+        StagedDocument staged = storage.stage(new DocumentUpload(
+                "document.txt", "text/plain", new ByteArrayInputStream(content)));
+
+        StoredDocument planned = storage.describe(staged, new StorageTarget("AGI-D-2026-000001"));
+
+        assertThat(planned.originalFilename()).isEqualTo("document.txt");
+        assertThat(planned.size()).isEqualTo(content.length);
+        assertThat(storage.exists(planned.storageUri())).isFalse();
+        assertThat(temporaryDirectory.resolve("staging").resolve(staged.token())).isRegularFile();
+
+        StoredDocument committed = storage.commit(staged, new StorageTarget("AGI-D-2026-000001"));
+
+        assertThat(committed).isEqualTo(planned);
+        assertThat(storage.exists(planned.storageUri())).isTrue();
+        assertThat(temporaryDirectory.resolve("staging").resolve(staged.token())).doesNotExist();
+
+        storage.discard(staged);
+        assertThat(storage.exists(planned.storageUri())).isFalse();
+    }
+
+    @Test
     void rejectsOversizedUploadAndRemovesPartialStagingFile() throws Exception {
         FileSystemDocumentStorage storage = new FileSystemDocumentStorage(temporaryDirectory.toString(), 4);
 
