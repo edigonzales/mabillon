@@ -109,6 +109,7 @@ public final class JavaApiIli2pgRunner implements Ili2pgRunner {
         config.setDbhost(dbHost);
         config.setDbport(dbPort);
         config.setDbdatabase(dbDatabase);
+        config.setDburl("jdbc:postgresql://%s:%s/%s".formatted(dbHost, dbPort, dbDatabase));
         config.setDbusr(dbUser);
         config.setDbpwd(dbPassword);
         config.setDbschema(dbSchema);
