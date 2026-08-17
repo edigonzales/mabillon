@@ -2,16 +2,19 @@ package guru.interlis.mabillon.geschaeft;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import guru.interlis.mabillon.aufgabe.AufgabeView;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Aufgabe;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
+import guru.interlis.mabillon.persistence.cayenne.Prozessstatus;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -26,77 +29,112 @@ public final class GeschaeftskontrolleQueryService {
 
     public GeschaeftskontrolleView load(GeschaeftskontrolleCriteria criteria) {
         return unitOfWork.read(context -> {
-            List<Geschaeft> businesses = ObjectSelect.query(Geschaeft.class).select(context);
-            List<Aufgabe> tasks = ObjectSelect.query(Aufgabe.class).select(context);
-            Predicate<Geschaeft> open = business -> !isClosed(business);
-            List<GeschaeftView> openViews = businesses.stream()
-                    .filter(open)
-                    .sorted(Comparator.comparing(Geschaeft::getGeschaeftsnummer))
+            List<GeschaeftView> openViews = openBusinesses()
+                    .orderBy(Geschaeft.GESCHAEFTSNUMMER.asc())
                     .limit(criteria.limit())
+                    .select(context).stream()
                     .map(this::toBusinessView)
                     .toList();
-            List<GeschaeftView> overdueBusinesses = businesses.stream()
-                    .filter(open)
-                    .filter(business -> business.getFaelligam() != null
-                            && business.getFaelligam().isBefore(criteria.today()))
-                    .sorted(Comparator.comparing(Geschaeft::getFaelligam))
+
+            List<GeschaeftView> overdueBusinesses = openBusinesses()
+                    .and(Geschaeft.FAELLIGAM.lt(criteria.today()))
+                    .orderBy(Geschaeft.FAELLIGAM.asc())
                     .limit(criteria.limit())
+                    .select(context).stream()
                     .map(this::toBusinessView)
                     .toList();
-            List<AufgabeView> openTasks = tasks.stream()
-                    .filter(this::isOpen)
-                    .sorted(taskComparator())
+
+            List<AufgabeView> openTasks = openTasks()
+                    .orderBy(Aufgabe.FAELLIGAM.asc())
+                    .orderBy(Aufgabe.PRIORITAET.desc())
+                    .orderBy(Aufgabe.TITEL.asc())
                     .limit(criteria.limit())
+                    .select(context).stream()
                     .map(this::toTaskView)
                     .toList();
-            List<AufgabeView> overdueTasks = tasks.stream()
-                    .filter(this::isOpen)
-                    .filter(task -> task.getFaelligam() != null && task.getFaelligam().isBefore(criteria.today()))
-                    .sorted(taskComparator())
+
+            List<AufgabeView> overdueTasks = openTasks()
+                    .and(Aufgabe.FAELLIGAM.lt(criteria.today()))
+                    .orderBy(Aufgabe.FAELLIGAM.asc())
+                    .orderBy(Aufgabe.PRIORITAET.desc())
+                    .orderBy(Aufgabe.TITEL.asc())
                     .limit(criteria.limit())
+                    .select(context).stream()
                     .map(this::toTaskView)
                     .toList();
-            Map<String, Long> processStatusCounts = businesses.stream()
-                    .filter(open)
-                    .collect(Collectors.groupingBy(
-                            business -> business.getProzessstatus() == null
-                                    ? "UNBEKANNT" : business.getProzessstatus().getAcode(),
-                            Collectors.counting()));
-            LocalDate inactiveSince = criteria.today().minusDays(criteria.inactiveSinceDays());
-            List<GeschaeftView> inactive = businesses.stream()
-                    .filter(open)
-                    .filter(business -> lastChangedDate(business) != null
-                            && lastChangedDate(business).isBefore(inactiveSince))
-                    .sorted(Comparator.comparing(this::lastChangedDate))
-                    .limit(criteria.limit())
+
+            Map<String, Long> processStatusCounts = processStatusCounts(context);
+            List<GeschaeftView> inactive = inactiveBusinesses(context, criteria).stream()
                     .map(this::toBusinessView)
                     .toList();
+
             return new GeschaeftskontrolleView(openViews, overdueBusinesses, openTasks, overdueTasks,
                     processStatusCounts, inactive);
         });
     }
 
-    private boolean isClosed(Geschaeft business) {
-        return "Abgeschlossen".equalsIgnoreCase(business.getLifecyclestatus())
-                || "Archiviert".equalsIgnoreCase(business.getLifecyclestatus())
-                || "Vernichtet".equalsIgnoreCase(business.getLifecyclestatus());
+    private Map<String, Long> processStatusCounts(org.apache.cayenne.ObjectContext context) {
+        var statusCode = Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE);
+        List<Object[]> rows = ObjectSelect.columnQuery(Geschaeft.class, statusCode, statusCode.count())
+                .where(openBusinessExpression())
+                .select(context);
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            counts.put((String) row[0], (Long) row[1]);
+        }
+        long unknown = ObjectSelect.query(Geschaeft.class)
+                .where(openBusinessExpression())
+                .and(Geschaeft.PROZESSSTATUS.isNull())
+                .selectCount(context);
+        if (unknown > 0) {
+            counts.put("UNBEKANNT", unknown);
+        }
+        return counts;
     }
 
-    private boolean isOpen(Aufgabe task) {
-        return !"Erledigt".equalsIgnoreCase(task.getAstatus())
-                && !"Abgebrochen".equalsIgnoreCase(task.getAstatus());
+    private List<Geschaeft> inactiveBusinesses(
+            org.apache.cayenne.ObjectContext context,
+            GeschaeftskontrolleCriteria criteria) {
+        LocalDate inactiveSince = criteria.today().minusDays(criteria.inactiveSinceDays());
+        LocalDateTime boundary = inactiveSince.atStartOfDay();
+        List<Geschaeft> candidates = new ArrayList<>(openBusinesses()
+                .and(Geschaeft.GEAENDERTAM.isNotNull())
+                .and(Geschaeft.GEAENDERTAM.lt(boundary))
+                .orderBy(Geschaeft.GEAENDERTAM.asc())
+                .limit(criteria.limit())
+                .select(context));
+        candidates.addAll(openBusinesses()
+                .and(Geschaeft.GEAENDERTAM.isNull())
+                .and(Geschaeft.ERSTELLTAM.lt(boundary))
+                .orderBy(Geschaeft.ERSTELLTAM.asc())
+                .limit(criteria.limit())
+                .select(context));
+        return candidates.stream()
+                .sorted(Comparator.comparing(this::lastChangedDate))
+                .limit(criteria.limit())
+                .toList();
+    }
+
+    private static ObjectSelect<Geschaeft> openBusinesses() {
+        return ObjectSelect.query(Geschaeft.class).where(openBusinessExpression());
+    }
+
+    private static Expression openBusinessExpression() {
+        return ExpressionFactory.and(
+                Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Abgeschlossen"),
+                Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Archiviert"),
+                Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Vernichtet"));
+    }
+
+    private static ObjectSelect<Aufgabe> openTasks() {
+        return ObjectSelect.query(Aufgabe.class)
+                .where(Aufgabe.ASTATUS.nlikeIgnoreCase("Erledigt"))
+                .and(Aufgabe.ASTATUS.nlikeIgnoreCase("Abgebrochen"));
     }
 
     private LocalDate lastChangedDate(Geschaeft business) {
         LocalDateTime changed = business.getGeaendertam();
         return changed == null ? business.getErstelltam().toLocalDate() : changed.toLocalDate();
-    }
-
-    private Comparator<Aufgabe> taskComparator() {
-        return Comparator.comparing(Aufgabe::getFaelligam, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(Comparator.comparing(Aufgabe::getPrioritaet,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .thenComparing(Aufgabe::getTitel);
     }
 
     private GeschaeftView toBusinessView(Geschaeft business) {
