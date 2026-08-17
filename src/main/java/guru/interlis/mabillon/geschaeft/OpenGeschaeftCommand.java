@@ -1,7 +1,11 @@
 package guru.interlis.mabillon.geschaeft;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+import guru.interlis.mabillon.domain.FieldError;
+import guru.interlis.mabillon.domain.ValidationException;
 import guru.interlis.mabillon.numbering.DossierNumber;
 
 public record OpenGeschaeftCommand(
@@ -17,21 +21,25 @@ public record OpenGeschaeftCommand(
         Integer priority) {
 
     public OpenGeschaeftCommand {
+        List<FieldError> errors = new ArrayList<>();
         if (dossierNumber == null) {
-            throw new IllegalArgumentException("dossierNumber darf nicht null sein.");
+            errors.add(new FieldError("dossierNumber", "required", "Dossier ist erforderlich."));
         }
-        requireText(title, "title");
-        requireText(geschaeftsartCode, "geschaeftsartCode");
-        requireText(federfuehrungKuerzel, "federfuehrungKuerzel");
-        requireText(verantwortlicherUsername, "verantwortlicherUsername");
+        requireText(errors, "title", title, "Titel ist erforderlich.");
+        requireText(errors, "type", geschaeftsartCode, "Geschäftsart ist erforderlich.");
+        requireText(errors, "federation", federfuehrungKuerzel, "Federführung ist erforderlich.");
+        requireText(errors, "responsible", verantwortlicherUsername, "Verantwortliche Person ist erforderlich.");
         if (priority != null && (priority < 0 || priority > 5)) {
-            throw new IllegalArgumentException("priority muss zwischen 0 und 5 liegen.");
+            errors.add(new FieldError("priority", "range", "Priorität muss zwischen 0 und 5 liegen."));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
     }
 
-    private static void requireText(String value, String name) {
+    private static void requireText(List<FieldError> errors, String field, String value, String message) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(name + " darf nicht leer sein.");
+            errors.add(new FieldError(field, "required", message));
         }
     }
 }
