@@ -1,6 +1,5 @@
 package guru.interlis.mabillon.archivierung;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
@@ -20,15 +19,14 @@ import guru.interlis.mabillon.persistence.cayenne.Archivablieferung;
 import guru.interlis.mabillon.persistence.cayenne.ArchivablieferungDossier;
 import guru.interlis.mabillon.persistence.cayenne.Benutzer;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
-import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
 import guru.interlis.mabillon.persistence.cayenne.Sippaket;
 import guru.interlis.mabillon.quality.DataQualityService;
+import guru.interlis.mabillon.security.AuthorizationException;
 import guru.interlis.mabillon.security.AuthorizationService;
 import guru.interlis.mabillon.security.CurrentActor;
 import guru.interlis.mabillon.security.Permission;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,9 +38,6 @@ public final class SipService {
     private static final String VALIDATED = "Validiert";
     private static final String GENERATED = "Erzeugt";
     private static final String NOT_VALIDATED = "Nicht_validiert";
-    private static final String VALID = "Gueltig";
-    private static final String VALID_WITH_WARNINGS = "Gueltig_mit_Warnungen";
-    private static final String INVALID = "Ungueltig";
 
     private final CayenneUnitOfWork unitOfWork;
     private final SipGenerator generator;
@@ -53,7 +48,6 @@ public final class SipService {
     private final CurrentActor currentActor;
     private final JournalService journalService;
     private final Clock clock;
-    private final String journalFallbackUsername;
 
     public SipService(
             CayenneUnitOfWork unitOfWork,
@@ -64,8 +58,7 @@ public final class SipService {
             AuthorizationService authorizationService,
             CurrentActor currentActor,
             JournalService journalService,
-            Clock clock,
-            @Value("${mabillon.security.journal-fallback-username:anna.mueller}") String journalFallbackUsername) {
+            Clock clock) {
         this.unitOfWork = unitOfWork;
         this.generator = generator;
         this.validator = validator;
@@ -75,7 +68,6 @@ public final class SipService {
         this.currentActor = currentActor;
         this.journalService = journalService;
         this.clock = clock;
-        this.journalFallbackUsername = journalFallbackUsername;
     }
 
     public SippaketView generate(ArchivAblieferungNumber deliveryNumber) {
@@ -104,8 +96,13 @@ public final class SipService {
         Path target = paths.sipRoot()
                 .resolve("SIP_%s_%s_%06d".formatted(LocalDateTime.now(clock).toLocalDate(),
                         deliveryNumber.value(), attempt) + "_" + UUID.randomUUID()).toAbsolutePath().normalize();
-        GeneratedSip generated = generator.generate(new SipGenerationRequest(
-                deliveryNumber, SipProfile.ECH_0160_1_3_0, target));
+        GeneratedSip generated;
+        try {
+            generated = generator.generate(new SipGenerationRequest(
+                    deliveryNumber, SipProfile.ECH_0160_1_3_0, target));
+        } catch (RuntimeException failure) {
+            throw new SipGenerationException("SIP konnte nicht erzeugt werden: " + deliveryNumber.value(), failure);
+        }
         return unitOfWork.write(context -> {
             Archivablieferung deliveryEntity = findDelivery(context, deliveryNumber);
             Sippaket packet = context.newObject(Sippaket.class);
@@ -117,7 +114,7 @@ public final class SipService {
             packet.setStorageuri(generated.path().toUri().toString());
             packet.setLaufnummer(attempt);
             packet.setArchivablieferung(deliveryEntity);
-            packet.setBenutzer(actorOrFallback(context));
+            packet.setBenutzer(actor(context));
             packet.setTBasket(deliveryEntity.getTBasket());
             packet.setTIliTid(UUID.randomUUID());
             deliveryEntity.setAstatus(SIP_CREATED);
@@ -196,13 +193,13 @@ public final class SipService {
         return path;
     }
 
-    private Benutzer actorOrFallback(ObjectContext context) {
-        Benutzer actor = ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(currentActor.username()))
-                .selectFirst(context);
-        if (actor != null) {
-            return actor;
+    private Benutzer actor(ObjectContext context) {
+        String username = currentActor.username();
+        Benutzer actor = ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(username)).selectFirst(context);
+        if (actor == null) {
+            throw new AuthorizationException("Kein fachlicher Benutzer für Identität: " + username);
         }
-        return ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(journalFallbackUsername)).selectFirst(context);
+        return actor;
     }
 
     private void record(ObjectContext context, EreignisObjektTyp objectType, String objectId, EreignisTyp type,
