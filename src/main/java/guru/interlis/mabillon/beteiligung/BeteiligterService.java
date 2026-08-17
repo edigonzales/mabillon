@@ -2,6 +2,7 @@ package guru.interlis.mabillon.beteiligung;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
@@ -44,6 +45,18 @@ public final class BeteiligterService {
             value.setTIliTid(UUID.randomUUID());
             return toView(value);
         });
+    }
+
+    public List<BeteiligterView> findPotentialDuplicates(CreateBeteiligterCommand command) {
+        authorizationService.require(Permission.EDIT_GESCHAEFT);
+        requireType(command.typ());
+        return unitOfWork.read(context -> ObjectSelect.query(Beteiligter.class).select(context).stream()
+                .filter(value -> command.typ().equals(value.getTyp()))
+                .filter(value -> isPotentialDuplicate(value, command))
+                .sorted(Comparator.comparing(Beteiligter::getAname))
+                .limit(10)
+                .map(this::toView)
+                .toList());
     }
 
     public BeteiligterView update(UpdateBeteiligterCommand command) {
@@ -115,6 +128,20 @@ public final class BeteiligterService {
         }
     }
 
+    private boolean isPotentialDuplicate(Beteiligter value, CreateBeteiligterCommand command) {
+        if (sameNonBlank(value.getExternereferenz(), command.externeReferenz())
+                || sameNonBlank(value.getEmail(), command.email())) {
+            return true;
+        }
+        if (!normalized(value.getAname()).equals(normalized(command.name()))) {
+            return false;
+        }
+        if ("Person".equals(command.typ())) {
+            return normalized(value.getVorname()).equals(normalized(command.vorname()));
+        }
+        return true;
+    }
+
     private BeteiligterView toView(Beteiligter value) {
         return new BeteiligterView(value.getTIliTid(), value.getTyp(), value.getAname(), value.getVorname(),
                 value.getOrganisation(), value.getEmail(), value.getTelefon(), value.getAdresse(),
@@ -126,8 +153,16 @@ public final class BeteiligterService {
     }
 
     private static boolean containsIgnoreCase(String value, String filter) {
-        return filter == null || (value != null && value.toLowerCase(java.util.Locale.ROOT)
-                .contains(filter.toLowerCase(java.util.Locale.ROOT)));
+        return filter == null || (value != null && value.toLowerCase(Locale.ROOT)
+                .contains(filter.toLowerCase(Locale.ROOT)));
+    }
+
+    private static boolean sameNonBlank(String left, String right) {
+        return right != null && !right.isBlank() && left != null && left.equalsIgnoreCase(right.trim());
+    }
+
+    private static String normalized(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 
     private static <T> SearchPage<T> page(List<T> values, int page, int size) {
