@@ -2,10 +2,13 @@ package guru.interlis.mabillon.interlis;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
-import ch.interlis.ili2c.Ili2c;
-import ch.interlis.ili2c.Ili2cFailure;
+import ch.ehi.basics.settings.Settings;
+import ch.interlis.ili2c.Ili2cSettings;
+import ch.interlis.ili2c.Main;
+import ch.interlis.ili2c.config.Configuration;
+import ch.interlis.ili2c.config.FileEntry;
+import ch.interlis.ili2c.config.FileEntryKind;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,16 +19,26 @@ public final class JavaApiInterlisModelValidator implements InterlisModelValidat
         if (iliModel == null || !Files.isRegularFile(iliModel)) {
             return ValidationResult.invalid(2, "INTERLIS-Modell nicht gefunden: " + iliModel);
         }
-        ArrayList<String> files = new ArrayList<>();
-        files.add(iliModel.toAbsolutePath().normalize().toString());
+
+        Configuration configuration = new Configuration();
+        configuration.setAutoCompleteModelList(true);
+        configuration.addFileEntry(new FileEntry(
+                iliModel.toAbsolutePath().normalize().toString(), FileEntryKind.ILIMODELFILE));
+
+        Settings settings = new Settings();
+        settings.setValue(Ili2cSettings.ILIDIRS, InterlisToolDefaults.absoluteModelDir());
+        Main.setDefaultIli2cPathMap(settings);
+
         try {
-            Ili2c.compileIliFiles(files, InterlisToolDefaults.modelDirectories());
+            if (Main.runCompiler(configuration, settings) == null) {
+                return ValidationResult.invalid(1, "ili2c Java API: Kompilierung fehlgeschlagen.");
+            }
             return ValidationResult.valid("ili2c Java API: Modell ist valide.");
-        } catch (Ili2cFailure failure) {
+        } catch (RuntimeException failure) {
             String message = failure.getMessage();
             return ValidationResult.invalid(1,
                     "ili2c Java API: "
-                            + (message == null || message.isBlank() ? "Kompilierung fehlgeschlagen." : message));
+                            + (message == null || message.isBlank() ? failure.getClass().getSimpleName() : message));
         }
     }
 }
