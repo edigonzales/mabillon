@@ -10,7 +10,6 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfiguration {
@@ -19,16 +18,13 @@ public class SecurityConfiguration {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("MABILLON_ADMIN")
-                        .requestMatchers("/admin/**").hasRole("MABILLON_ADMIN")
-                        .requestMatchers("/archivierung/**").authenticated()
-                        .requestMatchers(HttpMethod.POST,
-                                "/dossiers", "/dossiers/**", "/geschaefte", "/geschaefte/**",
-                                "/aufgaben", "/aufgaben/**", "/beteiligungen", "/beteiligungen/**",
-                                "/fachsystem-referenzen", "/fachsystem-referenzen/**")
-                        .authenticated()
-                        .anyRequest().permitAll())
+                        .requestMatchers(
+                                "/actuator/health", "/actuator/health/**",
+                                "/mabillon.css", "/mabillon.js", "/htmx-2.0.10.min.js", "/favicon.ico")
+                        .permitAll()
+                        .requestMatchers("/actuator", "/actuator/**").hasRole("MABILLON_ADMIN")
+                        .requestMatchers("/admin", "/admin/**").hasRole("MABILLON_ADMIN")
+                        .anyRequest().authenticated())
                 .httpBasic(httpBasic -> {})
                 .formLogin(form -> form.disable())
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
