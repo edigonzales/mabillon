@@ -1,5 +1,11 @@
 package guru.interlis.mabillon.beteiligung;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import guru.interlis.mabillon.domain.FieldError;
+import guru.interlis.mabillon.domain.ValidationException;
+
 public record CreateBeteiligterCommand(
         String typ,
         String name,
@@ -11,13 +17,17 @@ public record CreateBeteiligterCommand(
         String externeReferenz) {
 
     public CreateBeteiligterCommand {
-        requireText(typ, "typ");
-        requireText(name, "name");
+        List<FieldError> errors = new ArrayList<>();
+        requireText(errors, "typ", typ, "Typ ist erforderlich.");
+        requireText(errors, "name", name, "Name ist erforderlich.");
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
     }
 
-    private static void requireText(String value, String name) {
+    private static void requireText(List<FieldError> errors, String field, String value, String message) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(name + " darf nicht leer sein.");
+            errors.add(new FieldError(field, "required", message));
         }
     }
 }
