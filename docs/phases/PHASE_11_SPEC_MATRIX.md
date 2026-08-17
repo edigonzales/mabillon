@@ -34,7 +34,7 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 | X-CI-01 | P0 | IMPLEMENTED | `.github/workflows/ci.yml` now runs Java 25 and `./gradlew test` on pushes to `main`/`agent/**` and pull requests to `main`, using the GitHub-hosted Docker daemon for Testcontainers and uploading Gradle test reports on failure. A real runner reaches and executes the tests. | The current red tests are confined to the obsolete external INTERLIS tool/fixture path, including new integration tests that reuse those fixtures. Make the gate green through 11.5 Java-API integration, not by duplicating the old tool installation in CI. |
 | X-STORAGE-01 | P0 | IMPLEMENTED | `DocumentStorage.describe` now plans and verifies final metadata/URI without moving the staged file. `UnterlageService` commits Unterlage plus journal through `CayenneUnitOfWork` before calling the final storage move. If that move fails after DB commit, a compensation transaction deletes the newly created Unterlage and its journal event and storage cleanup removes staging/partial final state. The old `anna.mueller` fallback in `UnterlageService` was removed as part of the same fail-closed path. | The storage sequencing unit test executes successfully in GitHub Actions. The PostgreSQL/Cayenne compensation test is present and compiles, but its fixture initialization still uses the old external ili2pg JAR and therefore awaits 11.5 before it can execute. |
 | X-TEST-01 | P1 | OPEN | Specification requires Playwright Java; no Playwright dependency/test is present although phase reports describe browser/Playwright verification as passed. | Add real automated Playwright golden-path tests. |
-| X-TEST-02 | P1 | OPEN | `Phase0CompatibilityTest` uses a large shared PostgreSQL fixture/state, conflicting with the rule that tests must not share persistent mutable state between test methods. | Split/restructure integration tests and make their persistent state independent/reproducible. |
+| X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` keeps one PostgreSQL Testcontainer and one expensive Golden-Path import, but no longer shares mutations between test methods. A JUnit extension snapshots the pristine `mabillon` schema and restores it before every method, resets the technical number sequence and clears document/SIP filesystem state. `MabillonDatabaseBaselineTest` proves the PostgreSQL snapshot/restore mechanism independently in CI. | The complete `Phase0CompatibilityTest` still cannot initialize until 11.5 removes its external ili2pg fixture bootstrap. Once that is done, the full suite must execute under the per-method reset and remain green. |
 | X-VAL-01 | P1 | OPEN | Web layer primarily uses raw `@RequestParam` and exceptions; the specified structured validation/error model is not consistently implemented. | Introduce consistent form/command validation and user-facing field/domain errors. |
 | X-DQ-01 | P1 | OPEN | Mandatory rule DQ-007 (`geschlossenes Dossier mit offenem Geschäft`) is missing from `DataQualityService`. | Implement rule plus positive and negative PostgreSQL tests. |
 | X-SEARCH-01 | P1 | OPEN | Global search generates object links for Beteiligte/Unterlagen that are not backed by corresponding detail routes; matching logic is also overly positional/generic. | Make every result navigable and replace positional matching with explicit type-specific matching. |
@@ -93,13 +93,13 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 
 ## 4. Summary
 
-Strict status after the implemented 11.1–11.3 changes:
+Strict status after the implemented 11.1–11.4 changes:
 
 - **PASS:** 1 use case (`UC-006`)
 - **PARTIAL:** 38 use cases
 - **FAIL:** 7 use cases
 
-This deliberately conservative classification reflects the specification's own Definition of Done. A `PARTIAL` use case often already has most of its business implementation; it is not equivalent to "half implemented". The most common remaining reasons for `PARTIAL` are missing web reachability, insufficient independent automated evidence, incomplete validation/error semantics, or outstanding test isolation.
+This deliberately conservative classification reflects the specification's own Definition of Done. A `PARTIAL` use case often already has most of its business implementation; it is not equivalent to "half implemented". The most common remaining reasons for `PARTIAL` are missing web reachability, insufficient independent automated evidence, incomplete validation/error semantics, or outstanding INTERLIS fixture/runtime migration work.
 
 ## 5. Phase-11 execution status
 
@@ -109,7 +109,8 @@ The detailed and current order is maintained in `PHASE_11_WORKPLAN.md`, which su
 - **11.2 Identity & audit:** deterministic login-to-fachlicher-user mapping and fail-closed journal attribution implemented; unit tests execute successfully in GitHub Actions; the PostgreSQL integration test is blocked only by the old external ili2pg fixture path.
 - **11.CI Continuous integration baseline:** implemented and exercised by real GitHub Actions runs. Java 25 setup, Gradle build, Docker/Testcontainers access and failure-report upload work. The current red integration tests are confined to the old external INTERLIS tool/fixture path and therefore assigned to 11.5.
 - **11.3 DB/storage consistency:** implementation complete. Final storage mutation now happens only after a successful Cayenne DB commit; post-commit storage failure has explicit DB compensation and storage cleanup. The filesystem sequencing test is green in CI. The PostgreSQL compensation test compiles and is blocked only by the existing external ili2pg fixture bootstrap, to be removed in 11.5.
-- **Next:** 11.4 Test isolation (`X-TEST-02`).
+- **11.4 Test isolation:** implementation complete. The pristine Golden-Path database is snapshotted once and restored before every `Phase0CompatibilityTest`; technical numbering, document storage and SIP filesystem state are reset as well. The standalone PostgreSQL baseline test is green in GitHub Actions. Full execution of `Phase0CompatibilityTest` awaits only the 11.5 fixture migration away from external INTERLIS JARs.
+- **Next:** 11.5 INTERLIS Java-API integration.
 - **X-SEC-02:** remains intentionally open and is handled by the later dev/prod security-separation work package.
 
 ## 6. Hard final gate
