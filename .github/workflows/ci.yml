@@ -30,6 +30,7 @@ jobs:
         shell: bash
         run: |
           python .github/restore_ci.py
+          sed -i 's/[[:space:]]*$//' MABILLON_IMPLEMENTATION_SPEC.md
           git diff --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
