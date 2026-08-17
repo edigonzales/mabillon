@@ -13,30 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  update-binding-spec:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: agent/phase-11-spec-closure-matrix
-
-      - name: Update binding specification
-        run: python .github/update_binding_spec.py
-
-      - name: Commit binding specification
-        shell: bash
-        run: |
-          sed -i 's/[[:space:]]*$//' MABILLON_IMPLEMENTATION_SPEC.md
-          git diff --check
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add MABILLON_IMPLEMENTATION_SPEC.md
-          git commit -m 'docs: align binding spec with INTERLIS Java APIs'
-          git push origin HEAD:agent/phase-11-spec-closure-matrix
-
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
