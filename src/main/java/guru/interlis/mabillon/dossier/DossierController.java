@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import guru.interlis.mabillon.numbering.DossierNumber;
 import guru.interlis.mabillon.catalog.CatalogService;
 import guru.interlis.mabillon.catalog.CatalogType;
+import guru.interlis.mabillon.domain.NotFoundException;
 import guru.interlis.mabillon.registraturplan.RegistraturplanQueryService;
 import guru.interlis.mabillon.fachsystem.AddFachsystemReferenzToDossierCommand;
 import guru.interlis.mabillon.fachsystem.FachsystemReferenzService;
@@ -14,7 +15,6 @@ import guru.interlis.mabillon.journal.JournalQueryService;
 import guru.interlis.mabillon.stammdaten.BenutzerService;
 import guru.interlis.mabillon.stammdaten.OrganisationseinheitService;
 import guru.interlis.mabillon.web.HtmxRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/dossiers")
@@ -113,7 +112,7 @@ public final class DossierController {
     @GetMapping("/{number}")
     public String detail(@PathVariable String number, HttpServletRequest request, Model model) {
         DossierView dossier = queryService.findByNumber(number)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException("Unbekanntes Dossier: " + number));
         model.addAttribute("dossier", dossier);
         model.addAttribute("unterlagentypen", catalogService.list(CatalogType.UNTERLAGENTYP, false));
         model.addAttribute("fachsystemReferenzen", fachsystemReferenzService.forDossier(DossierNumber.parse(number)));
