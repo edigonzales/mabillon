@@ -96,6 +96,30 @@ Prefer one dependency/version source for runtime and verification. Gradle tasks 
 
 The binding specification currently prescribes ProcessBuilder implementations and fixed external JAR paths. Phase 11 must update those sections so the specification reflects the newly approved Java-API architecture before final spec closure.
 
+### Mandatory-constraint review
+
+Before carrying the current `--createMandatoryChecks` behavior into the Java-API implementation, verify whether Mabillon actually needs these additional mandatory CHECK constraints.
+
+The default ili2db schema mapping already creates SQL `NOT NULL` constraints for directly mappable INTERLIS `MANDATORY` attributes unless `--sqlEnableNull` is enabled. `--createMandatoryChecks` is only justified where mandatory semantics cannot be represented by a simple column-level `NOT NULL`, for example because of inheritance, smart mapping, references or roles that are represented by several nullable columns.
+
+The review must therefore:
+
+1. generate a fresh Mabillon schema **without** `createMandatoryChecks` and without `sqlEnableNull`;
+2. enumerate every INTERLIS `MANDATORY` attribute/reference/role in the Mabillon model;
+3. verify for each one whether the generated PostgreSQL schema already enforces the required mandatory semantics through `NOT NULL`, FK structure or another generated constraint;
+4. identify any concrete Mabillon model element whose mandatory semantics would be lost without `createMandatoryChecks`;
+5. add focused positive/negative database tests for every such exceptional case;
+6. compare the result with a schema generated with `createMandatoryChecks` and document every additional CHECK constraint it creates;
+7. specifically verify that optional references and `{0..1}` roles remain nullable;
+8. repeat the check with the selected ili2pg 5.5.1 Java-API baseline, because the current workaround was observed with ili2pg 5.5.2.
+
+Decision rule:
+
+- **If no Mabillon mandatory rule depends on `createMandatoryChecks`: remove it.** Delete `SchemaConstraintRepair.java` and the corresponding post-schema-import repair step. This is the preferred solution because it removes both the unnecessary option and the workaround.
+- **If Mabillon genuinely needs `createMandatoryChecks`: keep it only with a minimal reproducer and automated tests proving both the required mandatory constraints and the absence of false mandatory checks on optional references.** If ili2pg 5.5.1 still creates false checks, retain the repair only as a narrowly documented compatibility workaround and prepare an upstream reproducer/bug report.
+
+Do **not** use `sqlEnableNull` as the workaround: it intentionally suppresses ordinary SQL `NOT NULL` constraints and changes the database validation strategy globally.
+
 ### Dependency convergence gate
 
 Before the Java-API migration is accepted:
@@ -131,7 +155,7 @@ The full semantic export -> fresh DB -> import roundtrip remains a separate hard
 2. **11.2 Identity & audit** – deterministic authenticated-principal to fachlicher Benutzer mapping; remove silent person fallback.
 3. **11.3 DB/storage consistency** – implement the specified staging/DB/storage ordering and tested compensation.
 4. **11.4 Test isolation** – remove shared mutable persistent state between test methods.
-5. **11.5 INTERLIS Java-API integration** – replace ProcessBuilder runtime adapters, move dependencies to `jars.interlis.ch`, use ili2pg 5.5.1, prove dependency convergence, and update the binding specification.
+5. **11.5 INTERLIS Java-API integration** – replace ProcessBuilder runtime adapters, move dependencies to `jars.interlis.ch`, use ili2pg 5.5.1, prove dependency convergence, review whether `createMandatoryChecks` is required, remove `SchemaConstraintRepair` if it is not, and update the binding specification.
 6. **11.6 Missing UI use cases** – complete the reachable web flows, especially participants, tasks, catalog/master-data and registraturplan administration.
 7. **11.7 Unterlage lifecycle** – metadata update, assign/unassign, finalize, register as aktenrelevant, cancel and transition rules.
 8. **11.8 Business rules / data quality** – DQ-007, participation date validation, duplicate warning and remaining rule gaps.
@@ -150,6 +174,9 @@ In addition to the gates in `PHASE_11_SPEC_MATRIX.md`, Phase 11 is not complete 
 - Spring Boot uses ili2pg, ilivalidator and ili2c via Java APIs, not `ProcessBuilder`;
 - ili2pg is aligned to 5.5.1 as the selected compatibility baseline;
 - Gradle resolves a reviewed, coherent set of shared INTERLIS libraries;
+- the necessity of `createMandatoryChecks` has been demonstrated from the actual Mabillon model rather than assumed;
+- if `createMandatoryChecks` is unnecessary, `SchemaConstraintRepair.java` and its repair step have been removed;
+- if `createMandatoryChecks` remains necessary, automated tests prove required mandatory semantics and correct nullability of optional references/roles;
 - the application runtime/container requires no external INTERLIS tool JAR installation;
 - import/export/model-validation regression tests execute through the Java APIs;
 - the semantic INTERLIS roundtrip executes through the Java APIs;
