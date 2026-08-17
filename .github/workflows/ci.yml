@@ -26,16 +26,14 @@ jobs:
       - name: Update binding specification
         run: python .github/update_binding_spec.py
 
-      - name: Restore CI and commit
+      - name: Commit binding specification
         shell: bash
         run: |
-          python .github/restore_ci.py
           sed -i 's/[[:space:]]*$//' MABILLON_IMPLEMENTATION_SPEC.md
           git diff --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          rm .github/workflows/update-binding-spec.yml .github/update_binding_spec.py .github/restore_ci.py
-          git add -A
+          git add MABILLON_IMPLEMENTATION_SPEC.md
           git commit -m 'docs: align binding spec with INTERLIS Java APIs'
           git push origin HEAD:agent/phase-11-spec-closure-matrix
 
