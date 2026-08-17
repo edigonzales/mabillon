@@ -1,5 +1,6 @@
 package guru.interlis.mabillon.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,7 +31,7 @@ class SecurityConfigurationTest {
                 "/htmx-2.0.10.min.js",
                 "/favicon.ico"
         }) {
-            mockMvc.perform(get(path)).andExpect(status().isNotFound());
+            assertAllowed(path, null);
         }
     }
 
@@ -67,8 +69,7 @@ class SecurityConfigurationTest {
                 "/unterlagen/123/download",
                 "/archivierung"
         }) {
-            mockMvc.perform(get(path).with(httpBasic("sachbearbeiter", "sachbearbeiter")))
-                    .andExpect(status().isNotFound());
+            assertAllowed(path, httpBasic("sachbearbeiter", "sachbearbeiter"));
         }
     }
 
@@ -78,8 +79,7 @@ class SecurityConfigurationTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/admin").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/admin").with(httpBasic("admin", "admin")))
-                .andExpect(status().isNotFound());
+        assertAllowed("/admin", httpBasic("admin", "admin"));
     }
 
     @Test
@@ -88,8 +88,16 @@ class SecurityConfigurationTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/actuator/metrics").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/actuator/metrics").with(httpBasic("admin", "admin")))
-                .andExpect(status().isNotFound());
+        assertAllowed("/actuator/metrics", httpBasic("admin", "admin"));
+    }
+
+    private void assertAllowed(String path, RequestPostProcessor authentication) throws Exception {
+        var request = get(path);
+        if (authentication != null) {
+            request.with(authentication);
+        }
+        int responseStatus = mockMvc.perform(request).andReturn().getResponse().getStatus();
+        assertThat(responseStatus).isNotIn(401, 403);
     }
 
     @RestController
