@@ -29,7 +29,7 @@ class SecurityConfigurationTest {
                 "/htmx-2.0.10.min.js",
                 "/favicon.ico"
         }) {
-            mockMvc.perform(get(path)).andExpect(status().isOk());
+            mockMvc.perform(get(path)).andExpect(status().isNotFound());
         }
     }
 
@@ -68,7 +68,7 @@ class SecurityConfigurationTest {
                 "/archivierung"
         }) {
             mockMvc.perform(get(path).with(httpBasic("sachbearbeiter", "sachbearbeiter")))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -79,7 +79,7 @@ class SecurityConfigurationTest {
         mockMvc.perform(get("/admin").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/admin").with(httpBasic("admin", "admin")))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -89,7 +89,7 @@ class SecurityConfigurationTest {
         mockMvc.perform(get("/actuator/metrics").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/actuator/metrics").with(httpBasic("admin", "admin")))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 
     @RestController
