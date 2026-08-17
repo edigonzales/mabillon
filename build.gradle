@@ -48,6 +48,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:postgresql:1.21.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'com.microsoft.playwright:playwright:1.61.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -95,6 +96,18 @@ tasks.register('interlisTool', JavaExec) {
             args file
         }
     }
+}
+
+tasks.register('playwrightInstall', JavaExec) {
+    group = 'verification'
+    description = 'Installs Chromium required by the Playwright Java E2E test.'
+    classpath = configurations.testRuntimeClasspath
+    mainClass = 'com.microsoft.playwright.CLI'
+    args 'install'
+    if ('true'.equalsIgnoreCase(System.getenv('CI'))) {
+        args '--with-deps'
+    }
+    args 'chromium'
 }
 
 tasks.withType(Test).configureEach {
