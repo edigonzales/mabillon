@@ -121,7 +121,7 @@ class GlobalSearchCorrectnessIntegrationTest {
         GlobalSearchResult result = searchService.search(new GlobalSearchCriteria("Musterwil", 0, 100));
         assertThat(result.items()).isNotEmpty();
 
-        for (String targetUrl : result.items().stream().map(GlobalSearchHit::targetUrl).distinct().toList()) {
+        for (String targetUrl : result.items().stream().map(GlobalSearchHit::href).distinct().toList()) {
             mockMvc.perform(get(targetUrl).with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                     .andExpect(status().isOk());
         }
