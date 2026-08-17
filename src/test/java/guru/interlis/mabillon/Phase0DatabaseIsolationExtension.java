@@ -49,6 +49,17 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
 
     private static void prepareCompatibilityFixture(String testMethod, MabillonDatabaseBaseline baseline)
             throws Exception {
+        if ("springBootAndJteRenderTheLocalTemplate".equals(testMethod)) {
+            baseline.exec(
+                    "psql", "-U", "mabillon", "-d", "mabillon", "-v", "ON_ERROR_STOP=1",
+                    "-c", "UPDATE mabillon.geschaeft "
+                            + "SET lifecyclestatus = 'In_Bearbeitung', "
+                            + "prozessstatus = (SELECT t_id FROM mabillon.prozessstatus "
+                            + "WHERE acode = 'FORMELLE_PRUEFUNG'), "
+                            + "verantwortlicher = (SELECT t_id FROM mabillon.benutzer "
+                            + "WHERE username = 'a.keller') "
+                            + "WHERE geschaeftsnummer = 'AGI-G-2026-000421'");
+        }
         if ("phaseFourControlViewProvidesOpenAndOverdueMetrics".equals(testMethod)) {
             baseline.exec(
                     "psql", "-U", "mabillon", "-d", "mabillon", "-v", "ON_ERROR_STOP=1",
