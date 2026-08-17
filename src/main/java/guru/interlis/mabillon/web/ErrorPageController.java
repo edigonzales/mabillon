@@ -1,5 +1,7 @@
 package guru.interlis.mabillon.web;
 
+import java.util.List;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ public final class ErrorPageController {
                 ? "Die angeforderte Seite wurde nicht gefunden."
                 : statusCode == 403 ? "Für diese Aktion fehlt die erforderliche Berechtigung."
                         : "Die Anfrage konnte nicht verarbeitet werden.");
+        model.addAttribute("errors", List.of());
         return "error";
     }
 }
