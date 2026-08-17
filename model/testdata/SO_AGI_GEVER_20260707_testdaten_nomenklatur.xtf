@@ -1,0 +1,894 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transfer xmlns="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:so="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+  <headersection>
+    <models>
+      <model>CatalogueObjects_V2</model>
+      <model>SO_AGI_GEVER_20260707</model>
+    </models>
+    <sender>ChatGPT-Testdaten</sender>
+  </headersection>
+  <datasection>
+    <so:Kataloge ili:bid="c4dbb2a2-9b06-525d-b2d9-e69b8d9e7013" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+      <so:Geschaeftsart ili:tid="d5410f91-14ed-50c7-9596-f8c227db72c1" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>NOMENKLATURMUTATION</code>
+        <name>Nomenklaturmutation</name>
+        <beschreibung>Geschaeftsart fuer die Aenderung, Festlegung oder Aufhebung eines Flur-, Orts- oder geografischen Namens.</beschreibung>
+        <status>aktiv</status>
+        <resultatErforderlich>true</resultatErforderlich>
+      </so:Geschaeftsart>
+      <so:Geschaeftsart ili:tid="109338b9-ee32-5ddf-b731-80a78ae1449b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>NOMENKLATURAUSKUNFT</code>
+        <name>Nomenklaturauskunft</name>
+        <beschreibung>Einfache Auskunft oder Vorabklaerung zu geografischen Namen ohne formellen Kommissionsentscheid.</beschreibung>
+        <status>aktiv</status>
+        <resultatErforderlich>false</resultatErforderlich>
+      </so:Geschaeftsart>
+      <so:ProzessStatus ili:tid="be86dc02-b0cb-5f43-bdd0-fa990596d4f6" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ANTRAG_EINGEGANGEN</code>
+        <name>Antrag eingegangen</name>
+        <beschreibung>Der Antrag einer Gemeinde oder Stelle ist eingetroffen und wird registriert.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>10</sortierung>
+        <initial>true</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="06b7c28f-4a87-5a3c-a5ea-1829eade9095" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>FORMELLE_PRUEFUNG</code>
+        <name>Formelle Prüfung</name>
+        <beschreibung>Pruefung, ob Antrag, Beschluss und Beilagen formell vollstaendig sind.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>20</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="24dd19a6-ee96-5e1c-91ad-49413f13fd05" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>RUECKFRAGE_GEMEINDE</code>
+        <name>Rückfrage Gemeinde</name>
+        <beschreibung>Es sind Ergaenzungen oder Praezisierungen der Gemeinde ausstehend.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>30</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="6515a04a-a0e2-53df-aa93-3bd35ccdc539" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>FACHLICHE_PRUEFUNG</code>
+        <name>Fachliche Prüfung</name>
+        <beschreibung>Fachliche Pruefung der Namensform, Schreibweise, Verwechslungsgefahr und Plausibilitaet.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>40</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="d634b096-1003-50d7-8711-e2346f6ff1ed" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ENTSCHEIDVORLAGE</code>
+        <name>Entscheidvorlage</name>
+        <beschreibung>Die Vorlage fuer die kantonale Nomenklaturkommission wird erstellt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>50</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="65ee5c08-4cda-50c7-9ae3-a684370987ea" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>TRAKTANDIERT</code>
+        <name>Traktandiert</name>
+        <beschreibung>Das Geschaeft ist fuer eine Sitzung der Nomenklaturkommission traktandiert.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>60</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="6f403d25-297c-5451-8b4f-83dee6acdf6f" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ENTSCHEID_GEFALLEN</code>
+        <name>Entscheid gefallen</name>
+        <beschreibung>Die Nomenklaturkommission hat einen Entscheid gefaellt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>70</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="a6424142-2dab-50e2-bee2-1e219cabe536" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>UMSETZUNG_FACHSYSTEM</code>
+        <name>Umsetzung im Fachsystem</name>
+        <beschreibung>Der Entscheid wird im Fachsystem oder in der amtlichen Vermessung nachgefuehrt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>80</sortierung>
+        <initial>false</initial>
+        <terminal>false</terminal>
+      </so:ProzessStatus>
+      <so:ProzessStatus ili:tid="750efb6a-81c5-553f-b2ec-9d91ccde707c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ABGESCHLOSSEN</code>
+        <name>Abgeschlossen</name>
+        <beschreibung>Geschaeft ist erledigt und aktenmaessig abgeschlossen.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>90</sortierung>
+        <initial>false</initial>
+        <terminal>true</terminal>
+      </so:ProzessStatus>
+      <so:ResultatStatus ili:tid="2e2f6a78-e071-5868-b5ff-e2eace4d3e5e" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>GENEHMIGT</code>
+        <name>Genehmigt</name>
+        <beschreibung>Der beantragte Name oder die beantragte Umbenennung wurde genehmigt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>10</sortierung>
+        <terminal>true</terminal>
+      </so:ResultatStatus>
+      <so:ResultatStatus ili:tid="14afba04-b4d3-5348-8618-9991c9917af1" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ABGELEHNT</code>
+        <name>Abgelehnt</name>
+        <beschreibung>Der Antrag wurde abgelehnt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>20</sortierung>
+        <terminal>true</terminal>
+      </so:ResultatStatus>
+      <so:ResultatStatus ili:tid="b753ff70-72ee-5aa7-9c16-38f1fbaaac66" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ZURUECKGESTELLT</code>
+        <name>Zurückgestellt</name>
+        <beschreibung>Der Entscheid wurde vertagt; weitere Abklaerungen sind noetig.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>30</sortierung>
+        <terminal>false</terminal>
+      </so:ResultatStatus>
+      <so:ResultatStatus ili:tid="023a3043-4e4d-5972-b0f1-2e42c018a748" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>TEILWEISE_GENEHMIGT</code>
+        <name>Teilweise genehmigt</name>
+        <beschreibung>Der Antrag wurde in angepasster Form genehmigt.</beschreibung>
+        <status>aktiv</status>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <sortierung>40</sortierung>
+        <terminal>true</terminal>
+      </so:ResultatStatus>
+      <so:BeteiligungsRolle ili:tid="ba8e2e35-6981-5824-aa02-7980d8269158" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ANTRAGSTELLERIN</code>
+        <name>Antragstellerin</name>
+        <beschreibung>Partei, die das Geschaeft ausloest oder den formellen Antrag stellt.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="84420f7c-464f-5fb4-abc1-548b6a24b2eb" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ADRESSATIN</code>
+        <name>Adressatin</name>
+        <beschreibung>Partei, an die Entscheid, Mitteilung oder Antwort gerichtet ist.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="e824744f-6028-5a11-b341-cbd3e2812deb" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>FACHSTELLE</code>
+        <name>Fachstelle</name>
+        <beschreibung>Fachlich beigezogene interne oder externe Stelle.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="1eadb563-05aa-545e-90c3-d01737407844" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>STELLUNGNEHMENDE_STELLE</code>
+        <name>Stellungnehmende Stelle</name>
+        <beschreibung>Stelle oder Organisation, die zum Geschaeft eine Stellungnahme abgibt.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="45e96734-e696-5b12-a623-2c5b4bcd88e6" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ENTSCHEIDGREMIUM</code>
+        <name>Entscheidgremium</name>
+        <beschreibung>Gremium oder Behörde, die den massgeblichen Entscheid faellt.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="6ce51653-4fe8-5448-adcb-ac2e26c78829" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AUSFUEHRENDE_STELLE</code>
+        <name>Ausführende Stelle</name>
+        <beschreibung>Stelle, die nach dem Entscheid eine Umsetzung oder Nachfuehrung vornimmt.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:BeteiligungsRolle ili:tid="05855abb-75a1-588f-b3b3-9398bde6caee" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>INFORMIERTE_STELLE</code>
+        <name>Informierte Stelle</name>
+        <beschreibung>Stelle, die ueber Geschaeft oder Entscheid informiert wird.</beschreibung>
+        <status>aktiv</status>
+      </so:BeteiligungsRolle>
+      <so:UnterlagenTyp ili:tid="4107a5d3-7ddd-5687-9974-344b4727093c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ANTRAG</code>
+        <name>Antrag</name>
+        <beschreibung>Formeller Antrag auf Eroeffnung oder Behandlung eines Geschaefts.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="ecc14173-0ab1-5f83-a012-e082434ee68b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>GEMEINDERATSBESCHLUSS</code>
+        <name>Gemeinderatsbeschluss</name>
+        <beschreibung>Beschluss oder Protokollauszug der antragstellenden Gemeinde.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="f1ba31f7-e432-518b-9efe-68175f441f44" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>EMAIL_EINGANG</code>
+        <name>E-Mail Eingang</name>
+        <beschreibung>Aktenrelevante eingegangene E-Mail.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="d63944bb-68b2-5804-b834-bc39435ddb2b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>EMAIL_AUSGANG</code>
+        <name>E-Mail Ausgang</name>
+        <beschreibung>Aktenrelevante ausgehende E-Mail.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="f69b846c-cb07-5052-a65c-7f0471870082" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>SITUATIONSPLAN</code>
+        <name>Situationsplan</name>
+        <beschreibung>Plan, Kartenausschnitt oder Lagebeilage zum Geschaeft.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="bd9b3111-e7e0-5c72-aeb2-8e657173571b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AKTENNOTIZ</code>
+        <name>Aktennotiz</name>
+        <beschreibung>Interne Aktennotiz oder fachliche Pruefnotiz.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="19c977b3-fd81-55fd-8d20-672e2e2375e8" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>UNTERLAGE_ENTSCHEIDVORLAGE</code>
+        <name>Entscheidvorlage</name>
+        <beschreibung>Vorlage fuer die Beratung und Entscheidung durch ein Gremium.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="86e2fe2b-760a-5db3-b42a-cb07b9e3a41c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>KOMMISSIONSBESCHLUSS</code>
+        <name>Kommissionsbeschluss</name>
+        <beschreibung>Beschluss, Protokollauszug oder Entscheid eines Gremiums.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:UnterlagenTyp ili:tid="ea1656be-a83d-5bce-b228-102f42b6b32c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>MITTEILUNG</code>
+        <name>Mitteilung</name>
+        <beschreibung>Ausgehende Mitteilung, Brief oder Entscheidversand.</beschreibung>
+        <status>aktiv</status>
+      </so:UnterlagenTyp>
+      <so:AufgabenTyp ili:tid="11e45fb6-f54e-5c50-8bba-28d5d4c1a430" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AUFGABE_FORMELLE_PRUEFUNG</code>
+        <name>Formelle Prüfung</name>
+        <beschreibung>Pruefen, ob ein Geschaeft formell vollstaendig eroeffnet werden kann.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="dbeaca69-0628-5ae1-9b1e-ff126fe1fc50" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>RUECKFRAGE</code>
+        <name>Rückfrage</name>
+        <beschreibung>Rueckfrage oder Einforderung fehlender Angaben bei Beteiligten.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="aa04c27e-2145-5c58-9280-dc279d0afd37" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AUFGABE_FACHLICHE_PRUEFUNG</code>
+        <name>Fachliche Prüfung</name>
+        <beschreibung>Fachliche Beurteilung des Geschaefts.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="471d839c-c5fd-5112-ac99-ce1ed2a12eaf" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ENTSCHEIDVORLAGE_ERSTELLEN</code>
+        <name>Entscheidvorlage erstellen</name>
+        <beschreibung>Erstellen der Entscheidvorlage fuer das zustaendige Gremium.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="5ebabb3e-a49d-5360-b8fc-d51929589af8" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>TRAKTANDIEREN</code>
+        <name>Traktandieren</name>
+        <beschreibung>Geschaeft fuer eine Sitzung oder Entscheidrunde vormerken.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="76d2f020-2190-561f-bf4b-861d9e8b506c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>ENTSCHEID_MITTEILEN</code>
+        <name>Entscheid mitteilen</name>
+        <beschreibung>Entscheid oder Beschluss den Beteiligten mitteilen.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="ea0361aa-d686-5ea1-8b89-ebf0d96b7b6c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>FACHSYSTEM_NACHFUEHREN</code>
+        <name>Fachsystem nachführen</name>
+        <beschreibung>Fachdaten gemaess Entscheid nachfuehren.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+      <so:AufgabenTyp ili:tid="da0485f3-200c-51cb-b9af-3de124f75250" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>DOSSIER_ABSCHLIESSEN</code>
+        <name>Dossier abschliessen</name>
+        <beschreibung>Dossier fachlich und aktenmaessig abschliessen.</beschreibung>
+        <status>aktiv</status>
+      </so:AufgabenTyp>
+    </so:Kataloge>
+    <so:Stammdaten ili:bid="8f63ea47-4dd4-5dc9-9fd2-ab9a9f9f40fe" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+      <so:Organisationseinheit ili:tid="64d5a3f8-f3dc-580a-aecc-1479f74b878a" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AGI</kuerzel>
+        <name>Amt für Geoinformation</name>
+        <beschreibung>Federfuehrendes Amt fuer Geoinformation und amtliche Vermessung.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="2566f5fc-810b-55b2-a7f5-b78a2437df47" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AGI-NOM</kuerzel>
+        <name>Fachstelle Nomenklatur</name>
+        <beschreibung>Interne Fachstelle fuer geografische Namen und Nomenklaturgeschaefte.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="51df8697-f0ee-589f-9940-bf385dc42108" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>NOMKOM</kuerzel>
+        <name>Kantonale Nomenklaturkommission</name>
+        <beschreibung>Kantonales Entscheidgremium fuer Nomenklaturfragen.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="edce536b-8bea-5898-947d-b383cc558a45" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AV-NF</kuerzel>
+        <name>Nachführung amtliche Vermessung</name>
+        <beschreibung>Stelle fuer die technische Nachfuehrung in der amtlichen Vermessung.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Benutzer ili:tid="5e11e774-5cf9-5de9-939f-3f0072ef00a7" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>anna.mueller</username>
+        <name>Anna Müller</name>
+        <email>anna.mueller@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Benutzer ili:tid="c52b97a8-1469-56a0-8155-3dc2991b3a72" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>a.keller</username>
+        <name>Andreas Keller</name>
+        <email>andreas.keller@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Benutzer ili:tid="31b922eb-caf1-553b-8258-e77f0898b7db" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>p.steiner</username>
+        <name>Peter Steiner</name>
+        <email>peter.steiner@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="edce536b-8bea-5898-947d-b383cc558a45"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Ordnungssystem ili:tid="a898781f-61e5-5b0e-b48a-6f696aa44bfc" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AGI-GEVER</code>
+        <name>Ordnungssystem Amt für Geoinformation</name>
+        <gueltigVon>2026-01-01</gueltigVon>
+        <status>Aktiv</status>
+        <Verwaltungseinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Ordnungssystem_Organisationseinheit/></Verwaltungseinheit>
+      </so:Ordnungssystem>
+      <so:OrdnungssystemPosition ili:tid="68a1803c-93a6-513d-9834-9bc06d3fbbba" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4</code>
+        <titel>Geoinformation und amtliche Vermessung</titel>
+        <beschreibung>Aufgabenbereich Geoinformation, amtliche Vermessung und geografische Namen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="68a1803c-93a6-513d-9834-9bc06d3fbbba"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="20b050f8-f60e-5ac1-8f77-eff502e279f0" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3</code>
+        <titel>Nomenklatur und geografische Namen</titel>
+        <beschreibung>Grundlagen, Einzelgeschaefte und Gremienarbeit zu geografischen Namen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="68a1803c-93a6-513d-9834-9bc06d3fbbba"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="c82dbebd-73a6-5282-be46-01e6bc859300" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3.2</code>
+        <titel>Einzelgeschäfte Flur- und Ortsnamen</titel>
+        <beschreibung>Dossiers zu einzelnen Festlegungen, Umbenennungen oder Korrekturen von Flur- und Ortsnamen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="20b050f8-f60e-5ac1-8f77-eff502e279f0"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="9d10d1e0-bccf-5489-9cb3-660631d8648f" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3.3</code>
+        <titel>Kantonale Nomenklaturkommission</titel>
+        <beschreibung>Sitzungsunterlagen, Protokolle und allgemeine Unterlagen der Nomenklaturkommission.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="51df8697-f0ee-589f-9940-bf385dc42108"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="20b050f8-f60e-5ac1-8f77-eff502e279f0"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+    </so:Stammdaten>
+    <so:Geschaeftsdaten ili:bid="ada09d02-2110-5e46-afa6-ea7426d960bc" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+      <so:Dossier ili:tid="dd811d7e-1890-5254-9cd9-0a93bb5635a8" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <dossiernummer>AGI-D-2026-000007</dossiernummer>
+        <titel>Umbenennung Flurname "Im alten Boden" zu "Bodenrain", Gemeinde Musterwil</titel>
+        <beschreibung>Falldossier zur beantragten Umbenennung eines Flurnamens auf dem Gebiet der Gemeinde Musterwil.</beschreibung>
+        <ordnungssystemPosition ili:ref="c82dbebd-73a6-5282-be46-01e6bc859300"/>
+        <federfuehrung ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+        <verantwortlicher ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <status>Geschlossen</status>
+        <eroeffnetAm>2026-02-13</eroeffnetAm>
+        <geschlossenAm>2026-05-10</geschlossenAm>
+        <bemerkungen>Beispieldaten fuer ein GEVER-Testdossier Nomenklatur.</bemerkungen>
+      </so:Dossier>
+      <so:Geschaeft ili:tid="8e2db417-33f6-5818-b052-2b0c91c48f49" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <geschaeftsnummer>AGI-G-2026-000421</geschaeftsnummer>
+        <titel>Antrag Gemeinde Musterwil: Umbenennung Flurname "Im alten Boden"</titel>
+        <kurzbeschreibung>Pruefung und Entscheid ueber die Umbenennung des Flurnamens "Im alten Boden" in "Bodenrain".</kurzbeschreibung>
+        <geschaeftsart ili:ref="d5410f91-14ed-50c7-9596-f8c227db72c1"/>
+        <lifecycleStatus>Abgeschlossen</lifecycleStatus>
+        <prozessStatus ili:ref="750efb6a-81c5-553f-b2ec-9d91ccde707c"/>
+        <resultatStatus ili:ref="2e2f6a78-e071-5868-b5ff-e2eace4d3e5e"/>
+        <federfuehrung ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+        <verantwortlicher ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <eingangsdatum>2026-02-13</eingangsdatum>
+        <eroeffnungsdatum>2026-02-13</eroeffnungsdatum>
+        <faelligAm>2026-05-31</faelligAm>
+        <abgeschlossenAm>2026-05-10</abgeschlossenAm>
+        <prioritaet>2</prioritaet>
+        <erstelltAm>2026-02-13T09:14:00.000</erstelltAm>
+        <geaendertAm>2026-05-10T16:05:00.000</geaendertAm>
+      
+        <GeschaeftsDossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Geschaeft_Dossier/></GeschaeftsDossier></so:Geschaeft>
+      <so:Beteiligter ili:tid="016af2e9-9dc3-5a2d-b032-81fb7353eb0d" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <typ>Organisation</typ>
+        <name>Gemeinde Musterwil</name>
+        <organisation>Gemeindeverwaltung Musterwil</organisation>
+        <email>kanzlei@musterwil.example.ch</email>
+        <telefon>032 000 11 22</telefon>
+        <adresse>Dorfplatz 1
+4500 Musterwil</adresse>
+        <externeReferenz>GEM-9999</externeReferenz>
+      </so:Beteiligter>
+      <so:Beteiligter ili:tid="c6d8876d-cea9-564e-9bab-1f94e5046327" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <typ>Interne_Organisationseinheit</typ>
+        <name>Kantonale Nomenklaturkommission</name>
+        <email>nomenklaturkommission@so.ch</email>
+        <externeReferenz>NOMKOM-SO</externeReferenz>
+      </so:Beteiligter>
+      <so:Beteiligter ili:tid="63f1d61b-bce1-5bfa-bd1b-ac1c6ca37e26" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <typ>Interne_Organisationseinheit</typ>
+        <name>Amt für Geoinformation</name>
+        <email>agi@so.ch</email>
+        <adresse>Rötistrasse 4
+4500 Solothurn</adresse>
+        <externeReferenz>AGI</externeReferenz>
+      </so:Beteiligter>
+      <so:Beteiligter ili:tid="0d2f1245-23b4-573c-9bd8-055c909bfa15" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <typ>Organisation</typ>
+        <name>Nachführungsgeometer Kreis West</name>
+        <organisation>GeoWest AG</organisation>
+        <email>av@geowest.example.ch</email>
+        <telefon>032 000 44 55</telefon>
+        <adresse>Bahnhofstrasse 8
+4500 Solothurn</adresse>
+        <externeReferenz>NG-KREIS-WEST</externeReferenz>
+      </so:Beteiligter>
+      <so:Beteiligter ili:tid="163dcdf3-6af5-560d-b4e0-dfba98d99ec0" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <typ>Organisation</typ>
+        <name>Historischer Verein Wasseramt</name>
+        <email>info@hv-wasseramt.example.ch</email>
+        <externeReferenz>HV-WA</externeReferenz>
+      </so:Beteiligter>
+      <so:Beteiligung ili:tid="1b5b1cf3-3913-55a9-8586-0eda81ef98d7" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="ba8e2e35-6981-5824-aa02-7980d8269158"/>
+        <gueltigVon>2026-02-13</gueltigVon>
+        <bemerkung>Gemeinde reicht Antrag mit Gemeinderatsbeschluss und Situationsplan ein.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="016af2e9-9dc3-5a2d-b032-81fb7353eb0d"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Beteiligung ili:tid="334e3087-daec-5ac5-b0ec-83e86303415d" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="84420f7c-464f-5fb4-abc1-548b6a24b2eb"/>
+        <gueltigVon>2026-04-29</gueltigVon>
+        <bemerkung>Gemeinde erhaelt Beschluss und Mitteilung.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="016af2e9-9dc3-5a2d-b032-81fb7353eb0d"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Beteiligung ili:tid="59774f2e-0d2c-5b22-a2b1-781d39c99757" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="45e96734-e696-5b12-a623-2c5b4bcd88e6"/>
+        <rollenbezeichnung>Beschlussorgan</rollenbezeichnung>
+        <gueltigVon>2026-04-24</gueltigVon>
+        <bemerkung>Faellt den Entscheid an der Sitzung vom 24.04.2026.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="c6d8876d-cea9-564e-9bab-1f94e5046327"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Beteiligung ili:tid="0578275b-400a-5a6d-8439-947d5a12a74b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="e824744f-6028-5a11-b341-cbd3e2812deb"/>
+        <rollenbezeichnung>fachliche Vorprüfung und Verfahrensführung</rollenbezeichnung>
+        <gueltigVon>2026-02-13</gueltigVon>
+        <bemerkung>Federfuehrende interne Fachstelle.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="63f1d61b-bce1-5bfa-bd1b-ac1c6ca37e26"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Beteiligung ili:tid="7f5e0f4d-7830-5b7d-b266-16b74bbfe3b3" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="6ce51653-4fe8-5448-adcb-ac2e26c78829"/>
+        <rollenbezeichnung>Nachführung amtliche Vermessung</rollenbezeichnung>
+        <gueltigVon>2026-04-29</gueltigVon>
+        <bemerkung>Setzt den genehmigten Namen im Fachsystem um.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="0d2f1245-23b4-573c-9bd8-055c909bfa15"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Beteiligung ili:tid="d6b9efc8-3386-5dd7-917d-780cf5006310" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <rolle ili:ref="1eadb563-05aa-545e-90c3-d01737407844"/>
+        <rollenbezeichnung>historische Namensform</rollenbezeichnung>
+        <gueltigVon>2026-03-01</gueltigVon>
+        <gueltigBis>2026-03-18</gueltigBis>
+        <bemerkung>Gibt eine kurze Stellungnahme zur historischen Plausibilitaet ab.</bemerkung>
+      
+        <BeteiligtePartei ili:ref="163dcdf3-6af5-560d-b4e0-dfba98d99ec0"><so:Beteiligung_Beteiligter/></BeteiligtePartei>
+      
+        <BeteiligtesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Beteiligung_Geschaeft/></BeteiligtesGeschaeft></so:Beteiligung>
+      <so:Unterlage ili:tid="f6f77d49-6445-5120-a95d-7c0de08135ac" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Antrag Gemeinde Musterwil auf Umbenennung des Flurnamens</titel>
+        <typ ili:ref="4107a5d3-7ddd-5687-9974-344b4727093c"/>
+        <unterlagenDatum>2026-02-12</unterlagenDatum>
+        <eingangsdatum>2026-02-13</eingangsdatum>
+        <registriertAm>2026-02-13T09:20:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-02-12_antrag_flurname_bodenrain.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>342112</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/antrag.pdf</storageUri>
+        <hashSha256>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Antrag mit kurzer Begruendung der Gemeinde.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="44d459e0-a44e-581c-810c-fd25faa012df" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Protokollauszug Gemeinderat Musterwil Nr. 18/2026</titel>
+        <typ ili:ref="ecc14173-0ab1-5f83-a012-e082434ee68b"/>
+        <unterlagenDatum>2026-02-08</unterlagenDatum>
+        <eingangsdatum>2026-02-13</eingangsdatum>
+        <registriertAm>2026-02-13T09:23:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-02-08_gr_beschluss_18_2026.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>221045</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/gemeinderatsbeschluss.pdf</storageUri>
+        <hashSha256>BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Beschlussgrundlage der antragstellenden Gemeinde.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="b2b02b20-6dc1-5e2e-80da-a73e5295c12d" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Situationsplan betroffener Flurname Bodenrain</titel>
+        <typ ili:ref="f69b846c-cb07-5052-a65c-7f0471870082"/>
+        <unterlagenDatum>2026-02-12</unterlagenDatum>
+        <eingangsdatum>2026-02-13</eingangsdatum>
+        <registriertAm>2026-02-13T09:25:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>situationsplan_bodenrain.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>1568890</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/situationsplan.pdf</storageUri>
+        <hashSha256>CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC</hashSha256>
+        <dateiformat>PDF</dateiformat>
+        <bemerkungen>Kartenausschnitt mit Perimeter und betroffenem Namen.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="52f6a5c9-665f-582d-b900-09b028483c57" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Rückfrage an Gemeinde zur Schreibweise Bodenrain</titel>
+        <typ ili:ref="d63944bb-68b2-5804-b834-bc39435ddb2b"/>
+        <unterlagenDatum>2026-02-18</unterlagenDatum>
+        <ausgangsdatum>2026-02-18</ausgangsdatum>
+        <registriertAm>2026-02-18T14:30:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-02-18_rueckfrage_gemeinde.eml</dateiname>
+        <mimeType>message/rfc822</mimeType>
+        <dateigroesse>48122</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/rueckfrage.eml</storageUri>
+        <hashSha256>DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD</hashSha256>
+        <dateiformat>EML</dateiformat>
+        <bemerkungen>Bitte um Praezisierung der lokalen Schreibweise und bisherigen Verwendung.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="28a64f46-e1e0-5052-a69b-2d667c75aeba" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Antwort Gemeinde Musterwil zur Schreibweise Bodenrain</titel>
+        <typ ili:ref="f1ba31f7-e432-518b-9efe-68175f441f44"/>
+        <unterlagenDatum>2026-02-22</unterlagenDatum>
+        <eingangsdatum>2026-02-22</eingangsdatum>
+        <registriertAm>2026-02-22T10:12:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-02-22_antwort_gemeinde.eml</dateiname>
+        <mimeType>message/rfc822</mimeType>
+        <dateigroesse>52344</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/antwort_gemeinde.eml</storageUri>
+        <hashSha256>EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE</hashSha256>
+        <dateiformat>EML</dateiformat>
+        <bemerkungen>Gemeinde bestaetigt Schreibweise "Bodenrain".</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="6527e48a-a3e3-5d9e-9129-bf49b2e0da37" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Aktennotiz fachliche Prüfung Flurname Bodenrain</titel>
+        <typ ili:ref="bd9b3111-e7e0-5c72-aeb2-8e657173571b"/>
+        <unterlagenDatum>2026-03-05</unterlagenDatum>
+        <registriertAm>2026-03-05T15:45:00.000</registriertAm>
+        <registriertVon ili:ref="c52b97a8-1469-56a0-8155-3dc2991b3a72"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Final</status>
+        <dateiname>2026-03-05_aktennotiz_fachpruefung.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>121008</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/aktennotiz_fachpruefung.pdf</storageUri>
+        <hashSha256>FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Interne fachliche Beurteilung: keine Verwechslungsgefahr, Name plausibel.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="edeada1a-f8e1-5388-af96-4e219dc748c8" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Entscheidvorlage an die kantonale Nomenklaturkommission</titel>
+        <typ ili:ref="19c977b3-fd81-55fd-8d20-672e2e2375e8"/>
+        <unterlagenDatum>2026-04-10</unterlagenDatum>
+        <registriertAm>2026-04-10T11:00:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Final</status>
+        <dateiname>2026-04-10_entscheidvorlage_nomkom.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>289001</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/entscheidvorlage.pdf</storageUri>
+        <hashSha256>1111111111111111111111111111111111111111111111111111111111111111</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Vorlage fuer Traktandum 5 der Sitzung vom 24.04.2026.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="54ad92bc-c437-59f0-8f70-e02229af5b3f" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Beschluss Nomenklaturkommission vom 24.04.2026</titel>
+        <typ ili:ref="86e2fe2b-760a-5db3-b42a-cb07b9e3a41c"/>
+        <unterlagenDatum>2026-04-24</unterlagenDatum>
+        <registriertAm>2026-04-28T09:00:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-04-24_beschluss_nomkom_bodenrain.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>198776</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/beschluss_nomkom.pdf</storageUri>
+        <hashSha256>2222222222222222222222222222222222222222222222222222222222222222</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Kommission genehmigt die Umbenennung in "Bodenrain".</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Unterlage ili:tid="bd0797e4-ed2f-53ec-aafd-c1a01387164b" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Mitteilung Beschluss an Gemeinde Musterwil</titel>
+        <typ ili:ref="ea1656be-a83d-5bce-b228-102f42b6b32c"/>
+        <unterlagenDatum>2026-04-29</unterlagenDatum>
+        <ausgangsdatum>2026-04-29</ausgangsdatum>
+        <registriertAm>2026-04-29T16:20:00.000</registriertAm>
+        <registriertVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <aktenrelevant>true</aktenrelevant>
+        <status>Registriert</status>
+        <dateiname>2026-04-29_mitteilung_gemeinde.pdf</dateiname>
+        <mimeType>application/pdf</mimeType>
+        <dateigroesse>136044</dateigroesse>
+        <storageUri>gever://agi/nom/2026/0007/mitteilung_gemeinde.pdf</storageUri>
+        <hashSha256>3333333333333333333333333333333333333333333333333333333333333333</hashSha256>
+        <dateiformat>PDF/A</dateiformat>
+        <bemerkungen>Schriftliche Mitteilung des genehmigten Entscheids an die Gemeinde.</bemerkungen>
+      
+        <Ablagedossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Unterlage_Dossier/></Ablagedossier>
+        <Geschaeftskontext ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Unterlage_Geschaeft/></Geschaeftskontext></so:Unterlage>
+      <so:Aufgabe ili:tid="92cd050f-7de6-54b6-8d79-eaf87dbac655" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Formelle Prüfung Antrag</titel>
+        <beschreibung>Prüfen, ob Antrag, Beschluss und Situationsplan vollständig sind.</beschreibung>
+        <typ ili:ref="11e45fb6-f54e-5c50-8bba-28d5d4c1a430"/>
+        <status>Erledigt</status>
+        <prioritaet>2</prioritaet>
+        <erstelltAm>2026-02-13T09:30:00.000</erstelltAm>
+        <faelligAm>2026-02-20</faelligAm>
+        <erledigtAm>2026-02-17T16:00:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="001545cb-acef-51d6-8329-e645b1f57dad" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Rückfrage an Gemeinde</titel>
+        <beschreibung>Schreibweise und lokale Verwendung des Namens Bodenrain bestätigen lassen.</beschreibung>
+        <typ ili:ref="dbeaca69-0628-5ae1-9b1e-ff126fe1fc50"/>
+        <status>Erledigt</status>
+        <prioritaet>2</prioritaet>
+        <erstelltAm>2026-02-18T13:00:00.000</erstelltAm>
+        <faelligAm>2026-03-01</faelligAm>
+        <erledigtAm>2026-02-22T10:30:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="865220ef-83ad-55b8-bf6f-b679fab59a3e" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Fachliche Prüfung Nomenklatur</titel>
+        <beschreibung>Historische Plausibilität, Schreibweise und Verwechslungsgefahr prüfen.</beschreibung>
+        <typ ili:ref="aa04c27e-2145-5c58-9280-dc279d0afd37"/>
+        <status>Erledigt</status>
+        <prioritaet>3</prioritaet>
+        <erstelltAm>2026-02-23T08:30:00.000</erstelltAm>
+        <faelligAm>2026-03-15</faelligAm>
+        <erledigtAm>2026-03-05T15:50:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="c52b97a8-1469-56a0-8155-3dc2991b3a72"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="59c97a31-e305-566a-a0ec-8e13a2bbbfdc" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Entscheidvorlage erstellen</titel>
+        <beschreibung>Entscheidvorlage mit Antrag auf Genehmigung erstellen.</beschreibung>
+        <typ ili:ref="471d839c-c5fd-5112-ac99-ce1ed2a12eaf"/>
+        <status>Erledigt</status>
+        <prioritaet>3</prioritaet>
+        <erstelltAm>2026-03-06T10:00:00.000</erstelltAm>
+        <faelligAm>2026-04-10</faelligAm>
+        <erledigtAm>2026-04-10T11:05:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="433a867d-db74-5f85-a738-2db234ab2054" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Für Nomenklaturkommission traktandieren</titel>
+        <beschreibung>Geschäft für Sitzung vom 24.04.2026 traktandieren.</beschreibung>
+        <typ ili:ref="5ebabb3e-a49d-5360-b8fc-d51929589af8"/>
+        <status>Erledigt</status>
+        <prioritaet>2</prioritaet>
+        <erstelltAm>2026-04-10T11:30:00.000</erstelltAm>
+        <faelligAm>2026-04-15</faelligAm>
+        <erledigtAm>2026-04-12T09:00:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="51df8697-f0ee-589f-9940-bf385dc42108"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="a05a605c-a5ef-5e4f-9918-9bf37cdc7fc3" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Entscheid der Gemeinde mitteilen</titel>
+        <beschreibung>Beschluss an Gemeinde Musterwil versenden.</beschreibung>
+        <typ ili:ref="76d2f020-2190-561f-bf4b-861d9e8b506c"/>
+        <status>Erledigt</status>
+        <prioritaet>2</prioritaet>
+        <erstelltAm>2026-04-28T09:30:00.000</erstelltAm>
+        <faelligAm>2026-05-05</faelligAm>
+        <erledigtAm>2026-04-29T16:30:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="4b78e75b-2f08-5dc6-889b-f35520fe0cd6" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Fachsystem nachführen</titel>
+        <beschreibung>Flurname im Nomenklatur-/AV-Fachsystem nachführen oder Nachführung beauftragen.</beschreibung>
+        <typ ili:ref="ea0361aa-d686-5ea1-8b89-ebf0d96b7b6c"/>
+        <status>Erledigt</status>
+        <prioritaet>3</prioritaet>
+        <erstelltAm>2026-04-29T16:45:00.000</erstelltAm>
+        <faelligAm>2026-05-08</faelligAm>
+        <erledigtAm>2026-05-06T14:10:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="31b922eb-caf1-553b-8258-e77f0898b7db"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="edce536b-8bea-5898-947d-b383cc558a45"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:Aufgabe ili:tid="1c237ca0-7563-5215-a5d3-e18e94bdd0db" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <titel>Dossier abschliessen</titel>
+        <beschreibung>Dossier prüfen und abschliessen.</beschreibung>
+        <typ ili:ref="da0485f3-200c-51cb-b9af-3de124f75250"/>
+        <status>Erledigt</status>
+        <prioritaet>1</prioritaet>
+        <erstelltAm>2026-05-07T09:00:00.000</erstelltAm>
+        <faelligAm>2026-05-10</faelligAm>
+        <erledigtAm>2026-05-10T16:00:00.000</erledigtAm>
+        <zugewiesenAnBenutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <zugewiesenAnOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"/>
+      
+        <Aufgabengeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:Aufgabe_Geschaeft/></Aufgabengeschaeft></so:Aufgabe>
+      <so:FachsystemReferenz ili:tid="d7fbc668-4025-5208-80a4-1f474f6022ae" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <systemCode>NOMENKLATUR</systemCode>
+        <objektTyp>Flurname</objektTyp>
+        <objektId>FLN-4500-000123</objektId>
+        <mutationId>NOM-MUT-2026-0042</mutationId>
+        <link>https://nomenklatur.example.so.ch/flurnamen/FLN-4500-000123</link>
+        <beschreibung>Referenz auf den betroffenen Flurnamen im Nomenklatur-Fachsystem.</beschreibung>
+      
+        <ReferenziertesDossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:FachsystemReferenz_Dossier/></ReferenziertesDossier>
+        <ReferenziertesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:FachsystemReferenz_Geschaeft/></ReferenziertesGeschaeft></so:FachsystemReferenz>
+      <so:FachsystemReferenz ili:tid="3f11c3e4-d455-5c70-964a-c0e556ddfa4a" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <systemCode>AV</systemCode>
+        <objektTyp>Mutation</objektTyp>
+        <objektId>AV-MUT-2026-1187</objektId>
+        <mutationId>AV-MUT-2026-1187</mutationId>
+        <link>https://av.example.so.ch/mutationen/AV-MUT-2026-1187</link>
+        <beschreibung>Referenz auf die technische Nachfuehrungsmutation in der amtlichen Vermessung.</beschreibung>
+      
+        <ReferenziertesDossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:FachsystemReferenz_Dossier/></ReferenziertesDossier>
+        <ReferenziertesGeschaeft ili:ref="8e2db417-33f6-5818-b052-2b0c91c48f49"><so:FachsystemReferenz_Geschaeft/></ReferenziertesGeschaeft></so:FachsystemReferenz>
+      <so:Archivierung ili:tid="c9b1e1e0-254e-54b2-972c-9d9de10fcd61" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <status>Nicht_faellig</status>
+        <bemerkung>Dossier ist abgeschlossen; Aussonderung ist noch nicht faellig.</bemerkung>
+      
+        <Archivierungsdossier ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"><so:Archivierung_Dossier/></Archivierungsdossier></so:Archivierung>
+      <so:ArchivAblieferung ili:tid="f9a8bb2c-3f2e-5c8d-9c94-7a9b1e4d6f20" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <ablieferungsnummer>AGI-A-2026-000001</ablieferungsnummer>
+        <titel>Nomenklaturdossier Musterwil</titel>
+        <status>Entwurf</status>
+        <erstelltAm>2026-05-11T09:00:00.000</erstelltAm>
+        <erstelltVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <archivEmpfaenger>Staatsarchiv Solothurn</archivEmpfaenger>
+        <bemerkung>Testzusammenstellung fuer die spaetere Archivablieferung.</bemerkung>
+      </so:ArchivAblieferung>
+      <so:SipPaket ili:tid="b5df7d42-6e31-5c98-a7f0-2c4b9e8d1a63" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <laufnummer>1</laufnummer>
+        <status>Erzeugt</status>
+        <erstelltAm>2026-05-11T09:05:00.000</erstelltAm>
+        <erstelltVon ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <storageUri>file:///var/lib/mabillon/sip/AGI-A-2026-000001-1</storageUri>
+        <validierungsStatus>Nicht_validiert</validierungsStatus>
+        <bemerkung>Erster Erzeugungsversuch, noch nicht validiert.</bemerkung>
+      
+        <ZugehoerigeAblieferung ili:ref="f9a8bb2c-3f2e-5c8d-9c94-7a9b1e4d6f20"><so:SipPaket_ArchivAblieferung/></ZugehoerigeAblieferung></so:SipPaket>
+      <so:Ereignis ili:tid="91c44f8c-5cc2-5400-a7e9-4e33ab1399e7" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Geschaeft</objektTyp>
+        <objektId>AGI-G-2026-000421</objektId>
+        <typ>Erstellt</typ>
+        <zeitpunkt>2026-02-13T09:14:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Geschaeft und Dossier aus Antrag der Gemeinde Musterwil eroeffnet.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="ac46602f-572d-57db-a8f7-4e535f425b9c" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Unterlage</objektTyp>
+        <objektId>AGI-D-2026-000007/Antrag</objektId>
+        <typ>Unterlage_registriert</typ>
+        <zeitpunkt>2026-02-13T09:20:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Antrag und Beilagen der Gemeinde registriert.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="385ab169-cc14-5956-83dc-7ce0ed262aa3" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Aufgabe</objektTyp>
+        <objektId>Rueckfrage_Gemeinde</objektId>
+        <typ>Aufgabe_erstellt</typ>
+        <zeitpunkt>2026-02-18T13:00:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Rueckfrage zur Schreibweise an Gemeinde erstellt.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="694f934a-dfcc-5ad3-b390-4048f5ddb730" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Geschaeft</objektTyp>
+        <objektId>AGI-G-2026-000421</objektId>
+        <typ>Status_geaendert</typ>
+        <zeitpunkt>2026-04-12T09:00:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Prozessstatus auf Traktandiert gesetzt.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="52deb72c-9eb2-50c8-9afe-353b6a27de65" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Geschaeft</objektTyp>
+        <objektId>AGI-G-2026-000421</objektId>
+        <typ>Entscheid_erfasst</typ>
+        <zeitpunkt>2026-04-28T09:00:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Beschluss der Nomenklaturkommission: Genehmigt.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="947779ad-4d44-5d00-ba2a-b6a25144e4a2" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>FachsystemReferenz</objektTyp>
+        <objektId>AV-MUT-2026-1187</objektId>
+        <typ>Geaendert</typ>
+        <zeitpunkt>2026-05-06T14:10:00.000</zeitpunkt>
+        <benutzer ili:ref="31b922eb-caf1-553b-8258-e77f0898b7db"/>
+        <bemerkung>Nachfuehrung im Fachsystem als erledigt gemeldet.</bemerkung>
+      </so:Ereignis>
+      <so:Ereignis ili:tid="b0242a4e-1a6c-547e-a7cf-6eb26bcc66ac" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <objektTyp>Dossier</objektTyp>
+        <objektId>AGI-D-2026-000007</objektId>
+        <typ>Dossier_abgeschlossen</typ>
+        <zeitpunkt>2026-05-10T16:05:00.000</zeitpunkt>
+        <benutzer ili:ref="5e11e774-5cf9-5de9-939f-3f0072ef00a7"/>
+        <bemerkung>Dossier fachlich abgeschlossen.</bemerkung>
+      </so:Ereignis>
+      <so:ArchivAblieferung_Dossier xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <AblieferungenZumDossier ili:ref="f9a8bb2c-3f2e-5c8d-9c94-7a9b1e4d6f20"/>
+        <EnthalteneDossiers ili:ref="dd811d7e-1890-5254-9cd9-0a93bb5635a8"/>
+      </so:ArchivAblieferung_Dossier>
+    </so:Geschaeftsdaten>
+  </datasection>
+</transfer>

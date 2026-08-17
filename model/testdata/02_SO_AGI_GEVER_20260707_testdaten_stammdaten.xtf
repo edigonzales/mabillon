@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transfer xmlns="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:so="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+  <headersection>
+    <models>
+      <model>CatalogueObjects_V2</model>
+      <model>SO_AGI_GEVER_20260707</model>
+    </models>
+    <sender>ChatGPT-Testdaten</sender>
+  </headersection>
+  <datasection>
+    <so:Stammdaten ili:bid="8f63ea47-4dd4-5dc9-9fd2-ab9a9f9f40fe" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+      <so:Organisationseinheit ili:tid="64d5a3f8-f3dc-580a-aecc-1479f74b878a" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AGI</kuerzel>
+        <name>Amt für Geoinformation</name>
+        <beschreibung>Federfuehrendes Amt fuer Geoinformation und amtliche Vermessung.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="2566f5fc-810b-55b2-a7f5-b78a2437df47" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AGI-NOM</kuerzel>
+        <name>Fachstelle Nomenklatur</name>
+        <beschreibung>Interne Fachstelle fuer geografische Namen und Nomenklaturgeschaefte.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="51df8697-f0ee-589f-9940-bf385dc42108" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>NOMKOM</kuerzel>
+        <name>Kantonale Nomenklaturkommission</name>
+        <beschreibung>Kantonales Entscheidgremium fuer Nomenklaturfragen.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Organisationseinheit ili:tid="edce536b-8bea-5898-947d-b383cc558a45" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <kuerzel>AV-NF</kuerzel>
+        <name>Nachführung amtliche Vermessung</name>
+        <beschreibung>Stelle fuer die technische Nachfuehrung in der amtlichen Vermessung.</beschreibung>
+        <status>aktiv</status>
+        <UebergeordneteEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Organisationseinheit_Hierarchie/></UebergeordneteEinheit>
+      </so:Organisationseinheit>
+      <so:Benutzer ili:tid="5e11e774-5cf9-5de9-939f-3f0072ef00a7" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>anna.mueller</username>
+        <name>Anna Müller</name>
+        <email>anna.mueller@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Benutzer ili:tid="c52b97a8-1469-56a0-8155-3dc2991b3a72" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>a.keller</username>
+        <name>Andreas Keller</name>
+        <email>andreas.keller@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Benutzer ili:tid="31b922eb-caf1-553b-8258-e77f0898b7db" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <username>p.steiner</username>
+        <name>Peter Steiner</name>
+        <email>peter.steiner@agi.so.ch</email>
+        <status>aktiv</status>
+        <PrimaereOrganisationseinheit ili:ref="edce536b-8bea-5898-947d-b383cc558a45"><so:Benutzer_Organisationseinheit/></PrimaereOrganisationseinheit>
+      </so:Benutzer>
+      <so:Ordnungssystem ili:tid="a898781f-61e5-5b0e-b48a-6f696aa44bfc" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>AGI-GEVER</code>
+        <name>Ordnungssystem Amt für Geoinformation</name>
+        <gueltigVon>2026-01-01</gueltigVon>
+        <status>Aktiv</status>
+        <Verwaltungseinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:Ordnungssystem_Organisationseinheit/></Verwaltungseinheit>
+      </so:Ordnungssystem>
+      <so:OrdnungssystemPosition ili:tid="68a1803c-93a6-513d-9834-9bc06d3fbbba" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4</code>
+        <titel>Geoinformation und amtliche Vermessung</titel>
+        <beschreibung>Aufgabenbereich Geoinformation, amtliche Vermessung und geografische Namen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="68a1803c-93a6-513d-9834-9bc06d3fbbba"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="20b050f8-f60e-5ac1-8f77-eff502e279f0" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3</code>
+        <titel>Nomenklatur und geografische Namen</titel>
+        <beschreibung>Grundlagen, Einzelgeschaefte und Gremienarbeit zu geografischen Namen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="64d5a3f8-f3dc-580a-aecc-1479f74b878a"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="68a1803c-93a6-513d-9834-9bc06d3fbbba"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="c82dbebd-73a6-5282-be46-01e6bc859300" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3.2</code>
+        <titel>Einzelgeschäfte Flur- und Ortsnamen</titel>
+        <beschreibung>Dossiers zu einzelnen Festlegungen, Umbenennungen oder Korrekturen von Flur- und Ortsnamen.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="2566f5fc-810b-55b2-a7f5-b78a2437df47"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="20b050f8-f60e-5ac1-8f77-eff502e279f0"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+      <so:OrdnungssystemPosition ili:tid="9d10d1e0-bccf-5489-9cb3-660631d8648f" xmlns="http://www.interlis.ch/xtf/2.4/SO_AGI_GEVER_20260707">
+        <code>4.3.3</code>
+        <titel>Kantonale Nomenklaturkommission</titel>
+        <beschreibung>Sitzungsunterlagen, Protokolle und allgemeine Unterlagen der Nomenklaturkommission.</beschreibung>
+        <status>aktiv</status>
+        <FederfuehrendeEinheit ili:ref="51df8697-f0ee-589f-9940-bf385dc42108"><so:OrdnungssystemPosition_Federfuehrung/></FederfuehrendeEinheit>
+        <Oberposition ili:ref="20b050f8-f60e-5ac1-8f77-eff502e279f0"><so:OrdnungssystemPosition_Hierarchie/></Oberposition>
+        <ZugehoerigesOrdnungssystem ili:ref="a898781f-61e5-5b0e-b48a-6f696aa44bfc"><so:Ordnungssystem_Position/></ZugehoerigesOrdnungssystem>
+      </so:OrdnungssystemPosition>
+    </so:Stammdaten>
+  </datasection>
+</transfer>

@@ -1,0 +1,15 @@
+.git
+.gradle
+build/classes
+build/generated
+build/resources
+build/test-results
+build/reports
+src
+model
+scripts
+*.log
+!.dockerignore
+!build/
+!build/libs/
+!build/libs/*.jar

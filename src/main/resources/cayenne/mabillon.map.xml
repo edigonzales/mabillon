@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-map xmlns="http://cayenne.apache.org/schema/12/modelMap"
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://cayenne.apache.org/schema/12/modelMap https://cayenne.apache.org/schema/12/modelMap.xsd"
+	 project-version="12">
+	<db-entity name="archivablieferung" schema="mabillon" catalog="mabillon">
+		<db-attribute name="ablieferungsnummer" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="archivempfaenger" type="VARCHAR" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="bemerkung" type="CLOB" length="2147483647"/>
+		<db-attribute name="erstelltam" type="TIMESTAMP" isMandatory="true" length="29"/>
+		<db-attribute name="erstelltvon" type="BIGINT" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="uebergebenam" type="TIMESTAMP" length="29"/>
+		<db-attribute name="uebernommenam" type="TIMESTAMP" length="29"/>
+	</db-entity>
+	<db-entity name="archivablieferung_dossier" schema="mabillon" catalog="mabillon">
+		<db-attribute name="ablieferungenzumdossier" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="enthaltenedossiers" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+	</db-entity>
+	<db-entity name="archivierung" schema="mabillon" catalog="mabillon">
+		<db-attribute name="angebotenam" type="DATE" length="13"/>
+		<db-attribute name="archivierungsdossier" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="archivsignatur" type="VARCHAR" length="80"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="bemerkung" type="CLOB" length="2147483647"/>
+		<db-attribute name="entscheidam" type="DATE" length="13"/>
+		<db-attribute name="sipuri" type="VARCHAR" length="1024"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="vernichtetam" type="DATE" length="13"/>
+	</db-entity>
+	<db-entity name="aufgabe" schema="mabillon" catalog="mabillon">
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="aufgabengeschaeft" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="erledigtam" type="TIMESTAMP" length="29"/>
+		<db-attribute name="erstelltam" type="TIMESTAMP" isMandatory="true" length="29"/>
+		<db-attribute name="faelligam" type="DATE" length="13"/>
+		<db-attribute name="prioritaet" type="INTEGER" length="10"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="typ" type="BIGINT" length="19"/>
+		<db-attribute name="zugewiesenanbenutzer" type="BIGINT" length="19"/>
+		<db-attribute name="zugewiesenanorganisationseinheit" type="BIGINT" length="19"/>
+	</db-entity>
+	<db-entity name="aufgabentyp" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<db-entity name="benutzer" schema="mabillon" catalog="mabillon">
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="email" type="VARCHAR" length="255"/>
+		<db-attribute name="primaereorganisationseinheit" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="username" type="VARCHAR" isMandatory="true" length="80"/>
+	</db-entity>
+	<db-entity name="beteiligter" schema="mabillon" catalog="mabillon">
+		<db-attribute name="adresse" type="CLOB" length="2147483647"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="email" type="VARCHAR" length="255"/>
+		<db-attribute name="externereferenz" type="VARCHAR" length="80"/>
+		<db-attribute name="organisation" type="VARCHAR" length="255"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="telefon" type="VARCHAR" length="50"/>
+		<db-attribute name="typ" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="vorname" type="VARCHAR" length="255"/>
+	</db-entity>
+	<db-entity name="beteiligung" schema="mabillon" catalog="mabillon">
+		<db-attribute name="bemerkung" type="CLOB" length="2147483647"/>
+		<db-attribute name="beteiligtepartei" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="beteiligtesgeschaeft" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="gueltigbis" type="DATE" length="13"/>
+		<db-attribute name="gueltigvon" type="DATE" length="13"/>
+		<db-attribute name="rolle" type="BIGINT" length="19"/>
+		<db-attribute name="rollenbezeichnung" type="VARCHAR" length="255"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<db-entity name="beteiligungsrolle" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<db-entity name="dossier" schema="mabillon" catalog="mabillon">
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="bemerkungen" type="CLOB" length="2147483647"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="dossiernummer" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="eroeffnetam" type="DATE" isMandatory="true" length="13"/>
+		<db-attribute name="federfuehrung" type="BIGINT" length="19"/>
+		<db-attribute name="geschlossenam" type="DATE" length="13"/>
+		<db-attribute name="ordnungssystemposition" type="BIGINT" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="verantwortlicher" type="BIGINT" length="19"/>
+	</db-entity>
+	<db-entity name="ereignis" schema="mabillon" catalog="mabillon">
+		<db-attribute name="bemerkung" type="CLOB" length="2147483647"/>
+		<db-attribute name="benutzer" type="BIGINT" length="19"/>
+		<db-attribute name="objektid" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="objekttyp" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="typ" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="zeitpunkt" type="TIMESTAMP" isMandatory="true" length="29"/>
+	</db-entity>
+	<db-entity name="fachsystemreferenz" schema="mabillon" catalog="mabillon">
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="link" type="VARCHAR" length="1024"/>
+		<db-attribute name="mutationid" type="VARCHAR" length="80"/>
+		<db-attribute name="objektid" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="objekttyp" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="referenziertesdossier" type="BIGINT" length="19"/>
+		<db-attribute name="referenziertesgeschaeft" type="BIGINT" length="19"/>
+		<db-attribute name="systemcode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<db-entity name="geschaeft" schema="mabillon" catalog="mabillon">
+		<db-attribute name="abgeschlossenam" type="DATE" length="13"/>
+		<db-attribute name="eingangsdatum" type="DATE" length="13"/>
+		<db-attribute name="eroeffnungsdatum" type="DATE" length="13"/>
+		<db-attribute name="erstelltam" type="TIMESTAMP" isMandatory="true" length="29"/>
+		<db-attribute name="faelligam" type="DATE" length="13"/>
+		<db-attribute name="federfuehrung" type="BIGINT" length="19"/>
+		<db-attribute name="geaendertam" type="TIMESTAMP" length="29"/>
+		<db-attribute name="geschaeftsart" type="BIGINT" length="19"/>
+		<db-attribute name="geschaeftsdossier" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="geschaeftsnummer" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="kurzbeschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="lifecyclestatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="prioritaet" type="INTEGER" length="10"/>
+		<db-attribute name="prozessstatus" type="BIGINT" length="19"/>
+		<db-attribute name="resultatstatus" type="BIGINT" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="verantwortlicher" type="BIGINT" length="19"/>
+	</db-entity>
+	<db-entity name="geschaeftsart" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="resultaterforderlich" type="BIT" isMandatory="true" length="1"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<db-entity name="ordnungssystem" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="gueltigbis" type="DATE" length="13"/>
+		<db-attribute name="gueltigvon" type="DATE" isMandatory="true" length="13"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="verwaltungseinheit" type="BIGINT" isMandatory="true" length="19"/>
+	</db-entity>
+	<db-entity name="ordnungssystemposition" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="federfuehrendeeinheit" type="BIGINT" length="19"/>
+		<db-attribute name="oberposition" type="BIGINT" length="19"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="zugehoerigesordnungssystem" type="BIGINT" isMandatory="true" length="19"/>
+	</db-entity>
+	<db-entity name="organisationseinheit" schema="mabillon" catalog="mabillon">
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="kuerzel" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="uebergeordneteeinheit" type="BIGINT" length="19"/>
+	</db-entity>
+	<db-entity name="prozessstatus" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="ainitial" type="BIT" isMandatory="true" length="1"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="geschaeftsart" type="BIGINT" length="19"/>
+		<db-attribute name="sortierung" type="INTEGER" length="10"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="terminal" type="BIT" isMandatory="true" length="1"/>
+	</db-entity>
+	<db-entity name="resultatstatus" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="geschaeftsart" type="BIGINT" length="19"/>
+		<db-attribute name="sortierung" type="INTEGER" length="10"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="terminal" type="BIT" isMandatory="true" length="1"/>
+	</db-entity>
+	<db-entity name="sippaket" schema="mabillon" catalog="mabillon">
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="bemerkung" type="CLOB" length="2147483647"/>
+		<db-attribute name="dateigroesse" type="BIGINT" length="19"/>
+		<db-attribute name="erstelltam" type="TIMESTAMP" isMandatory="true" length="29"/>
+		<db-attribute name="erstelltvon" type="BIGINT" length="19"/>
+		<db-attribute name="hashsha256" type="VARCHAR" length="64"/>
+		<db-attribute name="laufnummer" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="storageuri" type="VARCHAR" length="1024"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="validiertam" type="TIMESTAMP" length="29"/>
+		<db-attribute name="validierungsberichturi" type="VARCHAR" length="1024"/>
+		<db-attribute name="validierungsstatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="zugehoerigeablieferung" type="BIGINT" isMandatory="true" length="19"/>
+	</db-entity>
+	<db-entity name="unterlage" schema="mabillon" catalog="mabillon">
+		<db-attribute name="ablagedossier" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="aktenrelevant" type="BIT" isMandatory="true" length="1"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="ausgangsdatum" type="DATE" length="13"/>
+		<db-attribute name="bemerkungen" type="CLOB" length="2147483647"/>
+		<db-attribute name="dateiformat" type="VARCHAR" length="80"/>
+		<db-attribute name="dateigroesse" type="BIGINT" length="19"/>
+		<db-attribute name="dateiname" type="VARCHAR" length="255"/>
+		<db-attribute name="eingangsdatum" type="DATE" length="13"/>
+		<db-attribute name="geschaeftskontext" type="BIGINT" length="19"/>
+		<db-attribute name="hashsha256" type="VARCHAR" length="64"/>
+		<db-attribute name="mimetype" type="VARCHAR" length="80"/>
+		<db-attribute name="registriertam" type="TIMESTAMP" length="29"/>
+		<db-attribute name="registriertvon" type="BIGINT" length="19"/>
+		<db-attribute name="storageuri" type="VARCHAR" length="1024"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+		<db-attribute name="titel" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="typ" type="BIGINT" length="19"/>
+		<db-attribute name="unterlagendatum" type="DATE" length="13"/>
+	</db-entity>
+	<db-entity name="unterlagentyp" schema="mabillon" catalog="mabillon">
+		<db-attribute name="acode" type="VARCHAR" isMandatory="true" length="80"/>
+		<db-attribute name="aname" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="astatus" type="VARCHAR" isMandatory="true" length="255"/>
+		<db-attribute name="beschreibung" type="CLOB" length="2147483647"/>
+		<db-attribute name="t_basket" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="t_id" type="BIGINT" isPrimaryKey="true" isGenerated="true" isMandatory="true" length="19"/>
+		<db-attribute name="t_ili_tid" type="OTHER" length="2147483647"/>
+	</db-entity>
+	<obj-entity name="Archivablieferung" className="guru.interlis.mabillon.persistence.cayenne.Archivablieferung" dbEntityName="archivablieferung">
+		<obj-attribute name="ablieferungsnummer" type="java.lang.String" db-attribute-path="ablieferungsnummer"/>
+		<obj-attribute name="archivempfaenger" type="java.lang.String" db-attribute-path="archivempfaenger"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="bemerkung" type="java.lang.String" db-attribute-path="bemerkung"/>
+		<obj-attribute name="erstelltam" type="java.time.LocalDateTime" db-attribute-path="erstelltam"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+		<obj-attribute name="uebergebenam" type="java.time.LocalDateTime" db-attribute-path="uebergebenam"/>
+		<obj-attribute name="uebernommenam" type="java.time.LocalDateTime" db-attribute-path="uebernommenam"/>
+	</obj-entity>
+	<obj-entity name="ArchivablieferungDossier" className="guru.interlis.mabillon.persistence.cayenne.ArchivablieferungDossier" dbEntityName="archivablieferung_dossier">
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+	</obj-entity>
+	<obj-entity name="Archivierung" className="guru.interlis.mabillon.persistence.cayenne.Archivierung" dbEntityName="archivierung">
+		<obj-attribute name="angebotenam" type="java.time.LocalDate" db-attribute-path="angebotenam"/>
+		<obj-attribute name="archivsignatur" type="java.lang.String" db-attribute-path="archivsignatur"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="bemerkung" type="java.lang.String" db-attribute-path="bemerkung"/>
+		<obj-attribute name="entscheidam" type="java.time.LocalDate" db-attribute-path="entscheidam"/>
+		<obj-attribute name="sipuri" type="java.lang.String" db-attribute-path="sipuri"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="vernichtetam" type="java.time.LocalDate" db-attribute-path="vernichtetam"/>
+	</obj-entity>
+	<obj-entity name="Aufgabe" className="guru.interlis.mabillon.persistence.cayenne.Aufgabe" dbEntityName="aufgabe">
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="erledigtam" type="java.time.LocalDateTime" db-attribute-path="erledigtam"/>
+		<obj-attribute name="erstelltam" type="java.time.LocalDateTime" db-attribute-path="erstelltam"/>
+		<obj-attribute name="faelligam" type="java.time.LocalDate" db-attribute-path="faelligam"/>
+		<obj-attribute name="prioritaet" type="java.lang.Integer" db-attribute-path="prioritaet"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+	</obj-entity>
+	<obj-entity name="Aufgabentyp" className="guru.interlis.mabillon.persistence.cayenne.Aufgabentyp" dbEntityName="aufgabentyp">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Benutzer" className="guru.interlis.mabillon.persistence.cayenne.Benutzer" dbEntityName="benutzer">
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="email" type="java.lang.String" db-attribute-path="email"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="username" type="java.lang.String" db-attribute-path="username"/>
+	</obj-entity>
+	<obj-entity name="Beteiligter" className="guru.interlis.mabillon.persistence.cayenne.Beteiligter" dbEntityName="beteiligter">
+		<obj-attribute name="adresse" type="java.lang.String" db-attribute-path="adresse"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="email" type="java.lang.String" db-attribute-path="email"/>
+		<obj-attribute name="externereferenz" type="java.lang.String" db-attribute-path="externereferenz"/>
+		<obj-attribute name="organisation" type="java.lang.String" db-attribute-path="organisation"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="telefon" type="java.lang.String" db-attribute-path="telefon"/>
+		<obj-attribute name="typ" type="java.lang.String" db-attribute-path="typ"/>
+		<obj-attribute name="vorname" type="java.lang.String" db-attribute-path="vorname"/>
+	</obj-entity>
+	<obj-entity name="Beteiligung" className="guru.interlis.mabillon.persistence.cayenne.Beteiligung" dbEntityName="beteiligung">
+		<obj-attribute name="bemerkung" type="java.lang.String" db-attribute-path="bemerkung"/>
+		<obj-attribute name="gueltigbis" type="java.time.LocalDate" db-attribute-path="gueltigbis"/>
+		<obj-attribute name="gueltigvon" type="java.time.LocalDate" db-attribute-path="gueltigvon"/>
+		<obj-attribute name="rollenbezeichnung" type="java.lang.String" db-attribute-path="rollenbezeichnung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Beteiligungsrolle" className="guru.interlis.mabillon.persistence.cayenne.Beteiligungsrolle" dbEntityName="beteiligungsrolle">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Dossier" className="guru.interlis.mabillon.persistence.cayenne.Dossier" dbEntityName="dossier">
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="bemerkungen" type="java.lang.String" db-attribute-path="bemerkungen"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="dossiernummer" type="java.lang.String" db-attribute-path="dossiernummer"/>
+		<obj-attribute name="eroeffnetam" type="java.time.LocalDate" db-attribute-path="eroeffnetam"/>
+		<obj-attribute name="geschlossenam" type="java.time.LocalDate" db-attribute-path="geschlossenam"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+	</obj-entity>
+	<obj-entity name="Ereignis" className="guru.interlis.mabillon.persistence.cayenne.Ereignis" dbEntityName="ereignis">
+		<obj-attribute name="bemerkung" type="java.lang.String" db-attribute-path="bemerkung"/>
+		<obj-attribute name="objektid" type="java.lang.String" db-attribute-path="objektid"/>
+		<obj-attribute name="objekttyp" type="java.lang.String" db-attribute-path="objekttyp"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="typ" type="java.lang.String" db-attribute-path="typ"/>
+		<obj-attribute name="zeitpunkt" type="java.time.LocalDateTime" db-attribute-path="zeitpunkt"/>
+	</obj-entity>
+	<obj-entity name="Fachsystemreferenz" className="guru.interlis.mabillon.persistence.cayenne.Fachsystemreferenz" dbEntityName="fachsystemreferenz">
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="link" type="java.lang.String" db-attribute-path="link"/>
+		<obj-attribute name="mutationid" type="java.lang.String" db-attribute-path="mutationid"/>
+		<obj-attribute name="objektid" type="java.lang.String" db-attribute-path="objektid"/>
+		<obj-attribute name="objekttyp" type="java.lang.String" db-attribute-path="objekttyp"/>
+		<obj-attribute name="systemcode" type="java.lang.String" db-attribute-path="systemcode"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Geschaeft" className="guru.interlis.mabillon.persistence.cayenne.Geschaeft" dbEntityName="geschaeft">
+		<obj-attribute name="abgeschlossenam" type="java.time.LocalDate" db-attribute-path="abgeschlossenam"/>
+		<obj-attribute name="eingangsdatum" type="java.time.LocalDate" db-attribute-path="eingangsdatum"/>
+		<obj-attribute name="eroeffnungsdatum" type="java.time.LocalDate" db-attribute-path="eroeffnungsdatum"/>
+		<obj-attribute name="erstelltam" type="java.time.LocalDateTime" db-attribute-path="erstelltam"/>
+		<obj-attribute name="faelligam" type="java.time.LocalDate" db-attribute-path="faelligam"/>
+		<obj-attribute name="geaendertam" type="java.time.LocalDateTime" db-attribute-path="geaendertam"/>
+		<obj-attribute name="geschaeftsnummer" type="java.lang.String" db-attribute-path="geschaeftsnummer"/>
+		<obj-attribute name="kurzbeschreibung" type="java.lang.String" db-attribute-path="kurzbeschreibung"/>
+		<obj-attribute name="lifecyclestatus" type="java.lang.String" db-attribute-path="lifecyclestatus"/>
+		<obj-attribute name="prioritaet" type="java.lang.Integer" db-attribute-path="prioritaet"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+	</obj-entity>
+	<obj-entity name="Geschaeftsart" className="guru.interlis.mabillon.persistence.cayenne.Geschaeftsart" dbEntityName="geschaeftsart">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="resultaterforderlich" type="boolean" db-attribute-path="resultaterforderlich"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Ordnungssystem" className="guru.interlis.mabillon.persistence.cayenne.Ordnungssystem" dbEntityName="ordnungssystem">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="gueltigbis" type="java.time.LocalDate" db-attribute-path="gueltigbis"/>
+		<obj-attribute name="gueltigvon" type="java.time.LocalDate" db-attribute-path="gueltigvon"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Ordnungssystemposition" className="guru.interlis.mabillon.persistence.cayenne.Ordnungssystemposition" dbEntityName="ordnungssystemposition">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+	</obj-entity>
+	<obj-entity name="Organisationseinheit" className="guru.interlis.mabillon.persistence.cayenne.Organisationseinheit" dbEntityName="organisationseinheit">
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="kuerzel" type="java.lang.String" db-attribute-path="kuerzel"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<obj-entity name="Prozessstatus" className="guru.interlis.mabillon.persistence.cayenne.Prozessstatus" dbEntityName="prozessstatus">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="ainitial" type="boolean" db-attribute-path="ainitial"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="sortierung" type="java.lang.Integer" db-attribute-path="sortierung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="terminal" type="boolean" db-attribute-path="terminal"/>
+	</obj-entity>
+	<obj-entity name="Resultatstatus" className="guru.interlis.mabillon.persistence.cayenne.Resultatstatus" dbEntityName="resultatstatus">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="sortierung" type="java.lang.Integer" db-attribute-path="sortierung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="terminal" type="boolean" db-attribute-path="terminal"/>
+	</obj-entity>
+	<obj-entity name="Sippaket" className="guru.interlis.mabillon.persistence.cayenne.Sippaket" dbEntityName="sippaket">
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="bemerkung" type="java.lang.String" db-attribute-path="bemerkung"/>
+		<obj-attribute name="dateigroesse" type="java.lang.Long" db-attribute-path="dateigroesse"/>
+		<obj-attribute name="erstelltam" type="java.time.LocalDateTime" db-attribute-path="erstelltam"/>
+		<obj-attribute name="hashsha256" type="java.lang.String" db-attribute-path="hashsha256"/>
+		<obj-attribute name="laufnummer" type="int" db-attribute-path="laufnummer"/>
+		<obj-attribute name="storageuri" type="java.lang.String" db-attribute-path="storageuri"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="validiertam" type="java.time.LocalDateTime" db-attribute-path="validiertam"/>
+		<obj-attribute name="validierungsberichturi" type="java.lang.String" db-attribute-path="validierungsberichturi"/>
+		<obj-attribute name="validierungsstatus" type="java.lang.String" db-attribute-path="validierungsstatus"/>
+	</obj-entity>
+	<obj-entity name="Unterlage" className="guru.interlis.mabillon.persistence.cayenne.Unterlage" dbEntityName="unterlage">
+		<obj-attribute name="aktenrelevant" type="boolean" db-attribute-path="aktenrelevant"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="ausgangsdatum" type="java.time.LocalDate" db-attribute-path="ausgangsdatum"/>
+		<obj-attribute name="bemerkungen" type="java.lang.String" db-attribute-path="bemerkungen"/>
+		<obj-attribute name="dateiformat" type="java.lang.String" db-attribute-path="dateiformat"/>
+		<obj-attribute name="dateigroesse" type="java.lang.Long" db-attribute-path="dateigroesse"/>
+		<obj-attribute name="dateiname" type="java.lang.String" db-attribute-path="dateiname"/>
+		<obj-attribute name="eingangsdatum" type="java.time.LocalDate" db-attribute-path="eingangsdatum"/>
+		<obj-attribute name="hashsha256" type="java.lang.String" db-attribute-path="hashsha256"/>
+		<obj-attribute name="mimetype" type="java.lang.String" db-attribute-path="mimetype"/>
+		<obj-attribute name="registriertam" type="java.time.LocalDateTime" db-attribute-path="registriertam"/>
+		<obj-attribute name="storageuri" type="java.lang.String" db-attribute-path="storageuri"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+		<obj-attribute name="titel" type="java.lang.String" db-attribute-path="titel"/>
+		<obj-attribute name="unterlagendatum" type="java.time.LocalDate" db-attribute-path="unterlagendatum"/>
+	</obj-entity>
+	<obj-entity name="Unterlagentyp" className="guru.interlis.mabillon.persistence.cayenne.Unterlagentyp" dbEntityName="unterlagentyp">
+		<obj-attribute name="acode" type="java.lang.String" db-attribute-path="acode"/>
+		<obj-attribute name="aname" type="java.lang.String" db-attribute-path="aname"/>
+		<obj-attribute name="astatus" type="java.lang.String" db-attribute-path="astatus"/>
+		<obj-attribute name="beschreibung" type="java.lang.String" db-attribute-path="beschreibung"/>
+		<obj-attribute name="tBasket" type="long" db-attribute-path="t_basket"/>
+		<obj-attribute name="tIliTid" type="java.util.UUID" db-attribute-path="t_ili_tid"/>
+	</obj-entity>
+	<db-relationship name="archivablieferungDossiers" source="archivablieferung" target="archivablieferung_dossier" toMany="true">
+		<db-attribute-pair source="t_id" target="ablieferungenzumdossier"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="archivablieferung" target="benutzer">
+		<db-attribute-pair source="erstelltvon" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="sippakets" source="archivablieferung" target="sippaket" toMany="true">
+		<db-attribute-pair source="t_id" target="zugehoerigeablieferung"/>
+	</db-relationship>
+	<db-relationship name="archivablieferung" source="archivablieferung_dossier" target="archivablieferung">
+		<db-attribute-pair source="ablieferungenzumdossier" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="dossier" source="archivablieferung_dossier" target="dossier">
+		<db-attribute-pair source="enthaltenedossiers" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="dossier" source="archivierung" target="dossier">
+		<db-attribute-pair source="archivierungsdossier" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="aufgabentyp" source="aufgabe" target="aufgabentyp">
+		<db-attribute-pair source="typ" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="aufgabe" target="benutzer">
+		<db-attribute-pair source="zugewiesenanbenutzer" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="geschaeft" source="aufgabe" target="geschaeft">
+		<db-attribute-pair source="aufgabengeschaeft" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="aufgabe" target="organisationseinheit">
+		<db-attribute-pair source="zugewiesenanorganisationseinheit" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="aufgabes" source="aufgabentyp" target="aufgabe" toMany="true">
+		<db-attribute-pair source="t_id" target="typ"/>
+	</db-relationship>
+	<db-relationship name="archivablieferungs" source="benutzer" target="archivablieferung" toMany="true">
+		<db-attribute-pair source="t_id" target="erstelltvon"/>
+	</db-relationship>
+	<db-relationship name="aufgabes" source="benutzer" target="aufgabe" toMany="true">
+		<db-attribute-pair source="t_id" target="zugewiesenanbenutzer"/>
+	</db-relationship>
+	<db-relationship name="dossiers" source="benutzer" target="dossier" toMany="true">
+		<db-attribute-pair source="t_id" target="verantwortlicher"/>
+	</db-relationship>
+	<db-relationship name="ereigniss" source="benutzer" target="ereignis" toMany="true">
+		<db-attribute-pair source="t_id" target="benutzer"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="benutzer" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="verantwortlicher"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="benutzer" target="organisationseinheit">
+		<db-attribute-pair source="primaereorganisationseinheit" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="sippakets" source="benutzer" target="sippaket" toMany="true">
+		<db-attribute-pair source="t_id" target="erstelltvon"/>
+	</db-relationship>
+	<db-relationship name="unterlages" source="benutzer" target="unterlage" toMany="true">
+		<db-attribute-pair source="t_id" target="registriertvon"/>
+	</db-relationship>
+	<db-relationship name="beteiligungs" source="beteiligter" target="beteiligung" toMany="true">
+		<db-attribute-pair source="t_id" target="beteiligtepartei"/>
+	</db-relationship>
+	<db-relationship name="beteiligter" source="beteiligung" target="beteiligter">
+		<db-attribute-pair source="beteiligtepartei" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="beteiligungsrolle" source="beteiligung" target="beteiligungsrolle">
+		<db-attribute-pair source="rolle" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="geschaeft" source="beteiligung" target="geschaeft">
+		<db-attribute-pair source="beteiligtesgeschaeft" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="beteiligungs" source="beteiligungsrolle" target="beteiligung" toMany="true">
+		<db-attribute-pair source="t_id" target="rolle"/>
+	</db-relationship>
+	<db-relationship name="archivablieferungDossiers" source="dossier" target="archivablieferung_dossier" toMany="true">
+		<db-attribute-pair source="t_id" target="enthaltenedossiers"/>
+	</db-relationship>
+	<db-relationship name="archivierungs" source="dossier" target="archivierung" toMany="true">
+		<db-attribute-pair source="t_id" target="archivierungsdossier"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="dossier" target="benutzer">
+		<db-attribute-pair source="verantwortlicher" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="fachsystemreferenzes" source="dossier" target="fachsystemreferenz" toMany="true">
+		<db-attribute-pair source="t_id" target="referenziertesdossier"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="dossier" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="geschaeftsdossier"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystemposition1" source="dossier" target="ordnungssystemposition">
+		<db-attribute-pair source="ordnungssystemposition" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="dossier" target="organisationseinheit">
+		<db-attribute-pair source="federfuehrung" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="unterlages" source="dossier" target="unterlage" toMany="true">
+		<db-attribute-pair source="t_id" target="ablagedossier"/>
+	</db-relationship>
+	<db-relationship name="benutzer1" source="ereignis" target="benutzer">
+		<db-attribute-pair source="benutzer" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="dossier" source="fachsystemreferenz" target="dossier">
+		<db-attribute-pair source="referenziertesdossier" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="geschaeft" source="fachsystemreferenz" target="geschaeft">
+		<db-attribute-pair source="referenziertesgeschaeft" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="aufgabes" source="geschaeft" target="aufgabe" toMany="true">
+		<db-attribute-pair source="t_id" target="aufgabengeschaeft"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="geschaeft" target="benutzer">
+		<db-attribute-pair source="verantwortlicher" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="beteiligungs" source="geschaeft" target="beteiligung" toMany="true">
+		<db-attribute-pair source="t_id" target="beteiligtesgeschaeft"/>
+	</db-relationship>
+	<db-relationship name="dossier" source="geschaeft" target="dossier">
+		<db-attribute-pair source="geschaeftsdossier" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="fachsystemreferenzes" source="geschaeft" target="fachsystemreferenz" toMany="true">
+		<db-attribute-pair source="t_id" target="referenziertesgeschaeft"/>
+	</db-relationship>
+	<db-relationship name="geschaeftsart1" source="geschaeft" target="geschaeftsart">
+		<db-attribute-pair source="geschaeftsart" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="geschaeft" target="organisationseinheit">
+		<db-attribute-pair source="federfuehrung" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="prozessstatus1" source="geschaeft" target="prozessstatus">
+		<db-attribute-pair source="prozessstatus" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="resultatstatus1" source="geschaeft" target="resultatstatus">
+		<db-attribute-pair source="resultatstatus" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="unterlages" source="geschaeft" target="unterlage" toMany="true">
+		<db-attribute-pair source="t_id" target="geschaeftskontext"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="geschaeftsart" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="geschaeftsart"/>
+	</db-relationship>
+	<db-relationship name="prozessstatuses" source="geschaeftsart" target="prozessstatus" toMany="true">
+		<db-attribute-pair source="t_id" target="geschaeftsart"/>
+	</db-relationship>
+	<db-relationship name="resultatstatuses" source="geschaeftsart" target="resultatstatus" toMany="true">
+		<db-attribute-pair source="t_id" target="geschaeftsart"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystempositions" source="ordnungssystem" target="ordnungssystemposition" toMany="true">
+		<db-attribute-pair source="t_id" target="zugehoerigesordnungssystem"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="ordnungssystem" target="organisationseinheit">
+		<db-attribute-pair source="verwaltungseinheit" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="dossiers" source="ordnungssystemposition" target="dossier" toMany="true">
+		<db-attribute-pair source="t_id" target="ordnungssystemposition"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystem" source="ordnungssystemposition" target="ordnungssystem">
+		<db-attribute-pair source="zugehoerigesordnungssystem" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystemposition" source="ordnungssystemposition" target="ordnungssystemposition">
+		<db-attribute-pair source="oberposition" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystempositions" source="ordnungssystemposition" target="ordnungssystemposition" toMany="true">
+		<db-attribute-pair source="t_id" target="oberposition"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="ordnungssystemposition" target="organisationseinheit">
+		<db-attribute-pair source="federfuehrendeeinheit" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="aufgabes" source="organisationseinheit" target="aufgabe" toMany="true">
+		<db-attribute-pair source="t_id" target="zugewiesenanorganisationseinheit"/>
+	</db-relationship>
+	<db-relationship name="benutzers" source="organisationseinheit" target="benutzer" toMany="true">
+		<db-attribute-pair source="t_id" target="primaereorganisationseinheit"/>
+	</db-relationship>
+	<db-relationship name="dossiers" source="organisationseinheit" target="dossier" toMany="true">
+		<db-attribute-pair source="t_id" target="federfuehrung"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="organisationseinheit" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="federfuehrung"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystempositions" source="organisationseinheit" target="ordnungssystemposition" toMany="true">
+		<db-attribute-pair source="t_id" target="federfuehrendeeinheit"/>
+	</db-relationship>
+	<db-relationship name="ordnungssystems" source="organisationseinheit" target="ordnungssystem" toMany="true">
+		<db-attribute-pair source="t_id" target="verwaltungseinheit"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheit" source="organisationseinheit" target="organisationseinheit">
+		<db-attribute-pair source="uebergeordneteeinheit" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="organisationseinheits" source="organisationseinheit" target="organisationseinheit" toMany="true">
+		<db-attribute-pair source="t_id" target="uebergeordneteeinheit"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="prozessstatus" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="prozessstatus"/>
+	</db-relationship>
+	<db-relationship name="geschaeftsart1" source="prozessstatus" target="geschaeftsart">
+		<db-attribute-pair source="geschaeftsart" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="geschaefts" source="resultatstatus" target="geschaeft" toMany="true">
+		<db-attribute-pair source="t_id" target="resultatstatus"/>
+	</db-relationship>
+	<db-relationship name="geschaeftsart1" source="resultatstatus" target="geschaeftsart">
+		<db-attribute-pair source="geschaeftsart" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="archivablieferung" source="sippaket" target="archivablieferung">
+		<db-attribute-pair source="zugehoerigeablieferung" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="sippaket" target="benutzer">
+		<db-attribute-pair source="erstelltvon" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="benutzer" source="unterlage" target="benutzer">
+		<db-attribute-pair source="registriertvon" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="dossier" source="unterlage" target="dossier">
+		<db-attribute-pair source="ablagedossier" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="geschaeft" source="unterlage" target="geschaeft">
+		<db-attribute-pair source="geschaeftskontext" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="unterlagentyp" source="unterlage" target="unterlagentyp">
+		<db-attribute-pair source="typ" target="t_id"/>
+	</db-relationship>
+	<db-relationship name="unterlages" source="unterlagentyp" target="unterlage" toMany="true">
+		<db-attribute-pair source="t_id" target="typ"/>
+	</db-relationship>
+	<obj-relationship name="archivablieferungDossiers" source="Archivablieferung" target="ArchivablieferungDossier" deleteRule="Deny" db-relationship-path="archivablieferungDossiers"/>
+	<obj-relationship name="benutzer" source="Archivablieferung" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="sippakets" source="Archivablieferung" target="Sippaket" deleteRule="Deny" db-relationship-path="sippakets"/>
+	<obj-relationship name="archivablieferung" source="ArchivablieferungDossier" target="Archivablieferung" deleteRule="Nullify" db-relationship-path="archivablieferung"/>
+	<obj-relationship name="dossier" source="ArchivablieferungDossier" target="Dossier" deleteRule="Nullify" db-relationship-path="dossier"/>
+	<obj-relationship name="dossier" source="Archivierung" target="Dossier" deleteRule="Nullify" db-relationship-path="dossier"/>
+	<obj-relationship name="aufgabentyp" source="Aufgabe" target="Aufgabentyp" deleteRule="Nullify" db-relationship-path="aufgabentyp"/>
+	<obj-relationship name="benutzer" source="Aufgabe" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="geschaeft" source="Aufgabe" target="Geschaeft" deleteRule="Nullify" db-relationship-path="geschaeft"/>
+	<obj-relationship name="organisationseinheit" source="Aufgabe" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="aufgabes" source="Aufgabentyp" target="Aufgabe" deleteRule="Deny" db-relationship-path="aufgabes"/>
+	<obj-relationship name="archivablieferungs" source="Benutzer" target="Archivablieferung" deleteRule="Deny" db-relationship-path="archivablieferungs"/>
+	<obj-relationship name="aufgabes" source="Benutzer" target="Aufgabe" deleteRule="Deny" db-relationship-path="aufgabes"/>
+	<obj-relationship name="dossiers" source="Benutzer" target="Dossier" deleteRule="Deny" db-relationship-path="dossiers"/>
+	<obj-relationship name="ereigniss" source="Benutzer" target="Ereignis" deleteRule="Deny" db-relationship-path="ereigniss"/>
+	<obj-relationship name="geschaefts" source="Benutzer" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="organisationseinheit" source="Benutzer" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="sippakets" source="Benutzer" target="Sippaket" deleteRule="Deny" db-relationship-path="sippakets"/>
+	<obj-relationship name="unterlages" source="Benutzer" target="Unterlage" deleteRule="Deny" db-relationship-path="unterlages"/>
+	<obj-relationship name="beteiligungs" source="Beteiligter" target="Beteiligung" deleteRule="Deny" db-relationship-path="beteiligungs"/>
+	<obj-relationship name="beteiligter" source="Beteiligung" target="Beteiligter" deleteRule="Nullify" db-relationship-path="beteiligter"/>
+	<obj-relationship name="beteiligungsrolle" source="Beteiligung" target="Beteiligungsrolle" deleteRule="Nullify" db-relationship-path="beteiligungsrolle"/>
+	<obj-relationship name="geschaeft" source="Beteiligung" target="Geschaeft" deleteRule="Nullify" db-relationship-path="geschaeft"/>
+	<obj-relationship name="beteiligungs" source="Beteiligungsrolle" target="Beteiligung" deleteRule="Deny" db-relationship-path="beteiligungs"/>
+	<obj-relationship name="archivablieferungDossiers" source="Dossier" target="ArchivablieferungDossier" deleteRule="Deny" db-relationship-path="archivablieferungDossiers"/>
+	<obj-relationship name="archivierungs" source="Dossier" target="Archivierung" deleteRule="Deny" db-relationship-path="archivierungs"/>
+	<obj-relationship name="benutzer" source="Dossier" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="fachsystemreferenzes" source="Dossier" target="Fachsystemreferenz" deleteRule="Deny" db-relationship-path="fachsystemreferenzes"/>
+	<obj-relationship name="geschaefts" source="Dossier" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="ordnungssystemposition" source="Dossier" target="Ordnungssystemposition" deleteRule="Nullify" db-relationship-path="ordnungssystemposition1"/>
+	<obj-relationship name="organisationseinheit" source="Dossier" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="unterlages" source="Dossier" target="Unterlage" deleteRule="Deny" db-relationship-path="unterlages"/>
+	<obj-relationship name="benutzer" source="Ereignis" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer1"/>
+	<obj-relationship name="dossier" source="Fachsystemreferenz" target="Dossier" deleteRule="Nullify" db-relationship-path="dossier"/>
+	<obj-relationship name="geschaeft" source="Fachsystemreferenz" target="Geschaeft" deleteRule="Nullify" db-relationship-path="geschaeft"/>
+	<obj-relationship name="aufgabes" source="Geschaeft" target="Aufgabe" deleteRule="Deny" db-relationship-path="aufgabes"/>
+	<obj-relationship name="benutzer" source="Geschaeft" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="beteiligungs" source="Geschaeft" target="Beteiligung" deleteRule="Deny" db-relationship-path="beteiligungs"/>
+	<obj-relationship name="dossier" source="Geschaeft" target="Dossier" deleteRule="Nullify" db-relationship-path="dossier"/>
+	<obj-relationship name="fachsystemreferenzes" source="Geschaeft" target="Fachsystemreferenz" deleteRule="Deny" db-relationship-path="fachsystemreferenzes"/>
+	<obj-relationship name="geschaeftsart" source="Geschaeft" target="Geschaeftsart" deleteRule="Nullify" db-relationship-path="geschaeftsart1"/>
+	<obj-relationship name="organisationseinheit" source="Geschaeft" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="prozessstatus" source="Geschaeft" target="Prozessstatus" deleteRule="Nullify" db-relationship-path="prozessstatus1"/>
+	<obj-relationship name="resultatstatus" source="Geschaeft" target="Resultatstatus" deleteRule="Nullify" db-relationship-path="resultatstatus1"/>
+	<obj-relationship name="unterlages" source="Geschaeft" target="Unterlage" deleteRule="Deny" db-relationship-path="unterlages"/>
+	<obj-relationship name="geschaefts" source="Geschaeftsart" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="prozessstatuses" source="Geschaeftsart" target="Prozessstatus" deleteRule="Deny" db-relationship-path="prozessstatuses"/>
+	<obj-relationship name="resultatstatuses" source="Geschaeftsart" target="Resultatstatus" deleteRule="Deny" db-relationship-path="resultatstatuses"/>
+	<obj-relationship name="ordnungssystempositions" source="Ordnungssystem" target="Ordnungssystemposition" deleteRule="Deny" db-relationship-path="ordnungssystempositions"/>
+	<obj-relationship name="organisationseinheit" source="Ordnungssystem" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="dossiers" source="Ordnungssystemposition" target="Dossier" deleteRule="Deny" db-relationship-path="dossiers"/>
+	<obj-relationship name="ordnungssystem" source="Ordnungssystemposition" target="Ordnungssystem" deleteRule="Nullify" db-relationship-path="ordnungssystem"/>
+	<obj-relationship name="ordnungssystemposition" source="Ordnungssystemposition" target="Ordnungssystemposition" deleteRule="Nullify" db-relationship-path="ordnungssystemposition"/>
+	<obj-relationship name="ordnungssystempositions" source="Ordnungssystemposition" target="Ordnungssystemposition" deleteRule="Deny" db-relationship-path="ordnungssystempositions"/>
+	<obj-relationship name="organisationseinheit" source="Ordnungssystemposition" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="aufgabes" source="Organisationseinheit" target="Aufgabe" deleteRule="Deny" db-relationship-path="aufgabes"/>
+	<obj-relationship name="benutzers" source="Organisationseinheit" target="Benutzer" deleteRule="Deny" db-relationship-path="benutzers"/>
+	<obj-relationship name="dossiers" source="Organisationseinheit" target="Dossier" deleteRule="Deny" db-relationship-path="dossiers"/>
+	<obj-relationship name="geschaefts" source="Organisationseinheit" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="ordnungssystempositions" source="Organisationseinheit" target="Ordnungssystemposition" deleteRule="Deny" db-relationship-path="ordnungssystempositions"/>
+	<obj-relationship name="ordnungssystems" source="Organisationseinheit" target="Ordnungssystem" deleteRule="Deny" db-relationship-path="ordnungssystems"/>
+	<obj-relationship name="organisationseinheit" source="Organisationseinheit" target="Organisationseinheit" deleteRule="Nullify" db-relationship-path="organisationseinheit"/>
+	<obj-relationship name="organisationseinheits" source="Organisationseinheit" target="Organisationseinheit" deleteRule="Deny" db-relationship-path="organisationseinheits"/>
+	<obj-relationship name="geschaefts" source="Prozessstatus" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="geschaeftsart" source="Prozessstatus" target="Geschaeftsart" deleteRule="Nullify" db-relationship-path="geschaeftsart1"/>
+	<obj-relationship name="geschaefts" source="Resultatstatus" target="Geschaeft" deleteRule="Deny" db-relationship-path="geschaefts"/>
+	<obj-relationship name="geschaeftsart" source="Resultatstatus" target="Geschaeftsart" deleteRule="Nullify" db-relationship-path="geschaeftsart1"/>
+	<obj-relationship name="archivablieferung" source="Sippaket" target="Archivablieferung" deleteRule="Nullify" db-relationship-path="archivablieferung"/>
+	<obj-relationship name="benutzer" source="Sippaket" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="benutzer" source="Unterlage" target="Benutzer" deleteRule="Nullify" db-relationship-path="benutzer"/>
+	<obj-relationship name="dossier" source="Unterlage" target="Dossier" deleteRule="Nullify" db-relationship-path="dossier"/>
+	<obj-relationship name="geschaeft" source="Unterlage" target="Geschaeft" deleteRule="Nullify" db-relationship-path="geschaeft"/>
+	<obj-relationship name="unterlagentyp" source="Unterlage" target="Unterlagentyp" deleteRule="Nullify" db-relationship-path="unterlagentyp"/>
+	<obj-relationship name="unterlages" source="Unterlagentyp" target="Unterlage" deleteRule="Deny" db-relationship-path="unterlages"/>
+	<dbImport xmlns="http://cayenne.apache.org/schema/12/dbimport">
+		<excludeTable>t_ili2db_.*</excludeTable>
+		<schema>
+			<name>mabillon</name>
+		</schema>
+		<tableTypes>
+			<tableType>TABLE</tableType>
+		</tableTypes>
+		<forceDataMapCatalog>false</forceDataMapCatalog>
+		<forceDataMapSchema>false</forceDataMapSchema>
+		<namingStrategy>org.apache.cayenne.dbsync.naming.DefaultObjectNameGenerator</namingStrategy>
+		<skipPrimaryKeyLoading>false</skipPrimaryKeyLoading>
+		<skipRelationshipsLoading>false</skipRelationshipsLoading>
+		<useJava7Types>false</useJava7Types>
+	</dbImport>
+	<cgen xmlns="http://cayenne.apache.org/schema/12/cgen">
+		<name>mabillon</name>
+		<destDir>../../../../src/generated/java</destDir>
+		<mode>entity</mode>
+		<template>templates/v4_1/subclass.vm</template>
+		<superTemplate>templates/v4_1/superclass.vm</superTemplate>
+		<makePairs>true</makePairs>
+		<usePkgPath>true</usePkgPath>
+		<overwrite>true</overwrite>
+		<createPropertyNames>true</createPropertyNames>
+		<createPKProperties>true</createPKProperties>
+		<superPkg>guru.interlis.mabillon.persistence.cayenne</superPkg>
+	</cgen>
+</data-map>
