@@ -13,6 +13,7 @@ import guru.interlis.mabillon.query.SearchPage;
 import guru.interlis.mabillon.security.AuthorizationService;
 import guru.interlis.mabillon.security.Permission;
 import org.apache.cayenne.ObjectContext;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -80,19 +81,28 @@ public final class BeteiligterService {
     }
 
     public SearchPage<BeteiligterView> search(BeteiligterSearchCriteria criteria, int page, int size) {
-        if (criteria == null) {
-            criteria = BeteiligterSearchCriteria.empty();
-        }
-        final BeteiligterSearchCriteria filter = criteria;
+        requirePage(page, size);
+        BeteiligterSearchCriteria filter = criteria == null ? BeteiligterSearchCriteria.empty() : criteria;
         return unitOfWork.read(context -> {
-            List<BeteiligterView> values = ObjectSelect.query(Beteiligter.class).select(context).stream()
-                    .filter(value -> containsIgnoreCase(value.getAname(), filter.name()))
-                    .filter(value -> filter.typ() == null || filter.typ().equals(value.getTyp()))
-                    .filter(value -> contains(value.getExternereferenz(), filter.externeReferenz()))
-                    .sorted(Comparator.comparing(Beteiligter::getAname))
+            ObjectSelect<Beteiligter> query = ObjectSelect.query(Beteiligter.class);
+            addFilter(query, filter.name() == null ? null : Beteiligter.ANAME.containsIgnoreCase(filter.name()));
+            addFilter(query, filter.typ() == null ? null : Beteiligter.TYP.eq(filter.typ()));
+            addFilter(query, filter.externeReferenz() == null ? null
+                    : Beteiligter.EXTERNEREFERENZ.contains(filter.externeReferenz()));
+
+            long total = query.selectCount(context);
+            long offset = (long) page * size;
+            if (offset >= total) {
+                return new SearchPage<>(List.of(), page, size, total);
+            }
+            List<BeteiligterView> items = query
+                    .orderBy(Beteiligter.ANAME.asc())
+                    .offset(Math.toIntExact(offset))
+                    .limit(size)
+                    .select(context).stream()
                     .map(this::toView)
                     .toList();
-            return page(values, page, size);
+            return new SearchPage<>(items, page, size, total);
         });
     }
 
@@ -148,13 +158,21 @@ public final class BeteiligterService {
                 value.getExternereferenz());
     }
 
-    private static boolean contains(String value, String filter) {
-        return filter == null || (value != null && value.contains(filter));
+    private static <T> void addFilter(ObjectSelect<T> query, Expression expression) {
+        if (expression == null) {
+            return;
+        }
+        if (query.getWhere() == null) {
+            query.where(expression);
+        } else {
+            query.and(expression);
+        }
     }
 
-    private static boolean containsIgnoreCase(String value, String filter) {
-        return filter == null || (value != null && value.toLowerCase(Locale.ROOT)
-                .contains(filter.toLowerCase(Locale.ROOT)));
+    private static void requirePage(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("Ungültige Seitendaten.");
+        }
     }
 
     private static boolean sameNonBlank(String left, String right) {
@@ -163,14 +181,5 @@ public final class BeteiligterService {
 
     private static String normalized(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
-    }
-
-    private static <T> SearchPage<T> page(List<T> values, int page, int size) {
-        if (page < 0 || size < 1) {
-            throw new IllegalArgumentException("Ungültige Seitendaten.");
-        }
-        int from = Math.min(page * size, values.size());
-        int to = Math.min(from + size, values.size());
-        return new SearchPage<>(values.subList(from, to), page, size, values.size());
     }
 }
