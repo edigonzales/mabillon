@@ -37,6 +37,16 @@
             @else
                 <a href="/geschaefte">Geschäfte</a>
             @endif
+            @if (active.equals("aufgaben"))
+                <a class="is-active" href="/aufgaben">Aufgaben</a>
+            @else
+                <a href="/aufgaben">Aufgaben</a>
+            @endif
+            @if (active.equals("beteiligte"))
+                <a class="is-active" href="/beteiligte">Beteiligte</a>
+            @else
+                <a href="/beteiligte">Beteiligte</a>
+            @endif
             @if (active.equals("search"))
                 <a class="is-active" href="/suche">Suche</a>
             @else
