@@ -58,7 +58,7 @@ public final class AufgabeController {
     @GetMapping("/{tid}")
     String detail(@PathVariable UUID tid, Model model) {
         AufgabeView value = queryService.get(tid);
-        model.addAttribute("title", value.titel());
+        model.addAttribute("title", value.title());
         model.addAttribute("active", "aufgaben");
         model.addAttribute("aufgabe", value);
         model.addAttribute("benutzer", benutzerService.list(false));
