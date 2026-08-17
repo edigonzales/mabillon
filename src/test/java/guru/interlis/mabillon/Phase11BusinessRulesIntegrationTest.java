@@ -93,7 +93,13 @@ class Phase11BusinessRulesIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
-    void dq007DetectsClosedDossierWithOpenBusiness() {
+    void phase118BusinessRulesAreEnforced() throws Exception {
+        verifyDq007();
+        verifyParticipationRules();
+        verifyDuplicateWarning();
+    }
+
+    private void verifyDq007() {
         GeschaeftView business = openBusiness("DQ007");
         DossierNumber dossierNumber = DossierNumber.parse(business.dossierNumber());
 
@@ -116,9 +122,7 @@ class Phase11BusinessRulesIntegrationTest {
                 .anyMatch(finding -> "DQ-007".equals(finding.ruleCode()));
     }
 
-    @Test
-    @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
-    void participationDatesAreOrderedAndClosedBusinessesAreImmutable() {
+    private void verifyParticipationRules() {
         GeschaeftView business = openBusiness("Beteiligung");
         BeteiligterView party = beteiligterService.create(new CreateBeteiligterCommand(
                 "Person", "Regel", "Rita", null, "rita.regel@example.test", null, null, "P11-8-RITA"));
@@ -151,9 +155,7 @@ class Phase11BusinessRulesIntegrationTest {
                 .hasMessageContaining("nicht mehr bearbeitbar");
     }
 
-    @Test
-    @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
-    void duplicateDetectionWarnsButAllowsExplicitCreation() throws Exception {
+    private void verifyDuplicateWarning() throws Exception {
         CreateBeteiligterCommand original = new CreateBeteiligterCommand(
                 "Person", "Duplikat", "Dora", null, "dora.duplicate@example.test", null, null, "P11-8-DORA");
         BeteiligterView existing = beteiligterService.create(original);
