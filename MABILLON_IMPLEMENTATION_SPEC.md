@@ -1,14 +1,14 @@
 # Mabillon – Implementierungs- und Coding-Agent-Spezifikation
 
-**Status:** Entwurf v0.4  
-**Datum:** 2026-08-16  
-**Ziel:** Implementierungsgrundlage für einen LLM-Coding-Agent und menschliche Reviews  
-**Primärsprache der Fachdomäne/UI:** Deutsch  
-**Produktname:** `Mabillon`  
-**Claim:** `Einfache und transparente Geschäftsverwaltung`  
-**Gradle Group:** `guru.interlis`  
-**Java-Basispaket:** `guru.interlis.mabillon`  
-**Artefakt-/Repository-Name:** `mabillon`  
+**Status:** Entwurf v0.5
+**Datum:** 2026-08-17
+**Ziel:** Implementierungsgrundlage für einen LLM-Coding-Agent und menschliche Reviews
+**Primärsprache der Fachdomäne/UI:** Deutsch
+**Produktname:** `Mabillon`
+**Claim:** `Einfache und transparente Geschäftsverwaltung`
+**Gradle Group:** `guru.interlis`
+**Java-Basispaket:** `guru.interlis.mabillon`
+**Artefakt-/Repository-Name:** `mabillon`
 
 ---
 
@@ -73,7 +73,7 @@ Dieser Fall dient während der gesamten Entwicklung als Referenz- und End-to-End
 - JUnit Jupiter / AssertJ
 - Testcontainers PostgreSQL für Integrationstests
 - Playwright Java für wenige, aber echte Browser-E2E-Tests
-- ili2pg 5.5.2 für INTERLIS → PostgreSQL und XTF-Import/-Export
+- ili2pg 5.5.1 für INTERLIS → PostgreSQL und XTF-Import/-Export
 - ili2c 5.6.8 für verbindliche `.ili`-Validierung/-Kompilation
 - ilivalidator 1.15.0 für verbindliche XTF-Validierung
 
@@ -250,9 +250,9 @@ Referenzfluss:
 ```text
 INTERLIS 2.4
     ↓
-ili2c compile
+ili2c Java API
     ↓
-ili2pg --schemaimport
+ili2pg Java API: Schemaimport
     ↓
 PostgreSQL / Schema mabillon
     ↓
@@ -627,43 +627,57 @@ mabillon      fachliche, von ili2pg erzeugte Tabellen
 mabillon_app  rein technische Anwendungstabellen
 ```
 
-## 7.2 Feste lokale INTERLIS-Toolchain
+## 7.2 INTERLIS Java-API-Toolchain
 
-Für die lokale Agentenentwicklung sind folgende Versionen und Pfade verbindlich:
+Die INTERLIS-Werkzeuge sind normale Gradle-Abhängigkeiten und werden in Mabillon **in-process über ihre Java APIs** verwendet. Lokale Tool-JAR-Installationen und feste Rechnerpfade sind nicht Teil der Laufzeitarchitektur.
 
-```text
-ili2pg 5.5.2
-/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar
-
-ili2c 5.6.8
-/Users/stefan/apps/ili2c-5.6.8/ili2c.jar
-
-ilivalidator 1.15.0
-/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar
-```
-
-Die Pfade werden zentral in `scripts/interlis-tools-env.sh` oder einer gleichwertigen zentralen Konfiguration definiert. Unterstützte Overrides sind `ILI2PG_JAR`, `ILI2C_JAR` und `ILIVALIDATOR_JAR`; die Defaults bleiben exakt die oben genannten lokalen Pfade. Phase 0 muss für alle drei JARs Existenz und aufrufbare Version nachweisen.
-
-Verbindliche Verantwortlichkeiten:
-
-- **ili2c 5.6.8** validiert/kompiliert jedes produktive oder geänderte `.ili`-Modell, bevor daraus ein DB-Schema erzeugt oder Cayenne aktualisiert wird.
-- **ilivalidator 1.15.0** validiert jedes eingecheckte, erzeugte, exportierte oder vor einem Import angenommene `.xtf`, sofern nicht ein expliziter Negativtest absichtlich ungültige Daten verwendet.
-- **ili2pg 5.5.2** erzeugt das PostgreSQL-Schema aus dem validierten INTERLIS-Modell und übernimmt den XTF-Import/-Export.
-
-Der normale lokale Ablauf ist damit zwingend:
+Verbindliche Versionen:
 
 ```text
-.ili
-  → ili2c 5.6.8
-  → ili2pg 5.5.2 --schemaimport
-  → PostgreSQL
-
-.xtf
-  → ilivalidator 1.15.0
-  → ili2pg 5.5.2 --import --importTid --importBid
+ili2pg        5.5.1
+ili2db        5.5.1
+ili2c         5.6.8
+ilivalidator  1.15.0
 ```
 
-Das Projekt stellt hierfür zentrale Scripts bereit:
+Die Abhängigkeiten werden zentral über Gradle aufgelöst. `settings.gradle` enthält dafür `mavenCentral()` und `https://jars.interlis.ch`. Die gemeinsam verwendeten INTERLIS-Bibliotheken müssen zu einem bewusst geprüften Satz konvergieren; der Build prüft den freigegebenen Stand mit `verifyInterlisDependencies`.
+
+Freigegebener Phase-11-Baseline-Satz:
+
+```text
+ch.interlis:ili2pg:5.5.1
+ch.interlis:ili2db:5.5.1
+ch.interlis:ilivalidator:1.15.0
+ch.interlis:ili2c-tool:5.6.8
+ch.interlis:ili2c-core:5.6.8
+ch.interlis:iox-ili:1.24.4
+ch.interlis:iox-api:1.0.4
+ch.ehi:ehibasics:1.4.1
+```
+
+Zielarchitektur:
+
+```text
+Spring Boot
+    |
+    +-- InterlisExchangeService
+    |      |
+    |      +-- Ili2pgRunner ----------------> ili2pg Java API
+    |      +-- XtfValidator ----------------> ilivalidator Java API
+    |
+    +-- InterlisModelValidator -------------> ili2c Java API
+```
+
+Verbindliche Regeln:
+
+- Der Spring-Boot-Runtimepfad startet keine externen INTERLIS-Prozesse.
+- Es gibt keine Runtime-Konfiguration für lokale Tool-JAR-Pfade.
+- Toolversionen stammen aus der Gradle-Auflösung, nicht aus separat installierten CLI-Werkzeugen.
+- Modell- und Modellrepository-Konfiguration darf über `MABILLON_MODEL` und `MABILLON_MODEL_DIR` überschrieben werden.
+- Das Deployment-Containerimage ist durch seine normalen Gradle-Runtime-Abhängigkeiten vollständig; separate INTERLIS-CLI-Installationen sind nicht erforderlich.
+- Diagnosen werden über die Java-Adapter in strukturierte Mabillon-Ergebnisse überführt; Konsolenausgabe ist nicht der primäre Ergebnisvertrag.
+
+Die zentralen Scripts bleiben als dünne Convenience-Wrapper bestehen:
 
 ```text
 scripts/interlis-tools-env.sh
@@ -673,78 +687,60 @@ scripts/create-schema.sh
 scripts/import-xtf.sh
 ```
 
-CI und lokale Entwicklung verwenden dieselben Scripts/Gradle-Tasks. Toolparameter dürfen nicht separat in CI-YAML dupliziert werden.
-
-Wichtig: Die korrekte ili2db-Option heisst `--createBasketCol` (mit `t`). Die Schreibweise `--createBaskeCol` ist **nicht** zu verwenden.
+Sie rufen `InterlisToolCli` über den bereits von Gradle aufgelösten Runtime-Classpath beziehungsweise den Gradle-Task `interlisTool` auf. Sie definieren **keine zweite Toolchain und keine eigenen Toolversionen**.
 
 ### 7.2.1 Modellvalidierung mit ili2c
 
-`scripts/validate-model.sh` verwendet standardmässig exakt:
-
-```bash
-java -jar "${ILI2C_JAR:-/Users/stefan/apps/ili2c-5.6.8/ili2c.jar}" \
-  model/SO_AGI_GEVER_20260707.ili
-```
-
-Der Agent darf nach einer Modelländerung `ili2pg --schemaimport`, Cayenne DB Import oder `cgen` erst ausführen, wenn dieser Schritt erfolgreich war. Ein fehlgeschlagener ili2c-Lauf ist ein harter Phasenfehler.
+`JavaApiInterlisModelValidator` kompiliert das Modell direkt über ili2c 5.6.8. Nach einer Modelländerung dürfen Schemaimport, Cayenne DB Import und `cgen` erst nach erfolgreicher Modellvalidierung ausgeführt werden. Ein Compilerfehler ist ein harter Phasenfehler.
 
 ### 7.2.2 XTF-Validierung mit ilivalidator
 
-`scripts/validate-xtf.sh` verwendet standardmässig exakt:
-
-```bash
-java -jar "${ILIVALIDATOR_JAR:-/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar}" \
-  "$XTF"
-```
+`JavaApiXtfValidator` validiert XTF direkt über ilivalidator 1.15.0.
 
 Regeln:
 
-1. Alle positiven XTF-Fixtures unter `model/testdata/` müssen ilivalidator-fehlerfrei sein.
+1. Alle positiven XTF-Fixtures unter `model/testdata/` müssen fehlerfrei sein.
 2. Jeder Anwendungs-Import validiert die XTF-Datei **vor** dem ili2pg-Import; bei Validierungsfehlern findet kein DB-Import statt.
-3. Jeder von Mabillon erzeugte XTF-Export wird nach dem Export erneut mit ilivalidator geprüft, bevor er als erfolgreich gemeldet oder zum Download angeboten wird.
+3. Jeder von Mabillon erzeugte XTF-Export wird nach dem Export erneut validiert, bevor er als erfolgreich gemeldet oder zum Download angeboten wird.
 4. Negativtests dürfen absichtlich ungültige XTFs verwenden; diese Fixtures liegen klar getrennt, z. B. unter `model/testdata/invalid/`, und der erwartete Validierungsfehler ist Teil des Tests.
-5. Ein Exit-Code 0 allein genügt bei Roundtrip-Tests nicht: zusätzlich werden Objektzahlen, bekannte TIDs/BIDs und fachliche Referenzen geprüft.
+5. Eine erfolgreiche Validator-Rückgabe allein genügt bei Roundtrip-Tests nicht: zusätzlich werden Objektzahlen, bekannte TIDs/BIDs und fachliche Referenzen geprüft.
 
 ## 7.3 ili2pg Schemaimport
 
-Das Projekt muss einen reproduzierbaren Befehl/Task bereitstellen. `scripts/create-schema.sh` verwendet mindestens folgende Semantik:
+Der Schemaimport erfolgt über `JavaApiIli2pgRunner.schemaImport(...)` und die ili2db/ili2pg-Java-API. Die verbindliche Semantik entspricht:
 
 ```text
---schemaimport
---dbschema mabillon
---createFk
---createFkIdx
---createUnique
---createMandatoryChecks
---createNumChecks
---createTextChecks
---createDateTimeChecks
---createMetaInfo
---createTidCol
---createBasketCol
+function = SCHEMAIMPORT
+dbschema = mabillon
+createFk = yes
+createFkIdx = yes
+createUniqueConstraints = true
+createNumChecks = true
+createTextChecks = true
+createDateTimeChecks = true
+createMetaInfo = true
+createTidCol = true
+createBasketCol = true
+setupPgExt = true
 ```
 
-Beispielstruktur; Credentials/Host kommen aus Umgebungsvariablen und werden nicht geloggt:
+### Mandatory-Constraint-Entscheid
 
-```bash
-java -jar "${ILI2PG_JAR:-/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar}" \
-  --schemaimport \
-  --dbschema mabillon \
-  --createFk \
-  --createFkIdx \
-  --createUnique \
-  --createMandatoryChecks \
-  --createNumChecks \
-  --createTextChecks \
-  --createDateTimeChecks \
-  --createMetaInfo \
-  --createTidCol \
-  --createBasketCol \
-  ...connection arguments... \
-  model/SO_AGI_GEVER_20260707.ili
-```
+Mabillon setzt mit ili2pg/ili2db **5.5.1 kein `createMandatoryChecks`**.
 
-Die tatsächliche Kommandozeile wird ausschliesslich in `scripts/create-schema.sh` zentralisiert. Optionen dürfen nicht dupliziert in CI/YAML/README verteilt werden; CI ruft dasselbe Script bzw. denselben Gradle-Task auf.
+Die Phase-11-Prüfung hat für das konkrete Mabillon-Modell gezeigt:
+
+- direkt abbildbare `MANDATORY`-Attribute und -Referenzen werden bereits durch normale PostgreSQL-`NOT NULL`-/FK-Strukturen erzwungen,
+- die früher problematischen optionalen Referenzen und `{0..1}`-Rollen müssen nullable bleiben,
+- zusätzliche Mandatory-CHECK-Constraints sind für Mabillon nicht erforderlich.
+
+`sqlEnableNull` wird ebenfalls nicht verwendet, weil dies die normalen `NOT NULL`-Constraints global unterdrücken würde.
+
+`InterlisSchemaConstraintIntegrationTest` ist der verbindliche Regressionstest. Er prüft positive und negative Mandatory-Fälle, die Nullable-Semantik der früher betroffenen optionalen Referenzen und dass keine zusätzlichen `IS NOT NULL`-CHECK-Constraints erzeugt werden.
+
+Ein nachträglicher `SchemaConstraintRepair` ist nicht Teil der Architektur und darf nicht wieder eingeführt werden, solange kein reproduzierbarer, getesteter Bedarf vorliegt.
+
+Credentials/Host werden über Anwendungskonfiguration beziehungsweise Umgebungsvariablen geliefert und nie geloggt. Scripts und CI verwenden denselben Java-API-/Gradle-Pfad; ili2pg-Optionen werden nicht als zweite, unabhängige CLI-Konfiguration dupliziert.
 
 ## 7.4 Baskets, TIDs und BIDs
 
@@ -756,26 +752,16 @@ Für Test-/Entwicklungsdaten werden mindestens drei definierte Baskets erzeugt/i
 - Stammdaten,
 - Geschäftsdaten.
 
-Jeder XTF-Import über ili2pg muss standardmässig die Transfer- und Basket-IDs übernehmen:
+Die öffentlichen Mabillon-Importpfade übergeben an `ImportXtfRequest` verbindlich:
 
 ```text
---importTid
---importBid
+importTid = true
+importBid = true
 ```
 
-Damit ist der normale Importpfad in `scripts/import-xtf.sh` mindestens:
+`JavaApiIli2pgRunner` überträgt diese Werte direkt auf die ili2db-Konfiguration. Ein Importmodus ohne Übernahme dieser IDs muss als eigener, fachlich begründeter Use Case spezifiziert und freigegeben werden.
 
-```bash
-java -jar "${ILI2PG_JAR:-/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar}" \
-  --import \
-  --dbschema mabillon \
-  --importTid \
-  --importBid \
-  ...connection arguments... \
-  "$XTF"
-```
-
-Der Agent darf `--importTid` oder `--importBid` nicht aus Bequemlichkeit weglassen. Ein Importmodus ohne Übernahme dieser IDs muss als eigener, fachlich begründeter Use Case spezifiziert und freigegeben werden.
+Beim Export ist `exportTid = true`; Topics und optional ausgewählte Basket-IDs werden explizit an die Java-API übergeben.
 
 Pflichttests:
 
@@ -791,7 +777,7 @@ Pflichttests:
 Immer:
 
 ```text
-.ili → ili2pg --schemaimport → leere DB
+.ili → ili2c Java API → ili2pg Java API (Schemaimport) → leere DB
 ```
 
 ### Produktionsmigration
@@ -866,7 +852,7 @@ Der Agent darf **nicht** davon ausgehen, dass MCP in CI verfügbar ist.
 
 ## 8.4 MCP-Workflow bei Modelländerungen
 
-Nach erfolgreichem `ili2pg --schemaimport` gegen eine frische lokale Referenz-DB:
+Nach erfolgreichem Schemaimport über die ili2pg-Java-API gegen eine frische lokale Referenz-DB:
 
 1. Cayenne-Projekt via MCP öffnen.
 2. DB Import gegen Schema `mabillon` ausführen.
@@ -1934,7 +1920,9 @@ DQ-005, DQ-006, DQ-007, DQ-008, DQ-009, DQ-010, DQ-011, DQ-013 sind ERROR.
 
 # 14.14 INTERLIS Import/Export
 
-## Prozessadapter
+## Java-API-Adapter
+
+Die fachlichen Adapterinterfaces bleiben die stabile Anwendungsgrenze:
 
 ```java
 public interface InterlisModelValidator {
@@ -1945,17 +1933,6 @@ public interface XtfValidator {
     ValidationResult validate(Path xtf);
 }
 
-public final class InterlisToolDefaults {
-    public static final Path ILI2PG_JAR =
-        Path.of("/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar");
-    public static final Path ILI2C_JAR =
-        Path.of("/Users/stefan/apps/ili2c-5.6.8/ili2c.jar");
-    public static final Path ILIVALIDATOR_JAR =
-        Path.of("/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar");
-
-    private InterlisToolDefaults() {}
-}
-
 public interface Ili2pgRunner {
     Ili2pgResult schemaImport(SchemaImportRequest request);
     Ili2pgResult importXtf(ImportXtfRequest request);
@@ -1964,25 +1941,19 @@ public interface Ili2pgRunner {
 }
 ```
 
-Produktive Implementierung:
+Produktive Implementierungen:
 
-```java
-ProcessBuilderIli2pgRunner
-ProcessBuilderInterlisModelValidator
-ProcessBuilderXtfValidator
+```text
+JavaApiIli2pgRunner
+JavaApiInterlisModelValidator
+JavaApiXtfValidator
 ```
 
-`ProcessBuilderInterlisModelValidator.validate()` ruft ili2c 5.6.8 als externen Prozess auf, sammelt Exit-Code und Diagnoseausgabe und liefert bei jedem Compilerfehler `ValidationResult.invalid(...)`.
+Die Adapter rufen ili2pg/ili2db, ili2c und ilivalidator direkt im Anwendungsprozess auf. Externe Prozessstarts, separat installierte Tool-JARs und lokale JAR-Pfad-Defaults sind nicht Bestandteil der Produktarchitektur.
 
-`ProcessBuilderXtfValidator.validate()` ruft ilivalidator 1.15.0 als externen Prozess auf. Die Anwendung darf nach `invalid` keinen `Ili2pgRunner.importXtf(...)` aufrufen. Ebenso muss `InterlisExchangeService` nach `exportXtf(...)` den erzeugten XTF mit `XtfValidator` prüfen; ein nicht valider Export wird gelöscht/quarantänisiert und als Fehler gemeldet.
+`InterlisToolDefaults` enthält ausschliesslich gemeinsame fachlich-technische Defaults wie Modellname, Modellpfad, Modellrepositories und die erwarteten Toolversionen. Tool-Binaries oder lokale Installationspfade gehören nicht hinein.
 
-Verbindliche Defaults des Runners:
-
-```java
-`InterlisToolDefaults` ist die einzige Default-Quelle für die drei lokalen JAR-Pfade. Zusätzlich sind dort bzw. in einer gleichwertigen zentralen Konfiguration die erwarteten Versionen `5.5.2`, `5.6.8` und `1.15.0` hinterlegt. Es darf keine zweite `Ili2pgDefaults`-Klasse mit dupliziertem Pfad geben.
-```
-
-`ImportXtfRequest` muss explizit modellieren, ob TID/BID übernommen werden; die Application-Services verwenden immer `true/true`:
+Die öffentlichen Import-Use-Cases verwenden immer `importTid=true` und `importBid=true`:
 
 ```java
 public record ImportXtfRequest(
@@ -1993,31 +1964,27 @@ public record ImportXtfRequest(
 ) {}
 ```
 
-`ProcessBuilderIli2pgRunner.importXtf()` setzt bei diesen Flags die ili2pg-Argumente `--importTid` und `--importBid`. Die öffentlichen Mabillon-Import-Use-Cases dürfen sie nicht deaktivieren.
-
-Verbindlicher Importalgorithmus der drei öffentlichen Import-Use-Cases:
+Verbindlicher Importalgorithmus:
 
 ```text
 XtfValidator.validate(xtf)
   → invalid: STOP, keine DB-Änderung
-  → valid: Ili2pgRunner.importXtf(... importTid=true, importBid=true)
+  → valid: Topic prüfen
+  → Ili2pgRunner.importXtf(... importTid=true, importBid=true)
+  → Ili2pgRunner.validate(...)
   → fachliche Post-Import-Checks
 ```
 
 Verbindlicher Exportalgorithmus:
 
 ```text
-Ili2pgRunner.exportXtf(...)
+Ili2pgRunner.exportXtf(... exportTid=true)
   → XtfValidator.validate(exportedXtf)
-  → invalid: Export als FAILED markieren, Datei nicht ausliefern
+  → invalid: Export als FAILED behandeln und Datei nicht ausliefern
   → valid: fachliche Roundtrip-/Count-Prüfungen, danach Erfolg
 ```
 
-Kein `Runtime.exec(String)` mit unescaped Commandline.
-
-Argumente als Liste an `ProcessBuilder`.
-
-Passwörter nie in Logs.
+Passwörter werden nie geloggt. Fehler und Diagnosen werden über `ValidationResult`, `Ili2pgResult` und die Exchange-Ergebnisse transportiert.
 
 ## Application Service
 
@@ -2039,8 +2006,6 @@ Importreihenfolge:
 ```text
 Kataloge → Stammdaten → Geschäftsdaten
 ```
-
----
 
 # 14.15 Archivierung und SIP
 
@@ -2277,8 +2242,8 @@ Die folgenden Use Cases sind verbindlich. Die IDs bleiben stabil.
 
 ## UC-001 Meine Arbeit anzeigen
 
-**Actor:** Sachbearbeiter  
-**Service:** `MyWorkQueryService.load`  
+**Actor:** Sachbearbeiter
+**Service:** `MyWorkQueryService.load`
 **Controller:** `DashboardController.myWork`
 
 **Preconditions:** Benutzer angemeldet, aktiver Benutzer.
@@ -2876,15 +2841,15 @@ Minimaler Spring-Spike darf existieren, aber keine fachlichen Screens implementi
 
 ### Tests/Gate
 
-- `ILI2PG_JAR` existiert am Default-Pfad `/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar`,
-- `ILI2C_JAR` existiert am Default-Pfad `/Users/stefan/apps/ili2c-5.6.8/ili2c.jar`,
-- `ILIVALIDATOR_JAR` existiert am Default-Pfad `/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar`,
-- ili2pg-Version 5.5.2, ili2c-Version 5.6.8 und ilivalidator-Version 1.15.0 sind nachweislich aufrufbar,
-- `scripts/validate-model.sh` ist grün,
-- alle positiven XTF-Testdaten sind über `scripts/validate-xtf.sh` / ilivalidator 1.15.0 grün,
-- ili2pg schemaimport gegen frische PostgreSQL-Testinstanz grün, **inkl. `--createTidCol --createBasketCol`**,
-- XTF-Testdatenimport grün, **inkl. `--importTid --importBid`**,
-- erwartete TIDs und BIDs nach Import erhalten,
+- `settings.gradle` löst die INTERLIS-Bibliotheken zentral über Maven Central und `https://jars.interlis.ch` auf,
+- `verifyInterlisDependencies` bestätigt den freigegebenen Satz mit ili2pg/ili2db 5.5.1, ili2c 5.6.8 und ilivalidator 1.15.0,
+- `scripts/validate-model.sh` validiert das Modell über die ili2c-Java-API erfolgreich,
+- alle positiven XTF-Testdaten sind über `scripts/validate-xtf.sh` / ilivalidator-Java-API grün,
+- ein absichtlich ungültiges XTF wird vor dem DB-Import abgewiesen,
+- Schemaimport über die ili2pg-Java-API gegen eine frische PostgreSQL-Testinstanz ist grün, inklusive TID- und Basket-Spalten,
+- der Schemaimport verwendet **kein `createMandatoryChecks`**; `InterlisSchemaConstraintIntegrationTest` beweist die erforderlichen Mandatory- und Nullable-Semantiken,
+- XTF-Testdatenimport über die Java API ist grün mit `importTid=true` und `importBid=true`,
+- erwartete TIDs und BIDs bleiben nach Import erhalten,
 - alle erwarteten FK/Checks vorhanden,
 - Cayenne DB Import erfolgreich,
 - cgen erfolgreich,
@@ -2892,7 +2857,8 @@ Minimaler Spring-Spike darf existieren, aber keine fachlichen Screens implementi
 - MCP smoke test dokumentiert,
 - keine unerklärten Mapping-Diffs,
 - `ili2grails`-Designreferenz auf Commit `3e133a976a0ed1c704f38e81a6493501e0568ec4` geprüft und Design-ADR erstellt,
-- Agent-Skills unter `.agents/skills` syntaktisch geprüft und von Codex/OpenCode auffindbar.
+- Agent-Skills unter `.agents/skills` syntaktisch geprüft und von Codex/OpenCode auffindbar,
+- Runtime, Tests und Scripts benötigen keine separat installierten INTERLIS-Tool-JARs.
 
 ### STOP
 
@@ -3132,8 +3098,8 @@ UC-034, UC-035, UC-036.
 - jeder Input-XTF wird vor Import mit ilivalidator 1.15.0 geprüft,
 - jeder Export-XTF wird nach Export mit ilivalidator 1.15.0 geprüft,
 - Roundtrip XTF → DB → XTF semantisch gleich,
-- `--importTid` erhält die vorgegebenen Transfer-IDs,
-- `--importBid` erhält die vorgegebenen Basket-IDs,
+- `importTid=true` erhält die vorgegebenen Transfer-IDs,
+- `importBid=true` erhält die vorgegebenen Basket-IDs,
 - Kataloge → Stammdaten → Geschäftsdaten behalten ihre Basket-Zuordnung,
 - Cross-Topic-Referenzen bleiben nach Import korrekt,
 - falsche Importreihenfolge erzeugt verständlichen Fehler,
@@ -3574,19 +3540,16 @@ Der Agent muss in Phase 0 explizit verifizieren und dokumentieren:
 11. Association `Unterlage_Geschaeft` erzeugt ein brauchbares Mapping.
 12. Topic-/Basket-Metadaten behindern Cayenne nicht.
 13. `t_id`, `t_ili_tid`, `t_basket` werden korrekt verstanden und nicht als Fachnummern missbraucht.
-14. ili2pg 5.5.2 wird exakt vom Default-Pfad `/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar` gestartet oder bewusst über `ILI2PG_JAR` überschrieben.
-15. ili2c 5.6.8 wird exakt vom Default-Pfad `/Users/stefan/apps/ili2c-5.6.8/ili2c.jar` gestartet oder bewusst über `ILI2C_JAR` überschrieben.
-16. ilivalidator 1.15.0 wird exakt vom Default-Pfad `/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar` gestartet oder bewusst über `ILIVALIDATOR_JAR` überschrieben.
-17. Ein absichtlich ungültiges XTF wird von ilivalidator erkannt und gelangt nicht in den ili2pg-Import.
-18. Ein gültiger Mabillon-XTF-Export besteht die ilivalidator-Prüfung.
-15. Schemaimport verwendet `--createTidCol --createBasketCol`.
-16. Testdatenimport verwendet `--importTid --importBid` und erhält die erwarteten IDs.
-17. Die `ili2grails`-Designreferenz ist auf den in Abschnitt 2.2 genannten Commit gepinnt und dokumentiert.
-18. Die projektspezifischen Agent-Skills liegen unter `.agents/skills/<name>/SKILL.md` und werden in der lokalen Codex- und OpenCode-Konfiguration entdeckt.
+14. Gradle löst ili2pg 5.5.1, ili2db 5.5.1, ili2c 5.6.8 und ilivalidator 1.15.0 aus der zentralen Repository-/Dependency-Konfiguration auf; `verifyInterlisDependencies` ist grün.
+15. Modellkompilation, XTF-Validierung und ili2pg-Operationen funktionieren über die produktiven Java-API-Adapter ohne separat installierte Tool-JARs.
+16. Ein absichtlich ungültiges XTF wird von ilivalidator erkannt und gelangt nicht in den ili2pg-Import.
+17. Ein gültiger Mabillon-XTF-Export besteht die ilivalidator-Prüfung.
+18. Schemaimport erzeugt TID- und Basket-Spalten, verwendet kein `createMandatoryChecks` und erfüllt die in `InterlisSchemaConstraintIntegrationTest` geprüften Mandatory-/Nullable-Regeln.
+19. Testdatenimport verwendet `importTid=true` und `importBid=true` und erhält die erwarteten IDs.
+20. Die `ili2grails`-Designreferenz ist auf den in Abschnitt 2.2 genannten Commit gepinnt und dokumentiert.
+21. Die projektspezifischen Agent-Skills liegen unter `.agents/skills/<name>/SKILL.md` und werden in der lokalen Codex- und OpenCode-Konfiguration entdeckt.
 
 Wenn einer dieser Punkte scheitert, endet Phase 0 mit Status FAILED. Der Agent darf keine Workarounds in Phase 1 verstecken.
-
----
 
 # 25. Leitprinzip für alle weiteren Entscheidungen
 
