@@ -31,8 +31,8 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 | X-SEC-01 | P0 | IMPLEMENTED | Fachliche routes are default-deny and require a Mabillon role; only health and explicit static assets remain public. Focused MVC security tests cover anonymous, roleless, Sachbearbeiter and Admin access. The tests execute successfully in GitHub Actions. | Keep the policy covered by the final green Phase-11 verification run. |
 | X-SEC-02 | P0 | OPEN | In-memory development users still use configurable `{noop}` credentials and development defaults. | Dev/test-only identity configuration; production startup must not silently use default credentials. |
 | X-AUDIT-01 | P0 | IMPLEMENTED | `JournalService` no longer falls back to `anna.mueller`. `SpringSecurityCurrentActor` maps the development login aliases deterministically to configured fachliche usernames; an unmapped principal is accepted only under its own username and a writing use case fails if no corresponding fachlicher `Benutzer` exists. Unit and PostgreSQL/Cayenne integration tests cover the mapping and negative case. | The PostgreSQL integration test currently cannot initialize in CI because its fixture path still invokes the external ili2pg JAR; close that through 11.5. |
-| X-CI-01 | P0 | IMPLEMENTED | `.github/workflows/ci.yml` now runs Java 25 and `./gradlew test` on pushes to `main`/`agent/**` and pull requests to `main`, using the GitHub-hosted Docker daemon for Testcontainers and uploading Gradle test reports on failure. A real runner reaches and executes the tests. | Current baseline is intentionally red on three tests that still depend on the obsolete external INTERLIS JAR installation. Make the gate green through 11.5 Java-API integration, not by duplicating the old tool installation in CI. |
-| X-STORAGE-01 | P0 | OPEN | `UnterlageService` finalizes storage inside the Cayenne unit-of-work callback, while `CayenneUnitOfWork` commits the DB only afterwards. | Implement and failure-test the specified staging/DB/storage ordering and compensation behavior. |
+| X-CI-01 | P0 | IMPLEMENTED | `.github/workflows/ci.yml` now runs Java 25 and `./gradlew test` on pushes to `main`/`agent/**` and pull requests to `main`, using the GitHub-hosted Docker daemon for Testcontainers and uploading Gradle test reports on failure. A real runner reaches and executes the tests. | The current red tests are confined to the obsolete external INTERLIS tool/fixture path, including new integration tests that reuse those fixtures. Make the gate green through 11.5 Java-API integration, not by duplicating the old tool installation in CI. |
+| X-STORAGE-01 | P0 | IMPLEMENTED | `DocumentStorage.describe` now plans and verifies final metadata/URI without moving the staged file. `UnterlageService` commits Unterlage plus journal through `CayenneUnitOfWork` before calling the final storage move. If that move fails after DB commit, a compensation transaction deletes the newly created Unterlage and its journal event and storage cleanup removes staging/partial final state. The old `anna.mueller` fallback in `UnterlageService` was removed as part of the same fail-closed path. | The storage sequencing unit test executes successfully in GitHub Actions. The PostgreSQL/Cayenne compensation test is present and compiles, but its fixture initialization still uses the old external ili2pg JAR and therefore awaits 11.5 before it can execute. |
 | X-TEST-01 | P1 | OPEN | Specification requires Playwright Java; no Playwright dependency/test is present although phase reports describe browser/Playwright verification as passed. | Add real automated Playwright golden-path tests. |
 | X-TEST-02 | P1 | OPEN | `Phase0CompatibilityTest` uses a large shared PostgreSQL fixture/state, conflicting with the rule that tests must not share persistent mutable state between test methods. | Split/restructure integration tests and make their persistent state independent/reproducible. |
 | X-VAL-01 | P1 | OPEN | Web layer primarily uses raw `@RequestParam` and exceptions; the specified structured validation/error model is not consistently implemented. | Introduce consistent form/command validation and user-facing field/domain errors. |
@@ -57,7 +57,7 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 | UC-011 | Geschäftsergebnis erfassen | PARTIAL | Service and UI flow exist. Permission/integration coverage and structured validation need closure. |
 | UC-012 | Beteiligten erfassen | FAIL | Service exists, but the specification's duplicate-warning behavior is not implemented as a complete use case and there is no dedicated participant create/detail web flow. |
 | UC-013 | Beteiligten einem Geschäft zuordnen | PARTIAL | Service and POST controller exist. `add()` does not enforce `gueltigBis >= gueltigVon` although `update()` does; update/end UI flows are missing. |
-| UC-014 | Unterlage registrieren | FAIL | Upload/metadata/hash and service/UI exist, but DB/storage commit ordering contradicts the specified failure-safe staging sequence. |
+| UC-014 | Unterlage registrieren | PARTIAL | Upload, metadata/hash, service/UI and the specified staging → DB commit → final storage ordering are implemented. A final-storage failure now triggers DB compensation and cleanup. The focused filesystem sequencing test runs in CI; the PostgreSQL compensation test is present but cannot initialize until 11.5 removes the external ili2pg fixture dependency. |
 | UC-015 | Unterlage einem Geschäft zuordnen | PARTIAL | Service validates same-dossier consistency. A complete web flow/detail page and strict verification are incomplete. |
 | UC-016 | Eingegangene E-Mail registrieren | PARTIAL | Specialized service exists; no complete dedicated UI/verification of the incoming-email flow is evident. |
 | UC-017 | Ausgangsschreiben registrieren | PARTIAL | Supported through generic/specialized registration and outgoing date fields, but dedicated end-to-end evidence is incomplete. |
@@ -93,11 +93,11 @@ A phase report marked `SUCCESS` is not by itself evidence that a use case is com
 
 ## 4. Summary
 
-Strict status after the implemented 11.1/11.2 changes:
+Strict status after the implemented 11.1–11.3 changes:
 
 - **PASS:** 1 use case (`UC-006`)
-- **PARTIAL:** 37 use cases
-- **FAIL:** 8 use cases
+- **PARTIAL:** 38 use cases
+- **FAIL:** 7 use cases
 
 This deliberately conservative classification reflects the specification's own Definition of Done. A `PARTIAL` use case often already has most of its business implementation; it is not equivalent to "half implemented". The most common remaining reasons for `PARTIAL` are missing web reachability, insufficient independent automated evidence, incomplete validation/error semantics, or outstanding test isolation.
 
@@ -107,8 +107,9 @@ The detailed and current order is maintained in `PHASE_11_WORKPLAN.md`, which su
 
 - **11.1 Security default-deny:** implementation complete; focused security tests execute successfully in GitHub Actions.
 - **11.2 Identity & audit:** deterministic login-to-fachlicher-user mapping and fail-closed journal attribution implemented; unit tests execute successfully in GitHub Actions; the PostgreSQL integration test is blocked only by the old external ili2pg fixture path.
-- **11.CI Continuous integration baseline:** implemented and exercised by real GitHub Actions runs. Java 25 setup, Gradle build, Docker/Testcontainers access and failure-report upload work. The latest baseline executes 18 tests with 3 failures, all tied to the old external INTERLIS JAR integration and therefore assigned to 11.5.
-- **Next:** 11.3 DB/storage consistency (`X-STORAGE-01`).
+- **11.CI Continuous integration baseline:** implemented and exercised by real GitHub Actions runs. Java 25 setup, Gradle build, Docker/Testcontainers access and failure-report upload work. The current red integration tests are confined to the old external INTERLIS tool/fixture path and therefore assigned to 11.5.
+- **11.3 DB/storage consistency:** implementation complete. Final storage mutation now happens only after a successful Cayenne DB commit; post-commit storage failure has explicit DB compensation and storage cleanup. The filesystem sequencing test is green in CI. The PostgreSQL compensation test compiles and is blocked only by the existing external ili2pg fixture bootstrap, to be removed in 11.5.
+- **Next:** 11.4 Test isolation (`X-TEST-02`).
 - **X-SEC-02:** remains intentionally open and is handled by the later dev/prod security-separation work package.
 
 ## 6. Hard final gate
