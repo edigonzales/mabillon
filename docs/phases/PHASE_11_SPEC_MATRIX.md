@@ -29,16 +29,16 @@ The relevant dimensions are application/domain service, business rules and persi
 | X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` restores a pristine PostgreSQL baseline and filesystem state before every method. | Keep order independence covered. |
 | X-VAL-01 | P1 | IMPLEMENTED | `MabillonException`, `ValidationException`/`FieldError`, not-found/conflict/authorization types and the central `WebExceptionHandler` provide deterministic 400/404/409/403 semantics plus HTMX error fragments; focused MVC/PostgreSQL evidence is green. | Keep covered by final acceptance gate. |
 | X-DQ-01 | P1 | IMPLEMENTED | DQ-007 now reports an ERROR for a terminal dossier containing a non-terminal business and is exposed by dossier and business quality checks; focused PostgreSQL evidence is green in Run #113. | Keep DQ-001 through DQ-013 covered by the final acceptance gate. |
-| X-SEARCH-01 | P1 | IMPLEMENTED | Global search now uses explicit type-specific filters, normalizes blank criteria and emits only navigable result targets; route rendering and the former positional false-positive cases are PostgreSQL/MVC-tested in Run #120. | DB-side filtering/pagination remains the separate 11.13 performance task. |
-| X-PERF-01 | P2 | OPEN | Several searches materialize/filter/page in Java. | 11.13. |
+| X-SEARCH-01 | P1 | IMPLEMENTED | Global search uses explicit type-specific filters, normalizes blank criteria and emits only navigable result targets; route rendering and former positional false-positive cases are PostgreSQL/MVC-tested in Run #120, while 11.13 adds DB-side counts/filtering/pagination. | Keep covered by the final acceptance gate. |
+| X-PERF-01 | P2 | IMPLEMENTED | Relevant dossier/business/participant/task/control/global-search paths now filter, count, sort and page in Cayenne/PostgreSQL; duplicate candidates are DB-prefiltered. `Phase11DatabaseSearchPaginationIntegrationTest` plus the full suite are green in Run #175. | Archive-candidate selection remains deliberately separate because final eligibility depends on DQ/storage/hash checks before paging. |
 
 ## 3. Use-case closure matrix
 
 | UC | Use case | Status | Evidence / remaining gap |
 |---|---|---|---|
 | UC-001 | Meine Arbeit anzeigen | PARTIAL | Dashboard/query and identity mapping exist and the real browser opens the authenticated dashboard; richer final acceptance mapping for populated work lists remains. |
-| UC-002 | Geschäft suchen | PARTIAL | Search/UI exist; DB-side filtering/paging remains 11.13. |
-| UC-003 | Dossier suchen | PARTIAL | Search/UI exist; DB-side filtering/paging remains 11.13. |
+| UC-002 | Geschäft suchen | PASS | Search UI/semantics exist and 11.13 moves filtering, `selectCount()`, ordering and offset/limit into Cayenne/PostgreSQL; isolated paging evidence and the full suite are green in Run #175. |
+| UC-003 | Dossier suchen | PASS | Search UI/semantics exist and 11.13 moves filtering, `selectCount()`, ordering and offset/limit into Cayenne/PostgreSQL; isolated paging evidence and the full suite are green in Run #175. |
 | UC-004 | Neues Geschäft eröffnen | PASS | Service/UI/numbering are PostgreSQL-backed and the real Playwright Golden Path creates the Nomenklatur business through the HTML form. |
 | UC-005 | Neues Dossier eröffnen | PASS | Service/UI/numbering are PostgreSQL-backed and the real Playwright Golden Path creates the dossier through the HTML form. |
 | UC-006 | Geschäft bestehendem Dossier zuordnen | PASS | Assignment during business creation is the specified scope and is exercised by the real Golden Path. |
@@ -57,7 +57,7 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-019 | Aufgabe erstellen | PASS | Service/create validation plus the real Playwright form flow create the fachliche Prüfaufgabe in PostgreSQL. |
 | UC-020 | Aufgabe bearbeiten | PARTIAL | 11.6 adds list/detail/edit/update/delegate web flows; 11.10 structures update/delegation validation. Dedicated edit/delegation acceptance remains. |
 | UC-021 | Aufgabe erledigen | PASS | Service/controller behavior and the real Playwright Golden Path complete the newly created task through the UI. |
-| UC-022 | Eigene Aufgaben verwalten | PARTIAL | 11.6 exposes own-task list/detail/edit/delegate flows; final populated-list acceptance evidence remains. |
+| UC-022 | Eigene Aufgaben verwalten | PARTIAL | 11.6 exposes own-task list/detail/edit/delegate flows; 11.13 moves the own/open task list predicates and limits into PostgreSQL, while final populated-list browser acceptance remains. |
 | UC-023 | Fachsystemreferenz erfassen | PARTIAL | Dossier/business add flows exist; final removal/audit acceptance remains. |
 | UC-024 | Journal eines Geschäfts anzeigen | PASS | Real browser reloads the business journal and verifies expected creation/status/result/closure events attributed to `anna.mueller`. |
 | UC-025 | Geschäft abschliessen | PASS | Close rules have positive/negative integration evidence and the full real-browser Golden Path reaches terminal process/result state and closes the business. |
@@ -72,26 +72,26 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-034 | Katalogdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
 | UC-035 | Stammdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
 | UC-036 | Geschäftsdaten importieren/exportieren | PASS | TID/BID-aware Java-API import/export plus semantic graph equality explicitly preserve BID, TID and REF identities across a fresh PostgreSQL roundtrip. |
-| UC-037 | Abgeschlossene Dossiers zur Aussonderung suchen | PARTIAL | Archive candidate/query functionality exists; final acceptance mapping remains. |
+| UC-037 | Abgeschlossene Dossiers zur Aussonderung suchen | PARTIAL | Archive candidate/query functionality exists; generic early DB paging is intentionally not applied because final eligibility depends on DQ/storage/hash checks. Final archive acceptance remains. |
 | UC-038 | Archivablieferung zusammenstellen | PARTIAL | Create/add/remove and quality gates exist; final role/integration mapping remains. |
 | UC-039 | SIP erzeugen | PARTIAL | Strong implementation/tests exist; final archive-browser/security closure remains. |
 | UC-040 | SIP validieren | PARTIAL | Persistent validation/report behavior exists; final closure remains. |
 | UC-041 | SIP-Ablieferung dokumentieren | PARTIAL | Transfer recording/journal exists; final permission evidence remains. |
 | UC-042 | Dossier nach erfolgreicher Ablieferung kennzeichnen | PARTIAL | Acceptance/archive state handling exists; final end-to-end archive evidence remains. |
-| UC-043 | Systemweite Suche | PARTIAL | 11.9 replaces positional generic matching with explicit type-specific semantics, normalizes blank browser criteria and verifies every returned Golden-Path target renders successfully. DB-side execution remains 11.13 and final acceptance remains. |
-| UC-044 | Geschäftskontrolle / Fristenübersicht | PARTIAL | Functionality and route protection exist; final integration/performance evidence remains. |
+| UC-043 | Systemweite Suche | PASS | 11.9 provides explicit type-specific semantics, blank-criteria normalization and navigable result-target tests; 11.13 adds DB-side per-type counts/filtering and cross-type offset/limit pagination. `GlobalSearchCorrectnessIntegrationTest`, `Phase11DatabaseSearchPaginationIntegrationTest` and the full suite are green in Run #175. |
+| UC-044 | Geschäftskontrolle / Fristenübersicht | PASS | Functionality and route protection are covered; 11.13 moves open/overdue task/business queries, bounded inactivity selection and process-status aggregation into PostgreSQL, with existing integration coverage and the full suite green in Run #175. |
 | UC-045 | Datenqualität prüfen | PARTIAL | `DataQualityService` implements DQ-001…DQ-013 including DQ-007; focused positive/negative PostgreSQL evidence is green. Final full acceptance mapping remains. |
 | UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling and fail-closed actor attribution are implemented; the Golden Path verifies key business/dossier audit events and `anna.mueller`, while final all-event acceptance coverage remains for 11.15. |
 
 ## 4. Summary
 
-Strict status after completed 11.12:
+Strict status after completed 11.13:
 
-- **PASS:** 18 use cases
-- **PARTIAL:** 28 use cases
+- **PASS:** 22 use cases
+- **PARTIAL:** 24 use cases
 - **FAIL:** 0 use cases
 
-`PARTIAL` remains deliberately conservative. The remaining gaps are now primarily dedicated admin/archive acceptance, permission coverage, DB-side query execution or final all-use-case verification rather than missing Golden-Path browser infrastructure.
+`PARTIAL` remains deliberately conservative. The remaining gaps are now primarily dedicated admin/archive acceptance, permission coverage, security profile separation or final all-use-case verification rather than missing search performance infrastructure.
 
 ## 5. Phase-11 execution status
 
@@ -108,7 +108,8 @@ Strict status after completed 11.12:
 - **11.10 Validation / error model:** complete. Structured `FieldError` validation and deterministic 400/404/409/403 handling for normal HTTP and HTMX are covered by `Phase11ValidationErrorIntegrationTest`; final 11.10 head Run #151 is green.
 - **11.11 INTERLIS semantic roundtrip:** complete. Two independent PostgreSQL/PostGIS databases exercise Java-API export → ilivalidator → fresh schema/import → DB validation → re-export; semantic graph equality preserves all three topics and explicitly verifies Golden-Path BID/TID/REF identities. Run #153 is green with explicit identity assertions.
 - **11.12 Real Playwright golden path:** complete. `PlaywrightGoldenPathE2ETest` drives the complete Nomenklatur dossier/business/participant/document/process/task/result/closure/audit workflow through real Chromium against RANDOM_PORT Spring Boot, PostgreSQL and filesystem storage. Full suite Run #160 is green.
-- **Next:** 11.13 DB-side search/pagination.
+- **11.13 DB-side search/pagination:** complete. Relevant search/dashboard/control paths now execute filters/counts/sorts/limits in Cayenne/PostgreSQL; global search uses DB-side per-type pagination and related-ID subqueries. `Phase11DatabaseSearchPaginationIntegrationTest` and the full suite passed in Run #175.
+- **Next:** 11.14 Dev/prod security separation.
 - **X-SEC-02:** intentionally deferred to 11.14.
 
 ## 6. Hard final gate
