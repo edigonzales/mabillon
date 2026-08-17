@@ -23,9 +23,21 @@
                 <label>Typ
                     <select name="typ">
                         <option value="">Alle</option>
-                        <option value="Person" selected="${"Person".equals(typ)}">Person</option>
-                        <option value="Organisation" selected="${"Organisation".equals(typ)}">Organisation</option>
-                        <option value="Interne_Organisationseinheit" selected="${"Interne_Organisationseinheit".equals(typ)}">Interne Organisationseinheit</option>
+                        @if ("Person".equals(typ))
+                            <option value="Person" selected>Person</option>
+                        @else
+                            <option value="Person">Person</option>
+                        @endif
+                        @if ("Organisation".equals(typ))
+                            <option value="Organisation" selected>Organisation</option>
+                        @else
+                            <option value="Organisation">Organisation</option>
+                        @endif
+                        @if ("Interne_Organisationseinheit".equals(typ))
+                            <option value="Interne_Organisationseinheit" selected>Interne Organisationseinheit</option>
+                        @else
+                            <option value="Interne_Organisationseinheit">Interne Organisationseinheit</option>
+                        @endif
                     </select>
                 </label>
                 <label>Externe Referenz <input name="externeReferenz" value="${externeReferenz == null ? "" : externeReferenz}"></label>
