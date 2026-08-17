@@ -14,6 +14,7 @@ import guru.interlis.mabillon.journal.JournalService;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Benutzer;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
+import guru.interlis.mabillon.persistence.cayenne.Ereignis;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
 import guru.interlis.mabillon.persistence.cayenne.Unterlage;
 import guru.interlis.mabillon.persistence.cayenne.Unterlagentyp;
@@ -27,7 +28,6 @@ import guru.interlis.mabillon.storage.StagedDocument;
 import guru.interlis.mabillon.storage.StorageTarget;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,7 +43,6 @@ public final class UnterlageService {
     private final AuthorizationService authorizationService;
     private final CurrentActor currentActor;
     private final Clock clock;
-    private final String journalFallbackUsername;
 
     public UnterlageService(
             CayenneUnitOfWork unitOfWork,
@@ -51,34 +50,34 @@ public final class UnterlageService {
             JournalService journalService,
             AuthorizationService authorizationService,
             CurrentActor currentActor,
-            Clock clock,
-            @Value("${mabillon.security.journal-fallback-username:anna.mueller}") String journalFallbackUsername) {
+            Clock clock) {
         this.unitOfWork = unitOfWork;
         this.storage = storage;
         this.journalService = journalService;
         this.authorizationService = authorizationService;
         this.currentActor = currentActor;
         this.clock = clock;
-        this.journalFallbackUsername = journalFallbackUsername;
     }
 
     public UnterlageView register(RegisterUnterlageCommand command, DocumentUpload upload) {
         authorizationService.require(Permission.EDIT_UNTERLAGE);
         StagedDocument staged = null;
+        boolean databaseCommitted = false;
+        UUID tid = UUID.randomUUID();
         try {
             if (upload != null) {
                 staged = stage(upload);
             }
-            StagedDocument stagedDocument = staged;
-            return unitOfWork.write(context -> {
+            StorageTarget target = new StorageTarget(command.dossierNumber().value());
+            StoredDocument planned = staged == null ? null : describe(staged, target);
+            StoredDocument plannedDocument = planned;
+            UnterlageView result = unitOfWork.write(context -> {
                 Dossier dossier = findDossier(context, command.dossierNumber().value());
                 requireEditableDossier(dossier);
                 Geschaeft business = command.geschaeftNumber() == null
                         ? null : findBusiness(context, command.geschaeftNumber().value());
                 requireBusinessContext(dossier, business);
                 Unterlagentyp type = findActiveType(context, command.typCode());
-                StoredDocument stored = stagedDocument == null ? null : commit(stagedDocument,
-                        new StorageTarget(dossier.getDossiernummer()));
                 Unterlage value = context.newObject(Unterlage.class);
                 value.setTitel(command.title().trim());
                 value.setUnterlagentyp(type);
@@ -86,27 +85,39 @@ public final class UnterlageService {
                 value.setEingangsdatum(command.incomingDate());
                 value.setAusgangsdatum(command.outgoingDate());
                 value.setRegistriertam(LocalDateTime.now(clock));
-                value.setBenutzer(findActorOrFallback(context));
+                value.setBenutzer(findActor(context));
                 value.setAktenrelevant(command.aktenrelevant());
                 value.setAstatus(REGISTERED);
-                value.setDateiname(stored == null ? null : stored.originalFilename());
-                value.setMimetype(stored == null ? null : stored.mimeType());
-                value.setDateigroesse(stored == null ? null : stored.size());
-                value.setStorageuri(stored == null ? null : stored.storageUri());
-                value.setHashsha256(stored == null ? null : stored.sha256());
+                value.setDateiname(plannedDocument == null ? null : plannedDocument.originalFilename());
+                value.setMimetype(plannedDocument == null ? null : plannedDocument.mimeType());
+                value.setDateigroesse(plannedDocument == null ? null : plannedDocument.size());
+                value.setStorageuri(plannedDocument == null ? null : plannedDocument.storageUri());
+                value.setHashsha256(plannedDocument == null ? null : plannedDocument.sha256());
                 value.setDateiformat(command.dateiformat());
                 value.setBemerkungen(command.bemerkungen());
                 value.setDossier(dossier);
                 value.setGeschaeft(business);
                 value.setTBasket(dossier.getTBasket());
-                value.setTIliTid(UUID.randomUUID());
+                value.setTIliTid(tid);
                 journalService.record(context, new JournalCommand(
-                        EreignisObjektTyp.Unterlage, value.getTIliTid().toString(),
+                        EreignisObjektTyp.Unterlage, tid.toString(),
                         EreignisTyp.Unterlage_registriert, "Unterlage registriert.",
                         currentActor.id(), Instant.now(clock)));
                 return UnterlageQueryService.toView(value);
             });
+            databaseCommitted = true;
+
+            if (staged != null) {
+                StoredDocument committed = commit(staged, target);
+                if (!planned.equals(committed)) {
+                    throw new IllegalStateException("Finale Ablage weicht von der geplanten Ablage ab.");
+                }
+            }
+            return result;
         } catch (RuntimeException failure) {
+            if (databaseCommitted) {
+                compensateRegistration(tid, failure);
+            }
             discardQuietly(staged, failure);
             throw failure;
         }
@@ -156,11 +167,37 @@ public final class UnterlageService {
         }
     }
 
+    private StoredDocument describe(StagedDocument staged, StorageTarget target) {
+        try {
+            return storage.describe(staged, target);
+        } catch (IOException failure) {
+            throw new IllegalStateException("Finale Dateiablage konnte nicht geplant werden.", failure);
+        }
+    }
+
     private StoredDocument commit(StagedDocument staged, StorageTarget target) {
         try {
             return storage.commit(staged, target);
         } catch (IOException failure) {
             throw new IllegalStateException("Datei konnte nicht endgültig abgelegt werden.", failure);
+        }
+    }
+
+    private void compensateRegistration(UUID tid, RuntimeException original) {
+        try {
+            unitOfWork.write(context -> {
+                ObjectSelect.query(Ereignis.class)
+                        .where(Ereignis.OBJEKTID.eq(tid.toString()))
+                        .select(context).stream()
+                        .filter(event -> EreignisObjektTyp.Unterlage.name().equals(event.getObjekttyp()))
+                        .forEach(context::deleteObject);
+                Unterlage document = find(context, tid);
+                if (document != null) {
+                    context.deleteObject(document);
+                }
+            });
+        } catch (RuntimeException compensationFailure) {
+            original.addSuppressed(compensationFailure);
         }
     }
 
@@ -206,14 +243,13 @@ public final class UnterlageService {
         return type;
     }
 
-    private Benutzer findActorOrFallback(ObjectContext context) {
+    private Benutzer findActor(ObjectContext context) {
         Benutzer actor = ObjectSelect.query(Benutzer.class)
                 .where(Benutzer.USERNAME.eq(currentActor.username())).selectFirst(context);
-        if (actor != null) {
-            return actor;
+        if (actor == null) {
+            throw new IllegalStateException("Registrierender ist kein fachlicher Benutzer: " + currentActor.username());
         }
-        return ObjectSelect.query(Benutzer.class)
-                .where(Benutzer.USERNAME.eq(journalFallbackUsername)).selectFirst(context);
+        return actor;
     }
 
     private void requireEditableDossier(Dossier dossier) {
