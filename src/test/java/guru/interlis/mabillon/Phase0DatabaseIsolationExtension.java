@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.testcontainers.containers.Container;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
@@ -36,47 +35,13 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
 
         PostgreSQLContainer<?> postgres = staticField(testClass, "POSTGRES", PostgreSQLContainer.class);
         Path storageRoot = staticField(testClass, "STORAGE_ROOT", Path.class);
+        MabillonDatabaseBaseline baseline = new MabillonDatabaseBaseline(postgres, SNAPSHOT);
 
         if (SNAPSHOT_CREATED.add(testClass)) {
-            createSnapshot(postgres);
+            baseline.createSnapshot();
         }
-        restoreSnapshot(postgres);
+        baseline.restore();
         clearStorage(storageRoot);
-    }
-
-    private static void createSnapshot(PostgreSQLContainer<?> postgres) throws Exception {
-        exec(postgres,
-                "pg_dump",
-                "-U", postgres.getUsername(),
-                "-d", postgres.getDatabaseName(),
-                "--schema=mabillon",
-                "--no-owner",
-                "--no-privileges",
-                "--file=" + SNAPSHOT);
-    }
-
-    private static void restoreSnapshot(PostgreSQLContainer<?> postgres) throws Exception {
-        exec(postgres,
-                "psql",
-                "-U", postgres.getUsername(),
-                "-d", postgres.getDatabaseName(),
-                "-v", "ON_ERROR_STOP=1",
-                "-c", "DROP SCHEMA IF EXISTS mabillon CASCADE");
-        exec(postgres,
-                "psql",
-                "-U", postgres.getUsername(),
-                "-d", postgres.getDatabaseName(),
-                "-v", "ON_ERROR_STOP=1",
-                "-f", SNAPSHOT);
-        exec(postgres,
-                "psql",
-                "-U", postgres.getUsername(),
-                "-d", postgres.getDatabaseName(),
-                "-v", "ON_ERROR_STOP=1",
-                "-c", "DO $reset$ BEGIN "
-                        + "IF to_regclass('mabillon_app.number_sequence') IS NOT NULL THEN "
-                        + "TRUNCATE TABLE mabillon_app.number_sequence; "
-                        + "END IF; END $reset$");
     }
 
     private static void clearStorage(Path root) throws IOException {
@@ -90,15 +55,6 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
                     .forEach(Phase0DatabaseIsolationExtension::delete);
         }
         Files.createDirectories(root);
-    }
-
-    private static void exec(PostgreSQLContainer<?> postgres, String... command) throws Exception {
-        Container.ExecResult result = postgres.execInContainer(command);
-        if (result.getExitCode() != 0) {
-            throw new IllegalStateException(
-                    "PostgreSQL test baseline command failed (" + result.getExitCode() + "): "
-                            + String.join(" ", command) + "\n" + result.getStderr() + result.getStdout());
-        }
     }
 
     private static void delete(Path path) {
