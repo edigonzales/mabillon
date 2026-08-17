@@ -1,19 +1,26 @@
 package guru.interlis.mabillon.search;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Function;
 
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Beteiligter;
+import guru.interlis.mabillon.persistence.cayenne.Beteiligung;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
 import guru.interlis.mabillon.persistence.cayenne.Fachsystemreferenz;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
+import guru.interlis.mabillon.persistence.cayenne.Geschaeftsart;
+import guru.interlis.mabillon.persistence.cayenne.Prozessstatus;
 import guru.interlis.mabillon.persistence.cayenne.Unterlage;
+import org.apache.cayenne.ObjectContext;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.query.ObjectSelect;
+import org.apache.cayenne.query.Ordering;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,252 +35,363 @@ public final class GlobalSearchService {
     public GlobalSearchResult search(GlobalSearchCriteria criteria) {
         Objects.requireNonNull(criteria, "criteria");
         return unitOfWork.read(context -> {
-            List<GlobalSearchHit> hits = new ArrayList<>();
-            ObjectSelect.query(Dossier.class).select(context).stream()
-                    .filter(dossier -> matchesDossier(dossier, criteria))
-                    .map(this::dossierHit)
-                    .forEach(hits::add);
-            ObjectSelect.query(Geschaeft.class).select(context).stream()
-                    .filter(business -> matchesBusiness(business, criteria))
-                    .map(this::businessHit)
-                    .forEach(hits::add);
-            ObjectSelect.query(Beteiligter.class).select(context).stream()
-                    .filter(party -> matchesParty(party, criteria))
-                    .map(this::partyHit)
-                    .forEach(hits::add);
-            ObjectSelect.query(Unterlage.class).select(context).stream()
-                    .filter(document -> matchesDocument(document, criteria))
-                    .map(this::documentHit)
-                    .forEach(hits::add);
-            ObjectSelect.query(Fachsystemreferenz.class).select(context).stream()
-                    .filter(reference -> matchesReference(reference, criteria))
-                    .map(this::referenceHit)
-                    .forEach(hits::add);
-            hits.sort(Comparator.comparing(GlobalSearchHit::objectType)
-                    .thenComparing(GlobalSearchHit::title, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
-                    .thenComparing(GlobalSearchHit::identifier, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
-            int from = Math.min(criteria.page() * criteria.size(), hits.size());
-            int to = Math.min(from + criteria.size(), hits.size());
-            return new GlobalSearchResult(hits.subList(from, to), criteria.page(), criteria.size(), hits.size());
+            ObjectSelect<Beteiligter> parties = partyQuery(criteria);
+            ObjectSelect<Dossier> dossiers = dossierQuery(criteria);
+            ObjectSelect<Fachsystemreferenz> references = referenceQuery(criteria);
+            ObjectSelect<Geschaeft> businesses = businessQuery(criteria);
+            ObjectSelect<Unterlage> documents = documentQuery(criteria);
+
+            long partyCount = count(context, parties);
+            long dossierCount = count(context, dossiers);
+            long referenceCount = count(context, references);
+            long businessCount = count(context, businesses);
+            long documentCount = count(context, documents);
+            long total = partyCount + dossierCount + referenceCount + businessCount + documentCount;
+
+            long offset = (long) criteria.page() * criteria.size();
+            if (offset >= total) {
+                return new GlobalSearchResult(List.of(), criteria.page(), criteria.size(), total);
+            }
+
+            List<GlobalSearchHit> hits = new ArrayList<>(criteria.size());
+            PageCursor cursor = new PageCursor(offset, criteria.size());
+            append(context, parties, partyCount, cursor, hits, this::partyHit,
+                    Beteiligter.ANAME.ascInsensitive(), Beteiligter.T_ILI_TID.asc());
+            append(context, dossiers, dossierCount, cursor, hits, this::dossierHit,
+                    Dossier.TITEL.ascInsensitive(), Dossier.DOSSIERNUMMER.ascInsensitive());
+            append(context, references, referenceCount, cursor, hits, this::referenceHit,
+                    Fachsystemreferenz.SYSTEMCODE.ascInsensitive(), Fachsystemreferenz.OBJEKTTYP.ascInsensitive(),
+                    Fachsystemreferenz.OBJEKTID.ascInsensitive());
+            append(context, businesses, businessCount, cursor, hits, this::businessHit,
+                    Geschaeft.TITEL.ascInsensitive(), Geschaeft.GESCHAEFTSNUMMER.ascInsensitive());
+            append(context, documents, documentCount, cursor, hits, this::documentHit,
+                    Unterlage.TITEL.ascInsensitive(), Unterlage.T_ILI_TID.asc());
+
+            return new GlobalSearchResult(hits, criteria.page(), criteria.size(), total);
         });
     }
 
-    private boolean matchesDossier(Dossier dossier, GlobalSearchCriteria criteria) {
-        List<Geschaeft> businesses = dossier.getGeschaefts();
-        List<String> businessNumbers = businesses.stream().map(Geschaeft::getGeschaeftsnummer).toList();
-        List<String> businessTypes = businesses.stream()
-                .map(Geschaeft::getGeschaeftsart)
-                .filter(Objects::nonNull)
-                .map(type -> type.getAcode())
-                .toList();
-        List<String> processStatuses = businesses.stream()
-                .map(Geschaeft::getProzessstatus)
-                .filter(Objects::nonNull)
-                .map(status -> status.getAcode())
-                .toList();
-        List<String> processStatusNames = businesses.stream()
-                .map(Geschaeft::getProzessstatus)
-                .filter(Objects::nonNull)
-                .map(status -> status.getAname())
-                .toList();
-        List<String> documentTitles = dossier.getUnterlages().stream().map(Unterlage::getTitel).toList();
-        List<String> partyNames = businesses.stream()
-                .flatMap(business -> business.getBeteiligungs().stream())
-                .map(participation -> participation.getBeteiligter())
-                .filter(Objects::nonNull)
-                .flatMap(party -> strings(party.getAname(), party.getVorname()).stream())
-                .toList();
-        List<String> organisations = businesses.stream()
-                .flatMap(business -> business.getBeteiligungs().stream())
-                .map(participation -> participation.getBeteiligter())
-                .filter(Objects::nonNull)
-                .map(Beteiligter::getOrganisation)
-                .filter(Objects::nonNull)
-                .toList();
-        List<String> referenceIds = dossier.getFachsystemreferenzes().stream()
-                .flatMap(reference -> strings(reference.getObjektid(), reference.getMutationid()).stream())
-                .toList();
-        List<String> freeText = concat(
-                strings(dossier.getDossiernummer(), dossier.getTitel(), dossier.getBeschreibung()),
-                businessNumbers,
-                businesses.stream().flatMap(business -> strings(
-                        business.getTitel(),
-                        business.getKurzbeschreibung(),
-                        business.getGeschaeftsart() == null ? null : business.getGeschaeftsart().getAname()).stream()).toList(),
-                businessTypes,
-                processStatuses,
-                processStatusNames,
-                documentTitles,
-                partyNames,
-                organisations,
-                referenceIds);
-
-        return containsAny(criteria.text(), freeText)
-                && containsAny(criteria.geschaeftsnummer(), businessNumbers)
-                && contains(criteria.dossiernummer(), dossier.getDossiernummer())
-                && contains(criteria.titel(), dossier.getTitel())
-                && containsAny(criteria.beteiligterName(), partyNames)
-                && containsAny(criteria.organisation(), organisations)
-                && containsAny(criteria.geschaeftsartCode(), businessTypes)
-                && containsAny(criteria.processStatusCode(), processStatuses)
-                && containsAny(criteria.unterlagentitel(), documentTitles)
-                && containsAny(criteria.fachsystemId(), referenceIds);
+    private static ObjectSelect<Dossier> dossierQuery(GlobalSearchCriteria criteria) {
+        ObjectSelect<Dossier> query = ObjectSelect.query(Dossier.class);
+        addFilter(query, textFilterForDossier(criteria.text()));
+        addFilter(query, relatedBusinessString(Geschaeft.GESCHAEFTSNUMMER, criteria.geschaeftsnummer()));
+        addFilter(query, ci(Dossier.DOSSIERNUMMER, criteria.dossiernummer()));
+        addFilter(query, ci(Dossier.TITEL, criteria.titel()));
+        addFilter(query, relatedPartyNameFromDossier(criteria.beteiligterName()));
+        addFilter(query, relatedPartyOrganisationFromDossier(criteria.organisation()));
+        addFilter(query, relatedBusinessString(Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE),
+                criteria.geschaeftsartCode()));
+        addFilter(query, relatedBusinessString(Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE),
+                criteria.processStatusCode()));
+        addFilter(query, relatedDossierDocumentTitle(criteria.unterlagentitel()));
+        addFilter(query, relatedDossierReferenceId(criteria.fachsystemId()));
+        return query;
     }
 
-    private boolean matchesBusiness(Geschaeft business, GlobalSearchCriteria criteria) {
-        List<String> documentTitles = business.getUnterlages().stream().map(Unterlage::getTitel).toList();
-        List<String> referenceIds = business.getFachsystemreferenzes().stream()
-                .flatMap(reference -> strings(reference.getObjektid(), reference.getMutationid()).stream())
-                .toList();
-        List<Beteiligter> parties = business.getBeteiligungs().stream()
-                .map(participation -> participation.getBeteiligter())
-                .filter(Objects::nonNull)
-                .toList();
-        List<String> partyNames = parties.stream()
-                .flatMap(party -> strings(party.getAname(), party.getVorname()).stream())
-                .toList();
-        List<String> organisations = parties.stream()
-                .map(Beteiligter::getOrganisation)
-                .filter(Objects::nonNull)
-                .toList();
-        String dossierNumber = business.getDossier() == null ? null : business.getDossier().getDossiernummer();
-        String businessType = business.getGeschaeftsart() == null ? null : business.getGeschaeftsart().getAcode();
-        String businessTypeName = business.getGeschaeftsart() == null ? null : business.getGeschaeftsart().getAname();
-        String processStatus = business.getProzessstatus() == null ? null : business.getProzessstatus().getAcode();
-        String processStatusName = business.getProzessstatus() == null ? null : business.getProzessstatus().getAname();
-        List<String> freeText = concat(
-                strings(business.getGeschaeftsnummer(), business.getTitel(), business.getKurzbeschreibung(), dossierNumber,
-                        businessType, businessTypeName, processStatus, processStatusName),
-                documentTitles, referenceIds, partyNames, organisations);
-
-        return containsAny(criteria.text(), freeText)
-                && contains(criteria.geschaeftsnummer(), business.getGeschaeftsnummer())
-                && contains(criteria.dossiernummer(), dossierNumber)
-                && contains(criteria.titel(), business.getTitel())
-                && containsAny(criteria.beteiligterName(), partyNames)
-                && containsAny(criteria.organisation(), organisations)
-                && contains(criteria.geschaeftsartCode(), businessType)
-                && contains(criteria.processStatusCode(), processStatus)
-                && containsAny(criteria.unterlagentitel(), documentTitles)
-                && containsAny(criteria.fachsystemId(), referenceIds);
+    private static ObjectSelect<Geschaeft> businessQuery(GlobalSearchCriteria criteria) {
+        ObjectSelect<Geschaeft> query = ObjectSelect.query(Geschaeft.class);
+        addFilter(query, textFilterForBusiness(criteria.text()));
+        addFilter(query, ci(Geschaeft.GESCHAEFTSNUMMER, criteria.geschaeftsnummer()));
+        addFilter(query, criteria.dossiernummer() == null ? null
+                : Geschaeft.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(criteria.dossiernummer()));
+        addFilter(query, ci(Geschaeft.TITEL, criteria.titel()));
+        addFilter(query, relatedPartyNameFromBusiness(criteria.beteiligterName()));
+        addFilter(query, relatedPartyOrganisationFromBusiness(criteria.organisation()));
+        addFilter(query, criteria.geschaeftsartCode() == null ? null
+                : Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE).containsIgnoreCase(criteria.geschaeftsartCode()));
+        addFilter(query, criteria.processStatusCode() == null ? null
+                : Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE).containsIgnoreCase(criteria.processStatusCode()));
+        addFilter(query, relatedBusinessDocumentTitle(criteria.unterlagentitel()));
+        addFilter(query, relatedBusinessReferenceId(criteria.fachsystemId()));
+        return query;
     }
 
-    private boolean matchesParty(Beteiligter party, GlobalSearchCriteria criteria) {
-        List<String> partyNames = strings(party.getAname(), party.getVorname(), fullName(party));
-        List<String> organisations = strings(party.getOrganisation());
-        List<String> freeText = strings(
-                party.getTIliTid() == null ? null : party.getTIliTid().toString(),
-                party.getTyp(),
-                party.getAname(),
-                party.getVorname(),
-                fullName(party),
-                party.getOrganisation(),
-                party.getEmail(),
-                party.getTelefon(),
-                party.getAdresse(),
-                party.getExternereferenz());
-
-        return containsAny(criteria.text(), freeText)
-                && absent(criteria.geschaeftsnummer())
-                && absent(criteria.dossiernummer())
-                && absent(criteria.titel())
-                && containsAny(criteria.beteiligterName(), partyNames)
-                && containsAny(criteria.organisation(), organisations)
-                && absent(criteria.geschaeftsartCode())
-                && absent(criteria.processStatusCode())
-                && absent(criteria.unterlagentitel())
-                && absent(criteria.fachsystemId());
-    }
-
-    private boolean matchesDocument(Unterlage document, GlobalSearchCriteria criteria) {
-        Geschaeft business = document.getGeschaeft();
-        String businessNumber = business == null ? null : business.getGeschaeftsnummer();
-        String dossierNumber = document.getDossier() == null ? null : document.getDossier().getDossiernummer();
-        List<String> freeText = strings(
-                document.getTIliTid() == null ? null : document.getTIliTid().toString(),
-                document.getTitel(),
-                document.getBemerkungen(),
-                document.getDateiname(),
-                document.getMimetype(),
-                businessNumber,
-                dossierNumber);
-
-        return containsAny(criteria.text(), freeText)
-                && contains(criteria.geschaeftsnummer(), businessNumber)
-                && contains(criteria.dossiernummer(), dossierNumber)
-                && contains(criteria.titel(), document.getTitel())
-                && absent(criteria.beteiligterName())
-                && absent(criteria.organisation())
-                && absent(criteria.geschaeftsartCode())
-                && absent(criteria.processStatusCode())
-                && contains(criteria.unterlagentitel(), document.getTitel())
-                && absent(criteria.fachsystemId());
-    }
-
-    private boolean matchesReference(Fachsystemreferenz reference, GlobalSearchCriteria criteria) {
-        if (reference.getGeschaeft() == null && reference.getDossier() == null) {
-            return false;
+    private static ObjectSelect<Beteiligter> partyQuery(GlobalSearchCriteria criteria) {
+        if (criteria.geschaeftsnummer() != null || criteria.dossiernummer() != null || criteria.titel() != null
+                || criteria.geschaeftsartCode() != null || criteria.processStatusCode() != null
+                || criteria.unterlagentitel() != null || criteria.fachsystemId() != null) {
+            return null;
         }
-        String businessNumber = reference.getGeschaeft() == null ? null : reference.getGeschaeft().getGeschaeftsnummer();
-        String dossierNumber = reference.getDossier() != null
-                ? reference.getDossier().getDossiernummer()
-                : reference.getGeschaeft().getDossier() == null
-                        ? null
-                        : reference.getGeschaeft().getDossier().getDossiernummer();
-        List<String> referenceIds = strings(reference.getObjektid(), reference.getMutationid());
-        List<String> freeText = strings(
-                reference.getTIliTid() == null ? null : reference.getTIliTid().toString(),
-                reference.getSystemcode(),
-                reference.getObjekttyp(),
-                reference.getObjektid(),
-                reference.getMutationid(),
-                reference.getBeschreibung(),
-                businessNumber,
-                dossierNumber);
-
-        return containsAny(criteria.text(), freeText)
-                && contains(criteria.geschaeftsnummer(), businessNumber)
-                && contains(criteria.dossiernummer(), dossierNumber)
-                && absent(criteria.titel())
-                && absent(criteria.beteiligterName())
-                && absent(criteria.organisation())
-                && absent(criteria.geschaeftsartCode())
-                && absent(criteria.processStatusCode())
-                && absent(criteria.unterlagentitel())
-                && containsAny(criteria.fachsystemId(), referenceIds);
+        ObjectSelect<Beteiligter> query = ObjectSelect.query(Beteiligter.class);
+        addFilter(query, textFilterForParty(criteria.text()));
+        addFilter(query, partyNameExpression(criteria.beteiligterName()));
+        addFilter(query, ci(Beteiligter.ORGANISATION, criteria.organisation()));
+        return query;
     }
 
-    private static boolean containsAny(String filter, List<String> values) {
-        return filter == null || values.stream().anyMatch(value -> contains(filter, value));
-    }
-
-    private static boolean contains(String filter, String value) {
-        return filter == null || value != null
-                && value.toLowerCase(Locale.ROOT).contains(filter.toLowerCase(Locale.ROOT));
-    }
-
-    private static boolean absent(String filter) {
-        return filter == null;
-    }
-
-    private static String fullName(Beteiligter party) {
-        if (party.getVorname() == null || party.getVorname().isBlank()) {
-            return party.getAname();
+    private static ObjectSelect<Unterlage> documentQuery(GlobalSearchCriteria criteria) {
+        if (criteria.beteiligterName() != null || criteria.organisation() != null
+                || criteria.geschaeftsartCode() != null || criteria.processStatusCode() != null
+                || criteria.fachsystemId() != null) {
+            return null;
         }
-        return party.getVorname() + " " + party.getAname();
+        ObjectSelect<Unterlage> query = ObjectSelect.query(Unterlage.class);
+        addFilter(query, textFilterForDocument(criteria.text()));
+        addFilter(query, criteria.geschaeftsnummer() == null ? null
+                : Unterlage.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER).containsIgnoreCase(criteria.geschaeftsnummer()));
+        addFilter(query, criteria.dossiernummer() == null ? null
+                : Unterlage.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(criteria.dossiernummer()));
+        addFilter(query, ci(Unterlage.TITEL, criteria.titel()));
+        addFilter(query, ci(Unterlage.TITEL, criteria.unterlagentitel()));
+        return query;
     }
 
-    private static List<String> strings(String... values) {
-        return Arrays.stream(values).filter(Objects::nonNull).toList();
-    }
-
-    @SafeVarargs
-    private static List<String> concat(List<String>... lists) {
-        List<String> values = new ArrayList<>();
-        for (List<String> list : lists) {
-            values.addAll(list);
+    private static ObjectSelect<Fachsystemreferenz> referenceQuery(GlobalSearchCriteria criteria) {
+        if (criteria.titel() != null || criteria.beteiligterName() != null || criteria.organisation() != null
+                || criteria.geschaeftsartCode() != null || criteria.processStatusCode() != null
+                || criteria.unterlagentitel() != null) {
+            return null;
         }
-        return values;
+        ObjectSelect<Fachsystemreferenz> query = ObjectSelect.query(Fachsystemreferenz.class)
+                .where(ExpressionFactory.or(
+                        Fachsystemreferenz.GESCHAEFT.isNotNull(),
+                        Fachsystemreferenz.DOSSIER.isNotNull()));
+        addFilter(query, textFilterForReference(criteria.text()));
+        addFilter(query, criteria.geschaeftsnummer() == null ? null
+                : Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER)
+                        .containsIgnoreCase(criteria.geschaeftsnummer()));
+        addFilter(query, referenceDossierNumber(criteria.dossiernummer()));
+        addFilter(query, referenceIdExpression(criteria.fachsystemId()));
+        return query;
+    }
+
+    private static Expression textFilterForDossier(String text) {
+        if (text == null) {
+            return null;
+        }
+        return or(
+                Dossier.DOSSIERNUMMER.containsIgnoreCase(text),
+                Dossier.TITEL.containsIgnoreCase(text),
+                Dossier.BESCHREIBUNG.containsIgnoreCase(text),
+                relatedBusinessString(Geschaeft.GESCHAEFTSNUMMER, text),
+                relatedBusinessString(Geschaeft.TITEL, text),
+                relatedBusinessString(Geschaeft.KURZBESCHREIBUNG, text),
+                relatedBusinessString(Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE), text),
+                relatedBusinessString(Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ANAME), text),
+                relatedBusinessString(Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE), text),
+                relatedBusinessString(Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ANAME), text),
+                relatedDossierDocumentTitle(text),
+                relatedPartyNameFromDossier(text),
+                relatedPartyOrganisationFromDossier(text),
+                relatedDossierReferenceId(text));
+    }
+
+    private static Expression textFilterForBusiness(String text) {
+        if (text == null) {
+            return null;
+        }
+        return or(
+                Geschaeft.GESCHAEFTSNUMMER.containsIgnoreCase(text),
+                Geschaeft.TITEL.containsIgnoreCase(text),
+                Geschaeft.KURZBESCHREIBUNG.containsIgnoreCase(text),
+                Geschaeft.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(text),
+                Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE).containsIgnoreCase(text),
+                Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ANAME).containsIgnoreCase(text),
+                Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE).containsIgnoreCase(text),
+                Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ANAME).containsIgnoreCase(text),
+                relatedBusinessDocumentTitle(text),
+                relatedBusinessReferenceId(text),
+                relatedPartyNameFromBusiness(text),
+                relatedPartyOrganisationFromBusiness(text));
+    }
+
+    private static Expression textFilterForParty(String text) {
+        if (text == null) {
+            return null;
+        }
+        List<Expression> expressions = new ArrayList<>(List.of(
+                Beteiligter.TYP.containsIgnoreCase(text),
+                Beteiligter.ANAME.containsIgnoreCase(text),
+                Beteiligter.VORNAME.containsIgnoreCase(text),
+                Beteiligter.ORGANISATION.containsIgnoreCase(text),
+                Beteiligter.EMAIL.containsIgnoreCase(text),
+                Beteiligter.TELEFON.containsIgnoreCase(text),
+                Beteiligter.ADRESSE.containsIgnoreCase(text),
+                Beteiligter.EXTERNEREFERENZ.containsIgnoreCase(text),
+                Beteiligter.VORNAME.concat(" ", Beteiligter.ANAME).containsIgnoreCase(text)));
+        addUuidExpression(expressions, Beteiligter.T_ILI_TID, text);
+        return or(expressions.toArray(Expression[]::new));
+    }
+
+    private static Expression textFilterForDocument(String text) {
+        if (text == null) {
+            return null;
+        }
+        List<Expression> expressions = new ArrayList<>(List.of(
+                Unterlage.TITEL.containsIgnoreCase(text),
+                Unterlage.BEMERKUNGEN.containsIgnoreCase(text),
+                Unterlage.DATEINAME.containsIgnoreCase(text),
+                Unterlage.MIMETYPE.containsIgnoreCase(text),
+                Unterlage.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER).containsIgnoreCase(text),
+                Unterlage.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(text)));
+        addUuidExpression(expressions, Unterlage.T_ILI_TID, text);
+        return or(expressions.toArray(Expression[]::new));
+    }
+
+    private static Expression textFilterForReference(String text) {
+        if (text == null) {
+            return null;
+        }
+        List<Expression> expressions = new ArrayList<>(List.of(
+                Fachsystemreferenz.SYSTEMCODE.containsIgnoreCase(text),
+                Fachsystemreferenz.OBJEKTTYP.containsIgnoreCase(text),
+                Fachsystemreferenz.OBJEKTID.containsIgnoreCase(text),
+                Fachsystemreferenz.MUTATIONID.containsIgnoreCase(text),
+                Fachsystemreferenz.BESCHREIBUNG.containsIgnoreCase(text),
+                Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.GESCHAEFTSNUMMER).containsIgnoreCase(text),
+                Fachsystemreferenz.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(text),
+                Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.DOSSIER).dot(Dossier.DOSSIERNUMMER)
+                        .containsIgnoreCase(text)));
+        addUuidExpression(expressions, Fachsystemreferenz.T_ILI_TID, text);
+        return or(expressions.toArray(Expression[]::new));
+    }
+
+    private static Expression relatedBusinessString(BaseProperty<String> property, String filter) {
+        return filter == null ? null : Dossier.GESCHAEFTS.dot(property).containsIgnoreCase(filter).exists();
+    }
+
+    private static Expression relatedDossierDocumentTitle(String filter) {
+        return filter == null ? null : Dossier.UNTERLAGES.dot(Unterlage.TITEL).containsIgnoreCase(filter).exists();
+    }
+
+    private static Expression relatedDossierReferenceId(String filter) {
+        if (filter == null) {
+            return null;
+        }
+        return or(
+                Dossier.FACHSYSTEMREFERENZES.dot(Fachsystemreferenz.OBJEKTID).containsIgnoreCase(filter).exists(),
+                Dossier.FACHSYSTEMREFERENZES.dot(Fachsystemreferenz.MUTATIONID).containsIgnoreCase(filter).exists());
+    }
+
+    private static Expression relatedBusinessDocumentTitle(String filter) {
+        return filter == null ? null
+                : Geschaeft.UNTERLAGES.dot(Unterlage.TITEL).containsIgnoreCase(filter).exists();
+    }
+
+    private static Expression relatedBusinessReferenceId(String filter) {
+        if (filter == null) {
+            return null;
+        }
+        return or(
+                Geschaeft.FACHSYSTEMREFERENZES.dot(Fachsystemreferenz.OBJEKTID).containsIgnoreCase(filter).exists(),
+                Geschaeft.FACHSYSTEMREFERENZES.dot(Fachsystemreferenz.MUTATIONID).containsIgnoreCase(filter).exists());
+    }
+
+    private static Expression relatedPartyNameFromDossier(String filter) {
+        if (filter == null) {
+            return null;
+        }
+        return or(
+                Dossier.GESCHAEFTS.dot(Geschaeft.BETEILIGUNGS).dot(Beteiligung.BETEILIGTER)
+                        .dot(Beteiligter.ANAME).containsIgnoreCase(filter).exists(),
+                Dossier.GESCHAEFTS.dot(Geschaeft.BETEILIGUNGS).dot(Beteiligung.BETEILIGTER)
+                        .dot(Beteiligter.VORNAME).containsIgnoreCase(filter).exists(),
+                Dossier.GESCHAEFTS.dot(Geschaeft.BETEILIGUNGS).dot(Beteiligung.BETEILIGTER)
+                        .dot(Beteiligter.VORNAME.concat(" ", Beteiligter.ANAME)).containsIgnoreCase(filter).exists());
+    }
+
+    private static Expression relatedPartyOrganisationFromDossier(String filter) {
+        return filter == null ? null
+                : Dossier.GESCHAEFTS.dot(Geschaeft.BETEILIGUNGS).dot(Beteiligung.BETEILIGTER)
+                        .dot(Beteiligter.ORGANISATION).containsIgnoreCase(filter).exists();
+    }
+
+    private static Expression relatedPartyNameFromBusiness(String filter) {
+        if (filter == null) {
+            return null;
+        }
+        return or(
+                Geschaeft.BETEILIGUNGS.dot(Beteiligung.BETEILIGTER).dot(Beteiligter.ANAME)
+                        .containsIgnoreCase(filter).exists(),
+                Geschaeft.BETEILIGUNGS.dot(Beteiligung.BETEILIGTER).dot(Beteiligter.VORNAME)
+                        .containsIgnoreCase(filter).exists(),
+                Geschaeft.BETEILIGUNGS.dot(Beteiligung.BETEILIGTER)
+                        .dot(Beteiligter.VORNAME.concat(" ", Beteiligter.ANAME)).containsIgnoreCase(filter).exists());
+    }
+
+    private static Expression relatedPartyOrganisationFromBusiness(String filter) {
+        return filter == null ? null
+                : Geschaeft.BETEILIGUNGS.dot(Beteiligung.BETEILIGTER).dot(Beteiligter.ORGANISATION)
+                        .containsIgnoreCase(filter).exists();
+    }
+
+    private static Expression partyNameExpression(String filter) {
+        return filter == null ? null : or(
+                Beteiligter.ANAME.containsIgnoreCase(filter),
+                Beteiligter.VORNAME.containsIgnoreCase(filter),
+                Beteiligter.VORNAME.concat(" ", Beteiligter.ANAME).containsIgnoreCase(filter));
+    }
+
+    private static Expression referenceDossierNumber(String filter) {
+        if (filter == null) {
+            return null;
+        }
+        return or(
+                Fachsystemreferenz.DOSSIER.dot(Dossier.DOSSIERNUMMER).containsIgnoreCase(filter),
+                Fachsystemreferenz.GESCHAEFT.dot(Geschaeft.DOSSIER).dot(Dossier.DOSSIERNUMMER)
+                        .containsIgnoreCase(filter));
+    }
+
+    private static Expression referenceIdExpression(String filter) {
+        return filter == null ? null : or(
+                Fachsystemreferenz.OBJEKTID.containsIgnoreCase(filter),
+                Fachsystemreferenz.MUTATIONID.containsIgnoreCase(filter));
+    }
+
+    private static Expression ci(org.apache.cayenne.exp.property.StringProperty<String> property, String filter) {
+        return filter == null ? null : property.containsIgnoreCase(filter);
+    }
+
+    private static Expression or(Expression... expressions) {
+        return ExpressionFactory.or(expressions);
+    }
+
+    private static <T> void addFilter(ObjectSelect<T> query, Expression expression) {
+        if (query == null || expression == null) {
+            return;
+        }
+        if (query.getWhere() == null) {
+            query.where(expression);
+        } else {
+            query.and(expression);
+        }
+    }
+
+    private static void addUuidExpression(List<Expression> expressions, BaseProperty<UUID> property, String text) {
+        try {
+            expressions.add(property.eq(UUID.fromString(text)));
+        } catch (IllegalArgumentException ignored) {
+            // UUID is an additional exact free-text key; all textual fields still use contains semantics.
+        }
+    }
+
+    private static long count(ObjectContext context, ObjectSelect<?> query) {
+        return query == null ? 0 : query.selectCount(context);
+    }
+
+    private static <T> void append(
+            ObjectContext context,
+            ObjectSelect<T> query,
+            long count,
+            PageCursor cursor,
+            List<GlobalSearchHit> target,
+            Function<T, GlobalSearchHit> mapper,
+            Ordering... orderings) {
+        if (query == null || count == 0 || cursor.remaining == 0) {
+            return;
+        }
+        if (cursor.offset >= count) {
+            cursor.offset -= count;
+            return;
+        }
+        int take = (int) Math.min(cursor.remaining, count - cursor.offset);
+        for (Ordering ordering : orderings) {
+            query.orderBy(ordering);
+        }
+        List<T> values = query.offset(Math.toIntExact(cursor.offset)).limit(take).select(context);
+        values.stream().map(mapper).forEach(target::add);
+        cursor.remaining -= values.size();
+        cursor.offset = 0;
     }
 
     private GlobalSearchHit dossierHit(Dossier dossier) {
@@ -303,5 +421,15 @@ public final class GlobalSearchService {
                 : "/dossiers/" + reference.getDossier().getDossiernummer();
         return new GlobalSearchHit("FachsystemReferenz", reference.getTIliTid(), reference.getObjektid(),
                 reference.getSystemcode() + ": " + reference.getObjekttyp(), reference.getObjektid(), targetUrl);
+    }
+
+    private static final class PageCursor {
+        private long offset;
+        private int remaining;
+
+        private PageCursor(long offset, int remaining) {
+            this.offset = offset;
+            this.remaining = remaining;
+        }
     }
 }
