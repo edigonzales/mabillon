@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   update-binding-spec:
-    if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'chore: run binding spec update v2' }}
     permissions:
       contents: write
     runs-on: ubuntu-latest
