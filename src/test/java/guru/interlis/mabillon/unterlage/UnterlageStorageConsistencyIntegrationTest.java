@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import guru.interlis.mabillon.dossier.DossierService;
+import guru.interlis.mabillon.dossier.DossierView;
+import guru.interlis.mabillon.dossier.OpenDossierCommand;
 import guru.interlis.mabillon.journal.EreignisTyp;
 import guru.interlis.mabillon.numbering.DossierNumber;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
@@ -60,6 +63,9 @@ class UnterlageStorageConsistencyIntegrationTest {
     private UnterlageService unterlageService;
 
     @Autowired
+    private DossierService dossierService;
+
+    @Autowired
     private CayenneUnitOfWork unitOfWork;
 
     @Autowired
@@ -84,12 +90,19 @@ class UnterlageStorageConsistencyIntegrationTest {
     @Test
     @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
     void failedFinalMoveRemovesCommittedMetadataAndJournal() throws Exception {
+        DossierView dossier = dossierService.open(new OpenDossierCommand(
+                "Phase 11 Storage Compensation Dossier",
+                "Offenes Testdossier fuer den simulierten finalen Storage-Fehler.",
+                "4.3.3",
+                "AGI-NOM",
+                "anna.mueller",
+                LocalDate.of(2026, 8, 17)));
         String title = "Phase 11 Storage Compensation";
         long journalBefore = registeredJournalCount();
         storage.failNextCommit();
 
         assertThatThrownBy(() -> unterlageService.register(new RegisterUnterlageCommand(
-                DossierNumber.parse("AGI-D-2026-000007"), null, title, "AKTENNOTIZ",
+                DossierNumber.parse(dossier.number()), null, title, "AKTENNOTIZ",
                 LocalDate.of(2026, 8, 17), LocalDate.of(2026, 8, 17), null,
                 true, "TXT", "Simulierter Storage-Fehler."),
                 new DocumentUpload("storage-failure.txt", "text/plain",
