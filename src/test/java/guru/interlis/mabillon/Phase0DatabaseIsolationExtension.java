@@ -13,17 +13,18 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
- * Restores the imported Golden-Path database before every test method in
+ * Restores the imported Golden-Path state before every test method in
  * {@link Phase0CompatibilityTest}.
  *
  * <p>The expensive INTERLIS fixture import is performed only once by the test
  * class. A PostgreSQL dump of that pristine state is then used as the baseline
- * for each method. This keeps the existing shared container without sharing
- * mutations between tests.</p>
+ * for each method. Persistent test filesystem state is cleared as well.</p>
  */
 public final class Phase0DatabaseIsolationExtension implements BeforeEachCallback {
 
     private static final String SNAPSHOT = "/tmp/mabillon-phase0-baseline.sql";
+    private static final Path ARCHIVE_ROOT = Path.of(System.getProperty("java.io.tmpdir"), "mabillon-sips")
+            .toAbsolutePath().normalize();
     private static final Set<Class<?>> SNAPSHOT_CREATED = ConcurrentHashMap.newKeySet();
 
     @Override
@@ -41,10 +42,11 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
             baseline.createSnapshot();
         }
         baseline.restore();
-        clearStorage(storageRoot);
+        clearDirectory(storageRoot);
+        clearDirectory(ARCHIVE_ROOT);
     }
 
-    private static void clearStorage(Path root) throws IOException {
+    private static void clearDirectory(Path root) throws IOException {
         if (!Files.exists(root)) {
             Files.createDirectories(root);
             return;
@@ -61,7 +63,8 @@ public final class Phase0DatabaseIsolationExtension implements BeforeEachCallbac
         try {
             Files.deleteIfExists(path);
         } catch (IOException failure) {
-            throw new IllegalStateException("Test-Storage konnte nicht zurückgesetzt werden: " + path, failure);
+            throw new IllegalStateException("Persistenter Testzustand konnte nicht zurückgesetzt werden: " + path,
+                    failure);
         }
     }
 
