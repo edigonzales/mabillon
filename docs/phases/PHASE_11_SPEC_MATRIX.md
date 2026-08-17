@@ -27,7 +27,7 @@ The relevant dimensions are application/domain service, business rules and persi
 | X-STORAGE-01 | P0 | IMPLEMENTED | Unterlage registration uses staging → DB commit → final storage move, with explicit compensation after post-commit storage failure. | Keep focused filesystem/PostgreSQL tests green. |
 | X-TEST-01 | P1 | OPEN | Specification requires a real Playwright Java golden path. | 11.12. |
 | X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` restores a pristine PostgreSQL baseline and filesystem state before every method. | Keep order independence covered. |
-| X-VAL-01 | P1 | OPEN | Web layer still primarily uses raw request parameters/exceptions rather than the specified structured validation/error model. | 11.10. |
+| X-VAL-01 | P1 | IMPLEMENTED | `MabillonException`, `ValidationException`/`FieldError`, not-found/conflict/authorization types and the central `WebExceptionHandler` provide deterministic 400/404/409/403 semantics plus HTMX error fragments; focused MVC/PostgreSQL evidence is green. | Keep covered by final acceptance gate. |
 | X-DQ-01 | P1 | IMPLEMENTED | DQ-007 now reports an ERROR for a terminal dossier containing a non-terminal business and is exposed by dossier and business quality checks; focused PostgreSQL evidence is green in Run #113. | Keep DQ-001 through DQ-013 covered by the final acceptance gate. |
 | X-SEARCH-01 | P1 | IMPLEMENTED | Global search now uses explicit type-specific filters, normalizes blank criteria and emits only navigable result targets; route rendering and the former positional false-positive cases are PostgreSQL/MVC-tested in Run #120. | DB-side filtering/pagination remains the separate 11.13 performance task. |
 | X-PERF-01 | P2 | OPEN | Several searches materialize/filter/page in Java. | 11.13. |
@@ -44,34 +44,34 @@ The relevant dimensions are application/domain service, business rules and persi
 | UC-006 | Geschäft bestehendem Dossier zuordnen | PASS | Assignment during business creation is the specified scope. |
 | UC-007 | Dossier anzeigen | PARTIAL | Detail view and related information exist; final acceptance verification remains. |
 | UC-008 | Geschäft anzeigen | PARTIAL | Detail view, tasks, participations, references and journal exist; final acceptance verification remains. |
-| UC-009 | Geschäft bearbeiten | PARTIAL | Update service/UI exist; structured validation remains 11.10. |
+| UC-009 | Geschäft bearbeiten | PARTIAL | Update service/UI and structured validation exist; final permission/integration mapping remains. |
 | UC-010 | Prozessstatus ändern | PARTIAL | Service/UI and catalog validation exist; final permission/integration mapping remains. |
-| UC-011 | Geschäftsergebnis erfassen | PARTIAL | Service/UI exist; structured validation/final evidence remain. |
-| UC-012 | Beteiligten erfassen | PARTIAL | Participant list/create/detail/edit routes exist; 11.8 adds a non-blocking duplicate warning with explicit `Trotzdem erfassen` confirmation. Structured validation/final acceptance mapping remain. |
+| UC-011 | Geschäftsergebnis erfassen | PARTIAL | Service/UI and central validation/error semantics exist; final acceptance evidence remains. |
+| UC-012 | Beteiligten erfassen | PARTIAL | Participant list/create/detail/edit routes exist; 11.8 adds a non-blocking duplicate warning and 11.10 structured form validation. Final acceptance mapping remains. |
 | UC-013 | Beteiligten einem Geschäft zuordnen | PARTIAL | Add/update/end are reachable; 11.8 enforces date ordering and prevents participation mutation after business completion. Final acceptance mapping remains. |
-| UC-014 | Unterlage registrieren | PARTIAL | Upload/storage/compensation plus complete status lifecycle are implemented and PostgreSQL-tested; structured validation/final acceptance mapping remain. |
+| UC-014 | Unterlage registrieren | PARTIAL | Upload/storage/compensation plus complete status lifecycle and structured form validation are PostgreSQL-tested; final acceptance mapping remains. |
 | UC-015 | Unterlage einem Geschäft zuordnen | PARTIAL | 11.7 adds assign/unassign web flows; same-dossier consistency and persistence are covered by integration tests. Final acceptance mapping remains. |
 | UC-016 | Eingegangene E-Mail registrieren | PARTIAL | Specialized service exists; dedicated UI/evidence remain incomplete. |
 | UC-017 | Ausgangsschreiben registrieren | PARTIAL | Supported by registration services; dedicated end-to-end evidence remains incomplete. |
 | UC-018 | Unterlage anzeigen/herunterladen | PARTIAL | `/unterlagen/{tid}` detail and download now exist; real MVC/JTE lifecycle rendering and download behavior are automated. Final acceptance mapping remains. |
-| UC-019 | Aufgabe erstellen | PARTIAL | Service and POST flow exist; final acceptance mapping remains. |
-| UC-020 | Aufgabe bearbeiten | PARTIAL | 11.6 adds list/detail/edit/update/delegate web flows on top of the existing service. |
+| UC-019 | Aufgabe erstellen | PARTIAL | Service and POST flow exist with structured create validation; final acceptance mapping remains. |
+| UC-020 | Aufgabe bearbeiten | PARTIAL | 11.6 adds list/detail/edit/update/delegate web flows; 11.10 structures update/delegation validation. Final acceptance mapping remains. |
 | UC-021 | Aufgabe erledigen | PARTIAL | Service/controller flow exists; final acceptance mapping remains. |
 | UC-022 | Eigene Aufgaben verwalten | PARTIAL | 11.6 exposes own-task list/detail/edit/delegate flows; final acceptance evidence remains. |
 | UC-023 | Fachsystemreferenz erfassen | PARTIAL | Dossier/business add flows exist; final removal/audit acceptance remains. |
 | UC-024 | Journal eines Geschäfts anzeigen | PARTIAL | Detail view shows journal with deterministic actor attribution; final event coverage remains. |
 | UC-025 | Geschäft abschliessen | PARTIAL | Close service/UI and major closure rules exist with positive/negative integration evidence; final acceptance mapping remains. |
 | UC-026 | Dossier abschliessen | PARTIAL | `DossierService.close` rejects non-completed businesses; DQ-007 now also detects persisted/imported terminal dossiers containing non-terminal businesses. Final acceptance mapping remains. |
-| UC-027 | Geschäftsart konfigurieren | PARTIAL | 11.6 adds catalog update UI/service; structured validation/final evidence remain. |
+| UC-027 | Geschäftsart konfigurieren | PARTIAL | 11.6 adds catalog update UI/service and 11.10 supplies central validation/error semantics; final evidence remains. |
 | UC-028 | Prozessstatus konfigurieren | PARTIAL | 11.6 adds update UI/service alongside activation/deactivation. |
 | UC-029 | Kataloge pflegen | PARTIAL | 11.6 completes create/update/activate/deactivate reachability; final acceptance remains. |
 | UC-030 | Organisationseinheiten pflegen | PARTIAL | 11.6 adds update maintenance UI/service; final acceptance remains. |
 | UC-031 | Benutzer pflegen | PARTIAL | 11.6 adds update maintenance UI/service; final acceptance remains. |
 | UC-032 | Registraturplan pflegen | PARTIAL | 11.6 exposes plan create/activate/replace flows; no longer a missing-use-case FAIL. |
 | UC-033 | Registraturplanposition pflegen | PARTIAL | 11.6 exposes create/update/move/deactivate flows; final acceptance remains. |
-| UC-034 | Katalogdaten importieren/exportieren | PARTIAL | Java-API import/export works; semantic roundtrip remains 11.11. |
-| UC-035 | Stammdaten importieren/exportieren | PARTIAL | Java-API import/export works; semantic roundtrip remains 11.11. |
-| UC-036 | Geschäftsdaten importieren/exportieren | PARTIAL | TID/BID-aware Java-API flow works; semantic roundtrip remains 11.11. |
+| UC-034 | Katalogdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
+| UC-035 | Stammdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
+| UC-036 | Geschäftsdaten importieren/exportieren | PASS | TID/BID-aware Java-API import/export plus semantic graph equality explicitly preserve BID, TID and REF identities across a fresh PostgreSQL roundtrip. |
 | UC-037 | Abgeschlossene Dossiers zur Aussonderung suchen | PARTIAL | Archive candidate/query functionality exists; final acceptance mapping remains. |
 | UC-038 | Archivablieferung zusammenstellen | PARTIAL | Create/add/remove and quality gates exist; final role/integration mapping remains. |
 | UC-039 | SIP erzeugen | PARTIAL | Strong implementation/tests exist; final browser/security closure remains. |
@@ -85,13 +85,13 @@ The relevant dimensions are application/domain service, business rules and persi
 
 ## 4. Summary
 
-Strict status after completed 11.9:
+Strict status after completed 11.11:
 
-- **PASS:** 1 use case (`UC-006`)
-- **PARTIAL:** 45 use cases
+- **PASS:** 4 use cases (`UC-006`, `UC-034`, `UC-035`, `UC-036`)
+- **PARTIAL:** 42 use cases
 - **FAIL:** 0 use cases
 
-`PARTIAL` is deliberately conservative: many use cases are functionally complete but remain PARTIAL until their final validation, permission, E2E, performance or semantic-roundtrip evidence is closed by the later Phase-11 packages.
+`PARTIAL` is deliberately conservative: many use cases are functionally complete but remain PARTIAL until their final permission, E2E, performance or final acceptance evidence is closed by the later Phase-11 packages.
 
 ## 5. Phase-11 execution status
 
@@ -105,7 +105,9 @@ Strict status after completed 11.9:
 - **11.7 Unterlage lifecycle:** complete. `UnterlageService` implements metadata update, assign/unassign, `In_Arbeit → Final → Registriert`, cancellation and transition guards; `/unterlagen/{tid}` exposes the lifecycle UI. `UnterlageLifecycleIntegrationTest` and the full Gradle suite passed in GitHub Actions Run #102; final 11.7 head Run #105 is also green.
 - **11.8 Business rules / data quality:** complete. DQ-007, participation date/lifecycle invariants and the non-blocking participant duplicate warning are PostgreSQL/MVC-tested; the full Gradle suite passed in GitHub Actions Run #113.
 - **11.9 Search correctness:** complete. Global search has explicit type-specific matching and blank-criteria normalization; `GlobalSearchCorrectnessIntegrationTest` covers former false positives and verifies result-target rendering. The full suite passed in GitHub Actions Run #120.
-- **Next:** 11.10 Validation / error model.
+- **11.10 Validation / error model:** complete. Structured `FieldError` validation and deterministic 400/404/409/403 handling for normal HTTP and HTMX are covered by `Phase11ValidationErrorIntegrationTest`; final 11.10 head Run #151 is green.
+- **11.11 INTERLIS semantic roundtrip:** complete. Two independent PostgreSQL/PostGIS databases exercise Java-API export → ilivalidator → fresh schema/import → DB validation → re-export; semantic graph equality preserves all three topics and explicitly verifies Golden-Path BID/TID/REF identities. Run #152 is green; explicit identity assertions are carried by the final 11.11 gate.
+- **Next:** 11.12 Real Playwright golden path.
 - **X-SEC-02:** intentionally deferred to 11.14.
 
 ## 6. Hard final gate
