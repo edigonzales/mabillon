@@ -62,7 +62,7 @@
                     @else
                         <ul class="record-list">
                             @for (var business : work.activeBusinesses())
-                                <li><a href="/geschaefte/${business.number()}"><strong>${business.number()}</strong><span>${business.title()}</span></a></li>
+                                <li><a href="/geschaefte/${business.number()}"><strong>${business.number()}</strong><span>${business.title()}${business.dossierNumber() == null ? "" : " · Dossier " + business.dossierNumber()}</span></a></li>
                             @endfor
                         </ul>
                     @endif
