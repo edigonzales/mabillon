@@ -233,6 +233,7 @@ class Phase0CompatibilityTest {
     }
 
     @Test
+    @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
     void springBootAndJteRenderTheLocalTemplate() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
@@ -269,6 +270,7 @@ class Phase0CompatibilityTest {
     }
 
     @Test
+    @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
     void normalHttpAndHtmxUseTheSameReadOnlyUseCase() throws Exception {
         mockMvc.perform(get("/dossiers/AGI-D-2026-000007"))
                 .andExpect(status().isOk())
@@ -282,6 +284,7 @@ class Phase0CompatibilityTest {
     }
 
     @Test
+    @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
     void phaseThreeSearchListsAndCreationFormsRender() throws Exception {
         mockMvc.perform(get("/dossiers"))
                 .andExpect(status().isOk())
@@ -757,6 +760,7 @@ class Phase0CompatibilityTest {
     }
 
     @Test
+    @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
     void phaseSixSearchAndControlPagesRenderThroughHttp() throws Exception {
         mockMvc.perform(get("/suche").param("q", "Bodenrain"))
                 .andExpect(status().isOk())
@@ -956,7 +960,7 @@ class Phase0CompatibilityTest {
 
     @Test
     void phaseTenExposesSafeHealthEndpointAndSecurityHeaders() throws Exception {
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("X-Frame-Options", "DENY"))
@@ -979,7 +983,7 @@ class Phase0CompatibilityTest {
                         .param("title", "CSRF-Test")
                         .param("archivempfaenger", "Staatsarchiv"))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/does-not-exist"))
+        mockMvc.perform(get("/does-not-exist").with(httpBasic("sachbearbeiter", "sachbearbeiter")))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("HTTP 404")));
     }
