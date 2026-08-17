@@ -1,6 +1,7 @@
 package guru.interlis.mabillon.security;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,6 +47,12 @@ class SecurityConfigurationTest {
         }) {
             mockMvc.perform(get(path)).andExpect(status().isUnauthorized());
         }
+    }
+
+    @Test
+    void fachlicheRoutesRejectAuthenticatedUsersWithoutMabillonRole() throws Exception {
+        mockMvc.perform(get("/dossiers").with(user("external-user")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
