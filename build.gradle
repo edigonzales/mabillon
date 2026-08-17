@@ -51,6 +51,34 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+tasks.register('verifyInterlisDependencies') {
+    group = 'verification'
+    description = 'Fails when shared INTERLIS runtime dependencies drift from the approved Phase-11 baseline.'
+    doLast {
+        def expected = [
+                'ch.interlis:ili2pg'       : '5.5.1',
+                'ch.interlis:ili2db'       : '5.5.1',
+                'ch.interlis:ilivalidator' : '1.15.0',
+                'ch.interlis:ili2c-tool'   : '5.6.8',
+                'ch.interlis:ili2c-core'   : '5.6.8',
+                'ch.interlis:iox-ili'      : '1.24.4',
+                'ch.interlis:iox-api'      : '1.0.4',
+                'ch.ehi:ehibasics'         : '1.4.1'
+        ]
+        def resolved = [:]
+        configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id
+            resolved["${id.group}:${id.name}"] = id.version
+        }
+        expected.each { module, version ->
+            if (resolved[module] != version) {
+                throw new GradleException("INTERLIS dependency drift: ${module} expected ${version}, resolved ${resolved[module]}")
+            }
+        }
+        logger.lifecycle('INTERLIS dependency baseline: ' + expected.collect { k, v -> "${k}:${v}" }.join(', '))
+    }
+}
+
 tasks.register('interlisTool', JavaExec) {
     group = 'verification'
     description = 'Runs Mabillon INTERLIS tooling through the in-process Java APIs.'
@@ -71,6 +99,7 @@ tasks.register('interlisTool', JavaExec) {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    dependsOn tasks.named('verifyInterlisDependencies')
     // Child fixture scripts use exactly the runtime classpath already resolved
     // for this build instead of installing or resolving a second toolchain.
     environment 'MABILLON_RUNTIME_CLASSPATH', sourceSets.main.runtimeClasspath.asPath
