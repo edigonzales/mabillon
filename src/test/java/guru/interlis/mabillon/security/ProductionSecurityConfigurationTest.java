@@ -1,5 +1,6 @@
 package guru.interlis.mabillon.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,6 +28,14 @@ class ProductionSecurityConfigurationTest {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private Environment environment;
+
+    @Test
+    void productionProfileDoesNotIncludeTestDefaults() {
+        assertThat(environment.getActiveProfiles()).containsExactly("prod");
+    }
 
     @Test
     void productionDoesNotAcceptDevelopmentCredentials() throws Exception {
