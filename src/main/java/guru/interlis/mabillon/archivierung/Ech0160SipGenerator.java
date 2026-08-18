@@ -9,7 +9,6 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -17,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.xml.XMLConstants;
+import javax.xml.validation.SchemaFactory;
+
+import guru.interlis.mabillon.archivierung.ech0160.generated.*;
 import guru.interlis.mabillon.numbering.ArchivAblieferungNumber;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Archivablieferung;
@@ -24,15 +27,19 @@ import guru.interlis.mabillon.persistence.cayenne.ArchivablieferungDossier;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
 import guru.interlis.mabillon.persistence.cayenne.Unterlage;
 import guru.interlis.mabillon.storage.DocumentStorage;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
 @Component
 public final class Ech0160SipGenerator implements SipGenerator {
 
-    private static final String NS = "http://bar.admin.ch/arelda/v4";
-    private static final String XSI = "http://www.w3.org/2001/XMLSchema-instance";
+    private static final String GENERATED_PACKAGE = "guru.interlis.mabillon.archivierung.ech0160.generated";
+    private static final JAXBContext JAXB_CONTEXT = createJaxbContext();
 
     private final CayenneUnitOfWork unitOfWork;
     private final DocumentStorage storage;
@@ -59,8 +66,7 @@ public final class Ech0160SipGenerator implements SipGenerator {
             copyXsdFixture(packageRoot.resolve("header/xsd"));
             Snapshot snapshot = unitOfWork.read(context -> snapshot(context, request.deliveryNumber()));
             writeContent(packageRoot, snapshot);
-            Files.writeString(packageRoot.resolve("header/metadata.xml"), metadata(snapshot, request.profile()),
-                    StandardCharsets.UTF_8);
+            writeMetadata(packageRoot.resolve("header/metadata.xml"), snapshot, request.profile());
             return new GeneratedSip(packageRoot, packageSize(packageRoot), packageHash(packageRoot));
         } catch (IOException failure) {
             throw new IllegalStateException("SIP konnte nicht erzeugt werden.", failure);
@@ -85,11 +91,7 @@ public final class Ech0160SipGenerator implements SipGenerator {
         if (dossiers.isEmpty()) {
             throw new IllegalArgumentException("Archivablieferung enthält kein Dossier.");
         }
-        return new Snapshot(
-                delivery.getAblieferungsnummer(),
-                delivery.getTitel(),
-                delivery.getErstelltam() == null ? LocalDate.now() : delivery.getErstelltam().toLocalDate(),
-                dossiers);
+        return new Snapshot(delivery.getAblieferungsnummer(), delivery.getTitel(), dossiers);
     }
 
     private DossierSnapshot snapshot(Dossier dossier) {
@@ -121,8 +123,7 @@ public final class Ech0160SipGenerator implements SipGenerator {
                 if (document.storageUri() == null || !storage.exists(document.storageUri())) {
                     throw new IllegalStateException("Archivdatei fehlt: " + document.title());
                 }
-                String extension = extension(document.filename());
-                String fileName = "p%06d%s".formatted(index++, extension);
+                String fileName = "p%06d%s".formatted(index++, extension(document.filename()));
                 Path target = dossierDirectory.resolve(fileName).normalize();
                 if (!target.startsWith(dossierDirectory)) {
                     throw new IllegalStateException("Ungültiger SIP-Dateiname.");
@@ -138,83 +139,127 @@ public final class Ech0160SipGenerator implements SipGenerator {
         }
     }
 
-    private String metadata(Snapshot snapshot, SipProfile profile) {
-        StringBuilder xml = new StringBuilder();
-        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-                .append("<paket xmlns=\"").append(NS).append("\" xmlns:xsi=\"").append(XSI)
-                .append("\" xsi:type=\"paketSIP\" schemaVersion=\"")
-                .append(escape(profile.archiveProfileVersion())).append("\">\n")
-                .append("  <paketTyp>SIP</paketTyp>\n")
-                .append("  <inhaltsverzeichnis>\n");
-        for (DossierSnapshot dossier : snapshot.dossiers()) {
-            String dossierId = id("dossier", dossier.number());
-            xml.append("    <ordner>\n      <name>").append(escape(dossierId)).append("</name>\n");
-            int index = 1;
-            for (DocumentSnapshot document : dossier.documents()) {
-                String fileName = "p%06d%s".formatted(index++, extension(document.filename()));
-                String fileId = id("file", dossier.number() + "-" + document.tid());
-                xml.append("      <datei id=\"").append(fileId).append("\">\n")
-                        .append("        <name>").append(escape(fileName)).append("</name>\n")
-                        .append("        <originalName>").append(escape(originalName(document.filename(), document.title())))
-                        .append("</originalName>\n")
-                        .append("        <pruefalgorithmus>SHA-256</pruefalgorithmus>\n")
-                        .append("        <pruefsumme>").append(escape(document.hashSha256())).append("</pruefsumme>\n")
-                        .append("      </datei>\n");
-            }
-            xml.append("    </ordner>\n");
-        }
-        xml.append("  </inhaltsverzeichnis>\n")
-                .append("  <ablieferung xsi:type=\"ablieferungGeverSIP\">\n")
-                .append("    <ablieferungstyp>GEVER</ablieferungstyp>\n")
-                .append("    <ablieferndeStelle>Mabillon</ablieferndeStelle>\n")
-                .append("    <bemerkung>").append(escape(snapshot.title())).append(" / Profil ")
-                .append(escape(profile.id())).append("</bemerkung>\n")
-                .append("    <ablieferungsnummer>").append(escape(snapshot.deliveryNumber())).append("</ablieferungsnummer>\n")
-                .append("    <provenienz>\n")
-                .append("      <aktenbildnerName>Mabillon</aktenbildnerName>\n")
-                .append("      <systemName>Mabillon</systemName>\n")
-                .append("      <registratur>Registraturplan</registratur>\n")
-                .append("    </provenienz>\n")
-                .append("    <ordnungssystem>\n      <name>Registraturplan</name>\n");
-        Map<String, List<DossierSnapshot>> positions = new LinkedHashMap<>();
-        for (DossierSnapshot dossier : snapshot.dossiers()) {
-            positions.computeIfAbsent(dossier.positionCode(), ignored -> new java.util.ArrayList<>()).add(dossier);
-        }
-        for (List<DossierSnapshot> positionDossiers : positions.values()) {
-            DossierSnapshot position = positionDossiers.getFirst();
-            xml.append("      <ordnungssystemposition id=\"").append(id("position", position.positionCode()))
-                    .append("\">\n        <nummer>").append(escape(position.positionCode())).append("</nummer>\n")
-                    .append("        <titel>").append(escape(position.positionTitle())).append("</titel>\n");
-            for (DossierSnapshot dossier : positionDossiers) {
-                xml.append("        <dossier id=\"").append(id("dossier", dossier.number())).append("\">\n")
-                        .append("          <titel>").append(escape(dossier.title())).append("</titel>\n")
-                        .append("          <erscheinungsform>digital</erscheinungsform>\n")
-                        .append("          <entstehungszeitraum>\n")
-                        .append("            <von><datum>").append(dossier.from()).append("</datum></von>\n")
-                        .append("            <bis><datum>").append(dossier.to()).append("</datum></bis>\n")
-                        .append("          </entstehungszeitraum>\n")
-                        .append("          <aktenzeichen>").append(escape(dossier.number())).append("</aktenzeichen>\n")
-                        .append("          <eroeffnungsdatum><datum>").append(dossier.from()).append("</datum></eroeffnungsdatum>\n")
-                        .append("          <abschlussdatum><datum>").append(dossier.to()).append("</datum></abschlussdatum>\n");
+    private void writeMetadata(Path metadataFile, Snapshot snapshot, SipProfile profile) {
+        try {
+            ObjectFactory factory = new ObjectFactory();
+            Map<String, Datei> filesById = new LinkedHashMap<>();
+
+            Inhaltsverzeichnis contents = new Inhaltsverzeichnis();
+            for (DossierSnapshot dossier : snapshot.dossiers()) {
+                Ordner folder = new Ordner();
+                folder.setName(id("dossier", dossier.number()));
                 int index = 1;
                 for (DocumentSnapshot document : dossier.documents()) {
-                    String fileName = "p%06d%s".formatted(index++, extension(document.filename()));
-                    xml.append("          <dokument id=\"").append(id("document", dossier.number() + "-" + document.tid()))
-                            .append("\">\n            <titel>").append(escape(document.title())).append("</titel>\n")
-                            .append("            <erscheinungsform>digital</erscheinungsform>\n")
-                            .append("            <dokumenttyp>").append(escape(document.typeCode() == null ? "Unterlage" : document.typeCode()))
-                            .append("</dokumenttyp>\n")
-                            .append("            <dateiRef>").append(id("file", dossier.number() + "-" + document.tid()))
-                            .append("</dateiRef>\n          </dokument>\n");
-                    if (fileName.isEmpty()) {
-                        throw new IllegalStateException("Unmöglicher SIP-Dateiname.");
-                    }
+                    String fileId = fileId(dossier, document);
+                    Datei file = new Datei();
+                    file.setId(fileId);
+                    file.setName("p%06d%s".formatted(index++, extension(document.filename())));
+                    file.setOriginalName(originalName(document.filename(), document.title()));
+                    file.setPruefalgorithmus(Pruefalgorithmus.fromValue("SHA-256"));
+                    file.setPruefsumme(document.hashSha256());
+                    folder.getDatei().add(file);
+                    filesById.put(fileId, file);
                 }
-                xml.append("        </dossier>\n");
+                contents.getOrdner().add(folder);
             }
-            xml.append("      </ordnungssystemposition>\n");
+
+            AblieferungGeverSIP delivery = new AblieferungGeverSIP();
+            delivery.setAblieferungstyp(Ablieferungstyp.fromValue("GEVER"));
+            delivery.setAblieferndeStelle("Mabillon");
+            delivery.setBemerkung(snapshot.title() + " / Profil " + profile.id());
+            delivery.setAblieferungsnummer(snapshot.deliveryNumber());
+
+            ProvenienzGever provenance = new ProvenienzGever();
+            provenance.setAktenbildnerName("Mabillon");
+            provenance.setSystemName("Mabillon");
+            provenance.setRegistratur("Registraturplan");
+            delivery.setProvenienz(provenance);
+
+            OrdnungssystemGever filingSystem = new OrdnungssystemGever();
+            filingSystem.setName("Registraturplan");
+            Map<String, List<DossierSnapshot>> positions = new LinkedHashMap<>();
+            for (DossierSnapshot dossier : snapshot.dossiers()) {
+                positions.computeIfAbsent(dossier.positionCode(), ignored -> new java.util.ArrayList<>()).add(dossier);
+            }
+            for (List<DossierSnapshot> positionDossiers : positions.values()) {
+                DossierSnapshot position = positionDossiers.getFirst();
+                OrdnungssystempositionGever filingPosition = new OrdnungssystempositionGever();
+                filingPosition.setId(id("position", position.positionCode()));
+                filingPosition.setNummer(position.positionCode());
+                filingPosition.setTitel(position.positionTitle());
+
+                for (DossierSnapshot dossier : positionDossiers) {
+                    DossierGever archiveDossier = new DossierGever();
+                    archiveDossier.setId(id("dossier", dossier.number()));
+                    archiveDossier.setTitel(dossier.title());
+                    archiveDossier.setErscheinungsform(ErscheinungsformDossier.fromValue("digital"));
+                    archiveDossier.setEntstehungszeitraum(period(dossier.from(), dossier.to()));
+                    archiveDossier.setAktenzeichen(dossier.number());
+                    archiveDossier.setEroeffnungsdatum(point(dossier.from()));
+                    archiveDossier.setAbschlussdatum(point(dossier.to()));
+
+                    for (DocumentSnapshot document : dossier.documents()) {
+                        DokumentGever archiveDocument = new DokumentGever();
+                        archiveDocument.setId(id("document", dossier.number() + "-" + document.tid()));
+                        archiveDocument.setTitel(document.title());
+                        archiveDocument.setErscheinungsform(ErscheinungsformDokument.fromValue("digital"));
+                        archiveDocument.setDokumenttyp(document.typeCode() == null ? "Unterlage" : document.typeCode());
+
+                        Datei file = filesById.get(fileId(dossier, document));
+                        if (file == null) {
+                            throw new IllegalStateException("SIP-Dateireferenz konnte nicht aufgelöst werden.");
+                        }
+                        DateiRef reference = new DateiRef();
+                        reference.getValue().add(file);
+                        archiveDocument.getDateiRef().add(reference);
+                        archiveDossier.getDokument().add(archiveDocument);
+                    }
+                    filingPosition.getDossier().add(archiveDossier);
+                }
+                filingSystem.getOrdnungssystemposition().add(filingPosition);
+            }
+            delivery.setOrdnungssystem(filingSystem);
+
+            PaketSIP packet = new PaketSIP();
+            packet.setPaketTyp(PaketTyp.fromValue("SIP"));
+            packet.setSchemaVersion(SchemaVersion.fromValue(profile.archiveProfileVersion()));
+            packet.setInhaltsverzeichnis(contents);
+            packet.setAblieferung(delivery);
+
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
+            var schema = schemaFactory.newSchema(paths.xsdRoot().resolve("arelda.xsd").toFile());
+
+            Marshaller marshaller = JAXB_CONTEXT.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setSchema(schema);
+            marshaller.marshal(factory.createPaket(packet), metadataFile.toFile());
+        } catch (JAXBException | SAXException failure) {
+            throw new IllegalStateException("eCH-0160-Metadaten konnten nicht erzeugt werden.", failure);
         }
-        return xml.append("    </ordnungssystem>\n  </ablieferung>\n</paket>\n").toString();
+    }
+
+    private static HistorischerZeitraum period(LocalDate from, LocalDate to) {
+        HistorischerZeitraum period = new HistorischerZeitraum();
+        period.setVon(point(from));
+        period.setBis(point(to));
+        return period;
+    }
+
+    private static HistorischerZeitpunkt point(LocalDate date) {
+        HistorischerZeitpunkt point = new HistorischerZeitpunkt();
+        point.setDatum(date.toString());
+        return point;
+    }
+
+    private static JAXBContext createJaxbContext() {
+        try {
+            return JAXBContext.newInstance(GENERATED_PACKAGE);
+        } catch (JAXBException failure) {
+            throw new ExceptionInInitializerError(failure);
+        }
     }
 
     private void copyXsdFixture(Path target) throws IOException {
@@ -230,6 +275,10 @@ public final class Ech0160SipGenerator implements SipGenerator {
                 Files.copy(xsd, target.resolve(xsd.getFileName()), StandardCopyOption.REPLACE_EXISTING);
             }
         }
+    }
+
+    private static String fileId(DossierSnapshot dossier, DocumentSnapshot document) {
+        return id("file", dossier.number() + "-" + document.tid());
     }
 
     private static String id(String prefix, String value) {
@@ -317,7 +366,7 @@ public final class Ech0160SipGenerator implements SipGenerator {
         }
     }
 
-    private record Snapshot(String deliveryNumber, String title, LocalDate created, List<DossierSnapshot> dossiers) {
+    private record Snapshot(String deliveryNumber, String title, List<DossierSnapshot> dossiers) {
     }
 
     private record DossierSnapshot(
@@ -338,13 +387,5 @@ public final class Ech0160SipGenerator implements SipGenerator {
             String hashSha256,
             String storageUri,
             String typeCode) {
-    }
-
-    private static String escape(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&apos;");
     }
 }
