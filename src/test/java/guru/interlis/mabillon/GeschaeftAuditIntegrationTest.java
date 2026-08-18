@@ -13,6 +13,7 @@ import guru.interlis.mabillon.archivierung.CreateArchivAblieferungCommand;
 import guru.interlis.mabillon.journal.EreignisTyp;
 import guru.interlis.mabillon.numbering.GeschaeftNumber;
 import guru.interlis.mabillon.persistence.cayenne.Archivablieferung;
+import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
 import guru.interlis.mabillon.security.AuthorizationException;
 import org.apache.cayenne.query.ObjectSelect;
 import org.junit.jupiter.api.Test;
@@ -43,16 +44,19 @@ class GeschaeftAuditIntegrationTest extends MabillonIntegrationTestSupport {
         assertThat(after.number()).isEqualTo(before.number());
         assertThat(after.geschaeftsartCode()).isEqualTo(before.geschaeftsartCode());
         assertThat(after.title()).isEqualTo("Musterwil – fachlich aktualisiert");
-        assertThat(after.dueDate()).isEqualTo(LocalDate.of(2026, 9, 30));
-        assertThat(after.priority()).isEqualTo(4);
+
+        Geschaeft persisted = unitOfWork.read(context -> ObjectSelect.query(Geschaeft.class)
+                .where(Geschaeft.GESCHAEFTSNUMMER.eq(before.number())).selectFirst(context));
+        assertThat(persisted.getFaelligam()).isEqualTo(LocalDate.of(2026, 9, 30));
+        assertThat(persisted.getPrioritaet()).isEqualTo(4);
+        assertThat(persisted.getGeschaeftsnummer()).isEqualTo(before.number());
+        assertThat(persisted.getGeschaeftsart().getAcode()).isEqualTo(before.geschaeftsartCode());
 
         assertThat(journalQueryService.findForGeschaeft(GeschaeftNumber.parse(before.number()), 20))
-                .anySatisfy(entry -> {
-                    if (entry.typ() == EreignisTyp.Geaendert
-                            && "Geschäft geändert.".equals(entry.bemerkung())) {
-                        assertThat(entry.username()).isEqualTo("a.keller");
-                    }
-                });
+                .filteredOn(entry -> entry.typ() == EreignisTyp.Geaendert
+                        && "Geschäft geändert.".equals(entry.bemerkung()))
+                .singleElement()
+                .satisfies(entry -> assertThat(entry.username()).isEqualTo("a.keller"));
     }
 
     @Test
@@ -69,14 +73,14 @@ class GeschaeftAuditIntegrationTest extends MabillonIntegrationTestSupport {
     @Test
     @WithMockUser(username = "unmapped-archive-admin", roles = "MABILLON_ADMIN")
     void archiveCreationFailsClosedInsteadOfUsingAnotherDomainUserAsFallback() {
-        long before = unitOfWork.read(context -> ObjectSelect.query(Archivablieferung.class).selectCount(context));
+        long before = unitOfWork.read(context -> (long) ObjectSelect.query(Archivablieferung.class).select(context).size());
 
         assertThatThrownBy(() -> archivAblieferungService.create(new CreateArchivAblieferungCommand(
                 "AGI", "Unmapped actor", "Staatsarchiv", null)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("kein fachlicher Benutzer");
 
-        long after = unitOfWork.read(context -> ObjectSelect.query(Archivablieferung.class).selectCount(context));
+        long after = unitOfWork.read(context -> (long) ObjectSelect.query(Archivablieferung.class).select(context).size());
         assertThat(after).isEqualTo(before);
     }
 }
