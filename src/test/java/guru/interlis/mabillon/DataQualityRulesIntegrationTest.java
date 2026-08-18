@@ -10,6 +10,8 @@ import java.time.LocalDate;
 
 import guru.interlis.mabillon.archivierung.CreateArchivAblieferungCommand;
 import guru.interlis.mabillon.aufgabe.CreateAufgabeCommand;
+import guru.interlis.mabillon.catalog.CatalogCreateCommand;
+import guru.interlis.mabillon.catalog.CatalogType;
 import guru.interlis.mabillon.geschaeft.GeschaeftView;
 import guru.interlis.mabillon.numbering.ArchivAblieferungNumber;
 import guru.interlis.mabillon.numbering.DossierNumber;
@@ -96,19 +98,26 @@ class DataQualityRulesIntegrationTest extends MabillonIntegrationTestSupport {
     @Test
     @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
     void detectsMismatchingStatusesAndMissingRequiredResult() {
+        catalogService.create(new CatalogCreateCommand(
+                CatalogType.GESCHAEFTSART, "P11_DQ_FOREIGN", "DQ Foreign", null,
+                null, null, false, false, false));
+        catalogService.create(new CatalogCreateCommand(
+                CatalogType.PROZESSSTATUS, "P11_DQ_FOREIGN_PROCESS", "DQ Foreign Process", null,
+                "P11_DQ_FOREIGN", 10, false, false, false));
+        catalogService.create(new CatalogCreateCommand(
+                CatalogType.RESULTATSTATUS, "P11_DQ_FOREIGN_RESULT", "DQ Foreign Result", null,
+                "P11_DQ_FOREIGN", 10, false, true, false));
+
         GeschaeftView mismatch = newBusiness("DQ-008-009");
         unitOfWork.write(context -> {
             Geschaeft entity = ObjectSelect.query(Geschaeft.class)
                     .where(Geschaeft.GESCHAEFTSNUMMER.eq(mismatch.number())).selectFirst(context);
-            String ownType = entity.getGeschaeftsart().getAcode();
-            Prozessstatus foreignProcess = ObjectSelect.query(Prozessstatus.class).select(context).stream()
-                    .filter(value -> value.getGeschaeftsart() != null
-                            && !ownType.equals(value.getGeschaeftsart().getAcode()))
-                    .findFirst().orElseThrow();
-            Resultatstatus foreignResult = ObjectSelect.query(Resultatstatus.class).select(context).stream()
-                    .filter(value -> value.getGeschaeftsart() != null
-                            && !ownType.equals(value.getGeschaeftsart().getAcode()))
-                    .findFirst().orElseThrow();
+            Prozessstatus foreignProcess = ObjectSelect.query(Prozessstatus.class)
+                    .where(Prozessstatus.ACODE.eq("P11_DQ_FOREIGN_PROCESS"))
+                    .selectFirst(context);
+            Resultatstatus foreignResult = ObjectSelect.query(Resultatstatus.class)
+                    .where(Resultatstatus.ACODE.eq("P11_DQ_FOREIGN_RESULT"))
+                    .selectFirst(context);
             entity.setProzessstatus(foreignProcess);
             entity.setResultatstatus(foreignResult);
         });
