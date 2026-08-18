@@ -21,7 +21,7 @@ The relevant dimensions are application/domain service, business rules and persi
 | ID | Severity | Status | Finding / implementation | Remaining closure |
 |---|---|---|---|---|
 | X-SEC-01 | P0 | IMPLEMENTED | Fachliche routes are default-deny and require a Mabillon role; focused MVC security tests execute successfully in GitHub Actions. | Keep covered by final Phase-11 gate. |
-| X-SEC-02 | P0 | OPEN | In-memory development users still use configurable `{noop}` credentials and development defaults. | 11.14 dev/prod security separation. |
+| X-SEC-02 | P0 | IMPLEMENTED | Local `{noop}` users now exist only in explicit `dev`/`test` profiles. Every other profile uses a fail-closed local `UserDetailsService`; the production image activates `prod`, and production compose no longer accepts a local Mabillon admin password. `ProductionSecurityConfigurationTest` proves the production profile rejects both development credentials and has no local user directory. | Verify the final 11.14 head in the full GitHub Actions suite before advancing to 11.15. |
 | X-AUDIT-01 | P0 | IMPLEMENTED | No silent `anna.mueller` fallback remains; login aliases map deterministically to fachliche users and unknown actors fail closed. | Keep covered by final gate. |
 | X-CI-01 | P0 | IMPLEMENTED | GitHub Actions runs Java 25 and `./gradlew test`, with Testcontainers/Docker, explicit Playwright Chromium installation and failure reports/screenshots. | Keep green through final closure. |
 | X-STORAGE-01 | P0 | IMPLEMENTED | Unterlage registration uses staging → DB commit → final storage move, with explicit compensation after post-commit storage failure. | Keep focused filesystem/PostgreSQL tests green. |
@@ -85,13 +85,13 @@ The relevant dimensions are application/domain service, business rules and persi
 
 ## 4. Summary
 
-Strict status after completed 11.13:
+Strict status after completed 11.13 and implemented 11.14 security separation:
 
 - **PASS:** 22 use cases
 - **PARTIAL:** 24 use cases
 - **FAIL:** 0 use cases
 
-`PARTIAL` remains deliberately conservative. The remaining gaps are now primarily dedicated admin/archive acceptance, permission coverage, security profile separation or final all-use-case verification rather than missing search performance infrastructure.
+`PARTIAL` remains deliberately conservative. The remaining gaps are now primarily dedicated admin/archive acceptance, permission coverage or final all-use-case verification rather than missing cross-cutting infrastructure.
 
 ## 5. Phase-11 execution status
 
@@ -109,8 +109,8 @@ Strict status after completed 11.13:
 - **11.11 INTERLIS semantic roundtrip:** complete. Two independent PostgreSQL/PostGIS databases exercise Java-API export → ilivalidator → fresh schema/import → DB validation → re-export; semantic graph equality preserves all three topics and explicitly verifies Golden-Path BID/TID/REF identities. Run #153 is green with explicit identity assertions.
 - **11.12 Real Playwright golden path:** complete. `PlaywrightGoldenPathE2ETest` drives the complete Nomenklatur dossier/business/participant/document/process/task/result/closure/audit workflow through real Chromium against RANDOM_PORT Spring Boot, PostgreSQL and filesystem storage. Full suite Run #160 is green.
 - **11.13 DB-side search/pagination:** complete. Relevant search/dashboard/control paths now execute filters/counts/sorts/limits in Cayenne/PostgreSQL; global search uses DB-side per-type pagination and related-ID subqueries. `Phase11DatabaseSearchPaginationIntegrationTest` and the full suite passed in Run #175.
-- **Next:** 11.14 Dev/prod security separation.
-- **X-SEC-02:** intentionally deferred to 11.14.
+- **11.14 Dev/prod security separation:** implementation complete. Local users are restricted to explicit `dev`/`test`; every other profile is fail-closed, the container activates `prod`, and production compose carries no local Mabillon credential. `ProductionSecurityConfigurationTest` provides the focused regression gate. Final full-suite CI verification of the 11.14 head is still required before this phase is marked complete.
+- **Next:** finish the 11.14 CI gate; only then start 11.15 Final specification verification.
 
 ## 6. Hard final gate
 
