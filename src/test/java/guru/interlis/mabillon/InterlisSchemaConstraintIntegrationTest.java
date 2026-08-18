@@ -56,6 +56,7 @@ class InterlisSchemaConstraintIntegrationTest {
             connection.setAutoCommit(false);
             assertThat(columnNullable(connection, "dossier", "dossiernummer")).isFalse();
             assertThat(columnNullable(connection, "geschaeft", "geschaeftsdossier")).isFalse();
+            assertThat(columnNullable(connection, "unterlage", "ablagedossier")).isFalse();
 
             assertThatThrownBy(() -> execute(connection,
                     "UPDATE mabillon.dossier SET dossiernummer = NULL "
@@ -66,6 +67,12 @@ class InterlisSchemaConstraintIntegrationTest {
             assertThatThrownBy(() -> execute(connection,
                     "UPDATE mabillon.geschaeft SET geschaeftsdossier = NULL "
                             + "WHERE geschaeftsnummer = 'AGI-G-2026-000421'"))
+                    .isInstanceOf(SQLException.class);
+            connection.rollback();
+
+            assertThatThrownBy(() -> execute(connection,
+                    "UPDATE mabillon.unterlage SET ablagedossier = NULL "
+                            + "WHERE t_id = (SELECT t_id FROM mabillon.unterlage LIMIT 1)"))
                     .isInstanceOf(SQLException.class);
             connection.rollback();
         }
