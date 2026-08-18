@@ -113,6 +113,10 @@ tasks.register('playwrightInstall', JavaExec) {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     dependsOn tasks.named('verifyInterlisDependencies')
+    // Activate local test identities by default without shadowing the main
+    // application.properties. Tests using @ActiveProfiles (for example prod)
+    // still replace this default profile explicitly.
+    environment 'SPRING_PROFILES_DEFAULT', 'test'
     // Child fixture scripts use exactly the runtime classpath already resolved
     // for this build instead of installing or resolving a second toolchain.
     environment 'MABILLON_RUNTIME_CLASSPATH', sourceSets.main.runtimeClasspath.asPath
