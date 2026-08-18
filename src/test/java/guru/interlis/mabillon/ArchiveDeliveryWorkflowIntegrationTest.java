@@ -18,7 +18,9 @@ import guru.interlis.mabillon.journal.EreignisObjektTyp;
 import guru.interlis.mabillon.numbering.ArchivAblieferungNumber;
 import guru.interlis.mabillon.numbering.DossierNumber;
 import guru.interlis.mabillon.numbering.GeschaeftNumber;
+import guru.interlis.mabillon.persistence.cayenne.Archivablieferung;
 import guru.interlis.mabillon.security.AuthorizationException;
+import org.apache.cayenne.query.ObjectSelect;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -48,7 +50,13 @@ class ArchiveDeliveryWorkflowIntegrationTest extends MabillonIntegrationTestSupp
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/archivierung/" + delivery.deliveryNumber()));
 
-        assertThat(archivAblieferungService.get(deliveryNumber).dossiers()).isEmpty();
+        boolean empty = unitOfWork.read(context -> {
+            Archivablieferung persisted = ObjectSelect.query(Archivablieferung.class)
+                    .where(Archivablieferung.ABLIEFERUNGSNUMMER.eq(deliveryNumber.value()))
+                    .selectFirst(context);
+            return persisted != null && persisted.getArchivablieferungDossiers().isEmpty();
+        });
+        assertThat(empty).isTrue();
         assertThat(journalQueryService.findForObject(
                 EreignisObjektTyp.ArchivAblieferung, delivery.deliveryNumber(), 20))
                 .extracting(entry -> entry.bemerkung())
