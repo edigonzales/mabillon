@@ -25,9 +25,11 @@ import guru.interlis.mabillon.unterlage.UnterlageView;
 import org.apache.cayenne.query.ObjectSelect;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 class DataQualityRulesIntegrationTest extends MabillonIntegrationTestSupport {
 
     @Test
