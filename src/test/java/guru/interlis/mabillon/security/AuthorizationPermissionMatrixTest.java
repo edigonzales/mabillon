@@ -67,7 +67,7 @@ class AuthorizationPermissionMatrixTest {
         CurrentActor actor = new CurrentActor() {
             @Override
             public ActorId id() {
-                return ActorId.of("permission-test");
+                return new ActorId("permission-test");
             }
 
             @Override
