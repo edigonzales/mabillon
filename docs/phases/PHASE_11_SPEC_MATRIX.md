@@ -1,6 +1,6 @@
 # Phase 11 – Specification Closure Matrix
 
-**Status:** Working baseline  
+**Status:** 11.15 Final Candidate – use-case closure complete, final full-suite CI pending  
 **Branch:** `agent/phase-11-spec-closure-matrix`  
 **Reference:** `MABILLON_IMPLEMENTATION_SPEC.md` v0.5  
 **Purpose:** Evidence-based closure of the gap between specification, implementation, UI, security and automated verification.
@@ -18,115 +18,118 @@ The relevant dimensions are application/domain service, business rules and persi
 
 ## 2. Cross-cutting findings
 
-| ID | Severity | Status | Finding / implementation | Remaining closure |
-|---|---|---|---|---|
-| X-SEC-01 | P0 | IMPLEMENTED | Fachliche routes are default-deny and require a Mabillon role; focused MVC security tests execute successfully in GitHub Actions. | Keep covered by final Phase-11 gate. |
-| X-SEC-02 | P0 | IMPLEMENTED | Local `{noop}` users now exist only in explicit `dev`/`test` profiles. Every other profile uses a fail-closed local `UserDetailsService`; the production image activates `prod`, and production compose no longer accepts a local Mabillon admin password. `ProductionSecurityConfigurationTest` proves the production profile rejects both development credentials and has no local user directory. | Verify the final 11.14 head in the full GitHub Actions suite before advancing to 11.15. |
-| X-AUDIT-01 | P0 | IMPLEMENTED | No silent `anna.mueller` fallback remains; login aliases map deterministically to fachliche users and unknown actors fail closed. | Keep covered by final gate. |
-| X-CI-01 | P0 | IMPLEMENTED | GitHub Actions runs Java 25 and `./gradlew test`, with Testcontainers/Docker, explicit Playwright Chromium installation and failure reports/screenshots. | Keep green through final closure. |
-| X-STORAGE-01 | P0 | IMPLEMENTED | Unterlage registration uses staging → DB commit → final storage move, with explicit compensation after post-commit storage failure. | Keep focused filesystem/PostgreSQL tests green. |
-| X-TEST-01 | P1 | IMPLEMENTED | `PlaywrightGoldenPathE2ETest` executes the complete binding-spec Nomenklatur workflow in real headless Chromium against RANDOM_PORT Spring Boot, PostgreSQL/Testcontainers and filesystem storage; Run #160 is green. | Keep as permanent final-gate coverage. |
-| X-TEST-02 | P1 | IMPLEMENTED | `Phase0CompatibilityTest` restores a pristine PostgreSQL baseline and filesystem state before every method. | Keep order independence covered. |
-| X-VAL-01 | P1 | IMPLEMENTED | `MabillonException`, `ValidationException`/`FieldError`, not-found/conflict/authorization types and the central `WebExceptionHandler` provide deterministic 400/404/409/403 semantics plus HTMX error fragments; focused MVC/PostgreSQL evidence is green. | Keep covered by final acceptance gate. |
-| X-DQ-01 | P1 | IMPLEMENTED | DQ-007 now reports an ERROR for a terminal dossier containing a non-terminal business and is exposed by dossier and business quality checks; focused PostgreSQL evidence is green in Run #113. | Keep DQ-001 through DQ-013 covered by the final acceptance gate. |
-| X-SEARCH-01 | P1 | IMPLEMENTED | Global search uses explicit type-specific filters, normalizes blank criteria and emits only navigable result targets; route rendering and former positional false-positive cases are PostgreSQL/MVC-tested in Run #120, while 11.13 adds DB-side counts/filtering/pagination. | Keep covered by the final acceptance gate. |
-| X-PERF-01 | P2 | IMPLEMENTED | Relevant dossier/business/participant/task/control/global-search paths now filter, count, sort and page in Cayenne/PostgreSQL; duplicate candidates are DB-prefiltered. `Phase11DatabaseSearchPaginationIntegrationTest` plus the full suite are green in Run #175. | Archive-candidate selection remains deliberately separate because final eligibility depends on DQ/storage/hash checks before paging. |
+| ID | Severity | Status | Evidence |
+|---|---|---|---|
+| X-SEC-01 | P0 | PASS | Fachliche routes are default-deny; `SecurityConfigurationTest` rejects anonymous and non-Mabillon identities and protects `/admin/**`. |
+| X-SEC-02 | P0 | PASS | Local users exist only in explicit `dev`/`test`; other profiles fail closed. `ProductionSecurityConfigurationTest` verifies production separation. 11.14 full-suite Run #205 (`32116846311`) is green. |
+| X-AUDIT-01 | P0 | PASS | Login aliases map deterministically to fachliche users. 11.15 removed the remaining archive actor fallback; unmapped archive actors now fail closed and roll back. |
+| X-CI-01 | P0 | PASS* | GitHub Actions runs Java 25, Testcontainers, the full Gradle test suite and real Playwright Chromium. `*` The final 11.15 head still requires its closing green run. |
+| X-STORAGE-01 | P0 | PASS | Unterlage registration uses staging → DB commit → final storage move with compensation; PostgreSQL/filesystem tests cover failure paths. |
+| X-TEST-01 | P1 | PASS | `PlaywrightGoldenPathE2ETest` executes the binding-spec Nomenklatur workflow in real Chromium. Run #160 is green. |
+| X-TEST-02 | P1 | PASS | The old `Phase0CompatibilityTest` monolith is gone. Thematic integration tests share `MabillonIntegrationTestSupport`; `MabillonIntegrationDatabaseIsolationExtension` restores the PostgreSQL baseline and filesystem before every test. 11.14 Run #205 is green. |
+| X-VAL-01 | P1 | PASS | Structured validation plus deterministic 400/404/409/403 handling for normal HTTP and HTMX are covered by focused integration tests. |
+| X-DQ-01 | P1 | PASS | `DataQualityRulesIntegrationTest` covers DQ-001, DQ-003 and DQ-005…DQ-013. DQ-002 and DQ-004 are additionally proven impossible in the valid schema by `InterlisSchemaConstraintIntegrationTest` mandatory-FK tests. |
+| X-SEARCH-01 | P1 | PASS | Global search uses type-specific semantics and DB-side counts/filtering/pagination; correctness and pagination integration tests are green in the established Phase-11 baseline. |
+| X-PERM-01 | P1 | PASS | `AuthorizationPermissionMatrixTest` verifies every declared permission for Sachbearbeitung, GEVER, Archiv and Admin roles, complementing HTTP and focused negative permission tests. |
+| X-INTERLIS-01 | P0 | PASS | Java-API INTERLIS import/export/validation and fresh-PostgreSQL semantic roundtrip preserve relevant BID/TID/REF identities. |
 
 ## 3. Use-case closure matrix
 
-| UC | Use case | Status | Evidence / remaining gap |
+| UC | Use case | Status | Evidence |
 |---|---|---|---|
-| UC-001 | Meine Arbeit anzeigen | PARTIAL | Dashboard/query and identity mapping exist and the real browser opens the authenticated dashboard; richer final acceptance mapping for populated work lists remains. |
-| UC-002 | Geschäft suchen | PASS | Search UI/semantics exist and 11.13 moves filtering, `selectCount()`, ordering and offset/limit into Cayenne/PostgreSQL; isolated paging evidence and the full suite are green in Run #175. |
-| UC-003 | Dossier suchen | PASS | Search UI/semantics exist and 11.13 moves filtering, `selectCount()`, ordering and offset/limit into Cayenne/PostgreSQL; isolated paging evidence and the full suite are green in Run #175. |
-| UC-004 | Neues Geschäft eröffnen | PASS | Service/UI/numbering are PostgreSQL-backed and the real Playwright Golden Path creates the Nomenklatur business through the HTML form. |
-| UC-005 | Neues Dossier eröffnen | PASS | Service/UI/numbering are PostgreSQL-backed and the real Playwright Golden Path creates the dossier through the HTML form. |
-| UC-006 | Geschäft bestehendem Dossier zuordnen | PASS | Assignment during business creation is the specified scope and is exercised by the real Golden Path. |
-| UC-007 | Dossier anzeigen | PASS | Detail view and related information render through the real browser before and after lifecycle mutations. |
-| UC-008 | Geschäft anzeigen | PASS | Detail view, tasks, participations, documents and journal render repeatedly through the real browser Golden Path. |
-| UC-009 | Geschäft bearbeiten | PARTIAL | Update service/UI and structured validation exist; final permission/integration mapping remains. |
-| UC-010 | Prozessstatus ändern | PARTIAL | Service/UI/catalog validation and real-browser status changes are covered; final permission mapping remains. |
-| UC-011 | Geschäftsergebnis erfassen | PASS | Service/UI/validation plus real-browser `GENEHMIGT` result capture are exercised before business closure. |
-| UC-012 | Beteiligten erfassen | PARTIAL | Participant list/create/detail/edit routes exist; 11.8 adds a non-blocking duplicate warning and 11.10 structured form validation. Dedicated create acceptance remains. |
-| UC-013 | Beteiligten einem Geschäft zuordnen | PASS | Add/update/end are reachable, business rules are integration-tested and the real browser assigns Gemeinde Musterwil as `ANTRAGSTELLERIN`. |
-| UC-014 | Unterlage registrieren | PASS | Upload/storage/compensation, lifecycle and validation are PostgreSQL-tested; the real browser uploads and registers two stored documents in the Golden Path. |
-| UC-015 | Unterlage einem Geschäft zuordnen | PASS | Assign/unassign and same-dossier consistency are integration-tested; the real browser assigns both newly uploaded documents to the new business. |
-| UC-016 | Eingegangene E-Mail registrieren | PARTIAL | Specialized service exists; dedicated UI/evidence remain incomplete. |
-| UC-017 | Ausgangsschreiben registrieren | PARTIAL | Supported by registration services; dedicated end-to-end evidence remains incomplete. |
-| UC-018 | Unterlage anzeigen/herunterladen | PASS | `/unterlagen/{tid}` detail/download behavior is MVC-tested and the real browser renders both newly registered document details during assignment. |
-| UC-019 | Aufgabe erstellen | PASS | Service/create validation plus the real Playwright form flow create the fachliche Prüfaufgabe in PostgreSQL. |
-| UC-020 | Aufgabe bearbeiten | PARTIAL | 11.6 adds list/detail/edit/update/delegate web flows; 11.10 structures update/delegation validation. Dedicated edit/delegation acceptance remains. |
-| UC-021 | Aufgabe erledigen | PASS | Service/controller behavior and the real Playwright Golden Path complete the newly created task through the UI. |
-| UC-022 | Eigene Aufgaben verwalten | PARTIAL | 11.6 exposes own-task list/detail/edit/delegate flows; 11.13 moves the own/open task list predicates and limits into PostgreSQL, while final populated-list browser acceptance remains. |
-| UC-023 | Fachsystemreferenz erfassen | PARTIAL | Dossier/business add flows exist; final removal/audit acceptance remains. |
-| UC-024 | Journal eines Geschäfts anzeigen | PASS | Real browser reloads the business journal and verifies expected creation/status/result/closure events attributed to `anna.mueller`. |
-| UC-025 | Geschäft abschliessen | PASS | Close rules have positive/negative integration evidence and the full real-browser Golden Path reaches terminal process/result state and closes the business. |
-| UC-026 | Dossier abschliessen | PASS | Close rules and DQ-007 are integration-tested; the real browser closes the newly created dossier only after its business is complete. |
-| UC-027 | Geschäftsart konfigurieren | PARTIAL | 11.6 adds catalog update UI/service and 11.10 supplies central validation/error semantics; final evidence remains. |
-| UC-028 | Prozessstatus konfigurieren | PARTIAL | 11.6 adds update UI/service alongside activation/deactivation. |
-| UC-029 | Kataloge pflegen | PARTIAL | 11.6 completes create/update/activate/deactivate reachability; final acceptance remains. |
-| UC-030 | Organisationseinheiten pflegen | PARTIAL | 11.6 adds update maintenance UI/service; final acceptance remains. |
-| UC-031 | Benutzer pflegen | PARTIAL | 11.6 adds update maintenance UI/service; final acceptance remains. |
-| UC-032 | Registraturplan pflegen | PARTIAL | 11.6 exposes plan create/activate/replace flows; final acceptance remains. |
-| UC-033 | Registraturplanposition pflegen | PARTIAL | 11.6 exposes create/update/move/deactivate flows; final acceptance remains. |
-| UC-034 | Katalogdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
-| UC-035 | Stammdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator validation and the fresh-PostgreSQL semantic roundtrip are automated. |
-| UC-036 | Geschäftsdaten importieren/exportieren | PASS | TID/BID-aware Java-API import/export plus semantic graph equality explicitly preserve BID, TID and REF identities across a fresh PostgreSQL roundtrip. |
-| UC-037 | Abgeschlossene Dossiers zur Aussonderung suchen | PARTIAL | Archive candidate/query functionality exists; generic early DB paging is intentionally not applied because final eligibility depends on DQ/storage/hash checks. Final archive acceptance remains. |
-| UC-038 | Archivablieferung zusammenstellen | PARTIAL | Create/add/remove and quality gates exist; final role/integration mapping remains. |
-| UC-039 | SIP erzeugen | PARTIAL | Strong implementation/tests exist; final archive-browser/security closure remains. |
-| UC-040 | SIP validieren | PARTIAL | Persistent validation/report behavior exists; final closure remains. |
-| UC-041 | SIP-Ablieferung dokumentieren | PARTIAL | Transfer recording/journal exists; final permission evidence remains. |
-| UC-042 | Dossier nach erfolgreicher Ablieferung kennzeichnen | PARTIAL | Acceptance/archive state handling exists; final end-to-end archive evidence remains. |
-| UC-043 | Systemweite Suche | PASS | 11.9 provides explicit type-specific semantics, blank-criteria normalization and navigable result-target tests; 11.13 adds DB-side per-type counts/filtering and cross-type offset/limit pagination. `GlobalSearchCorrectnessIntegrationTest`, `Phase11DatabaseSearchPaginationIntegrationTest` and the full suite are green in Run #175. |
-| UC-044 | Geschäftskontrolle / Fristenübersicht | PASS | Functionality and route protection are covered; 11.13 moves open/overdue task/business queries, bounded inactivity selection and process-status aggregation into PostgreSQL, with existing integration coverage and the full suite green in Run #175. |
-| UC-045 | Datenqualität prüfen | PARTIAL | `DataQualityService` implements DQ-001…DQ-013 including DQ-007; focused positive/negative PostgreSQL evidence is green. Final full acceptance mapping remains. |
-| UC-046 | Historie/Audit nachvollziehen | PARTIAL | Journaling and fail-closed actor attribution are implemented; the Golden Path verifies key business/dossier audit events and `anna.mueller`, while final all-event acceptance coverage remains for 11.15. |
+| UC-001 | Meine Arbeit anzeigen | PASS | `GeschaeftIntegrationTest` creates active work/open overdue tasks and verifies populated `MyWorkQueryService` lists; dashboard is authenticated and Playwright-tested. |
+| UC-002 | Geschäft suchen | PASS | DB-side filters/count/order/pagination plus MVC/search integration evidence. |
+| UC-003 | Dossier suchen | PASS | DB-side filters/count/order/pagination plus MVC/search integration evidence. |
+| UC-004 | Neues Geschäft eröffnen | PASS | PostgreSQL service/UI/numbering plus real Playwright creation. |
+| UC-005 | Neues Dossier eröffnen | PASS | PostgreSQL service/UI/numbering plus real Playwright creation. |
+| UC-006 | Geschäft bestehendem Dossier zuordnen | PASS | Specified assignment-at-creation scope is exercised by the real Golden Path. |
+| UC-007 | Dossier anzeigen | PASS | Detail UI and relationships render in MVC/Playwright lifecycle flows. |
+| UC-008 | Geschäft anzeigen | PASS | Detail UI renders tasks, participants, documents, references and journal in MVC/Playwright flows. |
+| UC-009 | Geschäft bearbeiten | PASS | `GeschaeftAuditIntegrationTest` verifies HTTP update, immutable number/type, persisted editable fields, audit attribution and negative `EDIT_GESCHAEFT` permission. |
+| UC-010 | Prozessstatus ändern | PASS | Service validates status/business type, normal HTTP and HTMX are integration-tested, and the real Golden Path changes status; role/permission matrix covers `EDIT_GESCHAEFT`. |
+| UC-011 | Geschäftsergebnis erfassen | PASS | Service/UI validation and real-browser result capture before closure. |
+| UC-012 | Beteiligten erfassen | PASS | Participant create/search/detail/edit routes exist; duplicate warning and participant creation/validation are PostgreSQL/MVC-tested. |
+| UC-013 | Beteiligten einem Geschäft zuordnen | PASS | Add/update/end rules and journal behavior are integration-tested; Playwright assigns the participant. |
+| UC-014 | Unterlage registrieren | PASS | Upload/storage/compensation/lifecycle plus real-browser upload and registration. |
+| UC-015 | Unterlage einem Geschäft zuordnen | PASS | Assign/unassign and same-dossier consistency are integration-tested and exercised in Playwright. |
+| UC-016 | Eingegangene E-Mail registrieren | PASS | `EmailRegistrationIntegrationTest` verifies `EMAIL_EINGANG`, dates, stored EML bytes, business attachment and negative permission. The MVP spec explicitly requires no mailbox integration. |
+| UC-017 | Ausgangsschreiben registrieren | PASS | `EmailRegistrationIntegrationTest` verifies `EMAIL_AUSGANG`, outgoing/document dates, stored EML bytes, business attachment and permission. |
+| UC-018 | Unterlage anzeigen/herunterladen | PASS | Detail/download behavior is MVC-tested; real browser renders registered documents. |
+| UC-019 | Aufgabe erstellen | PASS | Service/create validation and Playwright form flow persist the task. |
+| UC-020 | Aufgabe bearbeiten | PASS | `GeschaeftIntegrationTest` updates and delegates tasks, verifies lifecycle/journal rules and rejection after completion; web edit/delegate flows are reachable. |
+| UC-021 | Aufgabe erledigen | PASS | Service/controller integration and Playwright completion. |
+| UC-022 | Eigene Aufgaben verwalten | PASS | Populated own/open/overdue work lists are integration-tested; task list/edit/delegate UI exists and queries are DB-side. |
+| UC-023 | Fachsystemreferenz erfassen | PASS | `SearchIntegrationTest` adds/removes dossier/business references and verifies journal/search behavior. |
+| UC-024 | Journal eines Geschäfts anzeigen | PASS | Journal query/rendering plus Playwright verification of creation/status/result/closure events and mapped actor. |
+| UC-025 | Geschäft abschliessen | PASS | Positive/negative close rules plus complete Playwright closure. |
+| UC-026 | Dossier abschliessen | PASS | Close rules and DQ-007 are integration-tested; Playwright closes only after business completion. |
+| UC-027 | Geschäftsart konfigurieren | PASS | `AdministrationIntegrationTest` HTTP-creates/updates/deactivates a business type and verifies `resultatErforderlich` and persisted fields. |
+| UC-028 | Prozessstatus konfigurieren | PASS | `AdministrationIntegrationTest` verifies business-type link, ordering, initial/terminal flags and the sole-initial-status invariant. |
+| UC-029 | Kataloge pflegen | PASS | Create/update/activate/deactivate behavior, historical readability and specialized catalog rules are integration-tested. |
+| UC-030 | Organisationseinheiten pflegen | PASS | `AdministrationIntegrationTest` creates hierarchy, updates the child and verifies persisted parent semantics. |
+| UC-031 | Benutzer pflegen | PASS | `AdministrationIntegrationTest` creates, updates and deactivates a fachlicher user and verifies organisation mapping. |
+| UC-032 | Registraturplan pflegen | PASS | `AdministrationIntegrationTest` creates and replaces a plan and verifies validity/status. |
+| UC-033 | Registraturplanposition pflegen | PASS | `AdministrationIntegrationTest` creates root/child positions, updates and moves them; cycle/inactive historical behavior has separate integration evidence. |
+| UC-034 | Katalogdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator and fresh-DB semantic roundtrip. |
+| UC-035 | Stammdaten importieren/exportieren | PASS | Java-API import/export, ilivalidator and fresh-DB semantic roundtrip. |
+| UC-036 | Geschäftsdaten importieren/exportieren | PASS | Fresh-DB roundtrip explicitly compares semantic graph and BID/TID/REF identities. |
+| UC-037 | Abgeschlossene Dossiers zur Aussonderung suchen | PASS | `AussonderungQueryService` performs final DQ-aware eligibility; archive permission has a focused negative test. |
+| UC-038 | Archivablieferung zusammenstellen | PASS | `ArchiveDeliveryWorkflowIntegrationTest` verifies create/add/remove through UI/service, journal events and archive permission. |
+| UC-039 | SIP erzeugen | PASS | `ArchivSipIntegrationTest` generates structured eCH-0160 SIP content and validates storage/hash/package structure. |
+| UC-040 | SIP validieren | PASS | Invalid package → correction required → regeneration → valid package is integration-tested with persistent validation result. |
+| UC-041 | SIP-Ablieferung dokumentieren | PASS | Transfer is service/integration-tested; 11.15 exposes transfer/accept/reject actions in the archive detail UI. |
+| UC-042 | Dossier nach erfolgreicher Ablieferung kennzeichnen | PASS | Existing archive integration test records transfer/acceptance, archive signature and verifies dossier `Archiviert`; UI now exposes the complete final flow. |
+| UC-043 | Systemweite Suche | PASS | Type-specific correctness, navigable targets and DB-side per-type counts/pagination are integration-tested. |
+| UC-044 | Geschäftskontrolle / Fristenübersicht | PASS | Open/overdue metrics and DB-side control queries are integration-tested. |
+| UC-045 | Datenqualität prüfen | PASS | DQ-001…DQ-013 are now explicitly covered by `DataQualityRulesIntegrationTest` plus mandatory-schema tests for DQ-002/DQ-004. |
+| UC-046 | Historie/Audit nachvollziehen | PASS | Journal rendering and lifecycle events are covered throughout; `GeschaeftAuditIntegrationTest` proves mapped actor attribution and fail-closed archive attribution with rollback. |
 
 ## 4. Summary
 
-Strict status after completed 11.13 and implemented 11.14 security separation:
+Final 11.15 use-case status:
 
-- **PASS:** 22 use cases
-- **PARTIAL:** 24 use cases
+- **PASS:** 46 use cases
+- **PARTIAL:** 0 use cases
 - **FAIL:** 0 use cases
 
-`PARTIAL` remains deliberately conservative. The remaining gaps are now primarily dedicated admin/archive acceptance, permission coverage or final all-use-case verification rather than missing cross-cutting infrastructure.
+There is no remaining mandatory use-case gap in the closure matrix. The only remaining Phase-11 gate is a green full GitHub Actions run for the final 11.15 head.
 
 ## 5. Phase-11 execution status
 
-- **11.1 Security default-deny:** complete; focused tests green in GitHub Actions.
-- **11.2 Identity & audit:** complete; unit/PostgreSQL tests green.
+- **11.1 Security default-deny:** complete.
+- **11.2 Identity & audit:** complete.
 - **11.CI Continuous integration baseline:** complete and continuously exercised.
-- **11.3 DB/storage consistency:** complete; sequencing/compensation tests green.
-- **11.4 Test isolation:** complete; PostgreSQL/filesystem reset is deterministic.
-- **11.5 INTERLIS Java-API integration:** complete; ili2pg/ili2db 5.5.1, coherent dependency set, no external JAR runtime, no `createMandatoryChecks`, binding spec v0.5 aligned.
-- **11.6 Missing UI use cases:** complete. Participant, task, catalog/master-data and registraturplan maintenance routes/forms are reachable; `Phase11UiReachabilityTest` and the full suite are green in GitHub Actions (Run #97 after the final JTE UUID fix).
-- **11.7 Unterlage lifecycle:** complete. `UnterlageService` implements metadata update, assign/unassign, `In_Arbeit → Final → Registriert`, cancellation and transition guards; `/unterlagen/{tid}` exposes the lifecycle UI. `UnterlageLifecycleIntegrationTest` and the full Gradle suite passed in GitHub Actions Run #102; final 11.7 head Run #105 is also green.
-- **11.8 Business rules / data quality:** complete. DQ-007, participation date/lifecycle invariants and the non-blocking participant duplicate warning are PostgreSQL/MVC-tested; the full Gradle suite passed in GitHub Actions Run #113.
-- **11.9 Search correctness:** complete. Global search has explicit type-specific matching and blank-criteria normalization; `GlobalSearchCorrectnessIntegrationTest` covers former false positives and verifies result-target rendering. The full suite passed in GitHub Actions Run #120.
-- **11.10 Validation / error model:** complete. Structured `FieldError` validation and deterministic 400/404/409/403 handling for normal HTTP and HTMX are covered by `Phase11ValidationErrorIntegrationTest`; final 11.10 head Run #151 is green.
-- **11.11 INTERLIS semantic roundtrip:** complete. Two independent PostgreSQL/PostGIS databases exercise Java-API export → ilivalidator → fresh schema/import → DB validation → re-export; semantic graph equality preserves all three topics and explicitly verifies Golden-Path BID/TID/REF identities. Run #153 is green with explicit identity assertions.
-- **11.12 Real Playwright golden path:** complete. `PlaywrightGoldenPathE2ETest` drives the complete Nomenklatur dossier/business/participant/document/process/task/result/closure/audit workflow through real Chromium against RANDOM_PORT Spring Boot, PostgreSQL and filesystem storage. Full suite Run #160 is green.
-- **11.13 DB-side search/pagination:** complete. Relevant search/dashboard/control paths now execute filters/counts/sorts/limits in Cayenne/PostgreSQL; global search uses DB-side per-type pagination and related-ID subqueries. `Phase11DatabaseSearchPaginationIntegrationTest` and the full suite passed in Run #175.
-- **11.14 Dev/prod security separation:** implementation complete. Local users are restricted to explicit `dev`/`test`; every other profile is fail-closed, the container activates `prod`, and production compose carries no local Mabillon credential. `ProductionSecurityConfigurationTest` provides the focused regression gate. Final full-suite CI verification of the 11.14 head is still required before this phase is marked complete.
-- **Next:** finish the 11.14 CI gate; only then start 11.15 Final specification verification.
+- **11.3 DB/storage consistency:** complete.
+- **11.4 Test isolation:** complete; the monolithic compatibility test has been replaced by thematic tests and generic DB/filesystem isolation.
+- **11.5 INTERLIS Java-API integration:** complete.
+- **11.6 Missing UI use cases:** complete.
+- **11.7 Unterlage lifecycle:** complete.
+- **11.8 Business rules / data quality:** complete.
+- **11.9 Search correctness:** complete.
+- **11.10 Validation / error model:** complete.
+- **11.11 INTERLIS semantic roundtrip:** complete; Run #153 green.
+- **11.12 Real Playwright golden path:** complete; Run #160 green.
+- **11.13 DB-side search/pagination:** complete; Run #175 green.
+- **11.14 Dev/prod security separation:** complete. Full suite Run #205 (`32116846311`) on `10eccbd2b538ecbe4adb528175f0287ffb9e92a9` is green.
+- **11.15 Final specification verification:** use-case closure complete. Final full-suite CI for the current 11.15 head is the remaining release gate.
+
+See `PHASE_11_15_FINAL_SPEC_VERIFICATION.md` for the detailed final-verification findings and the implementation gaps discovered during 11.15.
 
 ## 6. Hard final gate
 
-Phase 11 may be reported `SUCCESS` only when:
+| Gate | Status |
+|---|---|
+| Every mandatory UC is PASS or explicitly out of scope | PASS |
+| Every writing use case has PostgreSQL/Cayenne integration evidence | PASS |
+| Business rules have positive/negative automated evidence | PASS |
+| Security-relevant use cases have permission coverage | PASS |
+| Tests do not rely on shared mutable persistent state | PASS |
+| Real Playwright Java golden path passes | PASS |
+| DQ-001 through DQ-013 implemented and tested | PASS |
+| INTERLIS semantic roundtrip preserves relevant identities/references | PASS |
+| No fachlicher page/download accidentally anonymous | PASS |
+| Audit attribution cannot silently impersonate another fachlicher user | PASS |
+| Storage failure tests demonstrate no accepted silent inconsistency | PASS |
+| Final 11.15 GitHub Actions full suite green | **PENDING** |
 
-- every mandatory UC is `PASS`, or explicitly changed out of scope;
-- every writing use case has PostgreSQL/Cayenne integration evidence;
-- every business rule has positive and negative automated evidence;
-- every security-relevant use case has permission coverage;
-- tests do not rely on shared mutable persistent state;
-- a real Playwright Java golden path passes;
-- DQ-001 through DQ-013 are implemented and tested;
-- INTERLIS export/import has a semantic roundtrip preserving relevant identities and references;
-- no fachlicher page/download is accidentally anonymous;
-- audit attribution cannot silently impersonate another fachlicher user;
-- document storage failure tests demonstrate no accepted silent inconsistency;
-- GitHub Actions remains green without a second independent INTERLIS toolchain.
-
-Only after this gate should the implementation be described as **Mabillon MVP 1.0 / Pilot Candidate**.
+Phase 11 may be reported `SUCCESS` and the implementation described as **Mabillon MVP 1.0 / Pilot Candidate** only after the final pending CI gate is green.
