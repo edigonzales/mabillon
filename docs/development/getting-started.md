@@ -16,6 +16,8 @@ INTERLIS-Tools müssen nicht separat installiert werden; sie sind Gradle-Abhäng
 
 Die Integrationstests starten ihre PostgreSQL/PostGIS-Instanzen über Testcontainers und erzeugen/importieren die benötigten INTERLIS-Fixtures reproduzierbar.
 
+Beim Kompilieren erzeugt XJC aus den versionierten eCH-0160-XSDs automatisch die Jakarta-XML-Binding-Klassen unter `build/generated/sources/ech0160/java`. Die generierten Quellen sind Build-Artefakte und werden nicht versioniert.
+
 Für den Browser-E2E-Test:
 
 ```bash
@@ -38,14 +40,15 @@ Hilfsskripte unter `scripts/` verwenden dieselbe Java-API-/Gradle-Toolchain wie 
 ## Wichtige Verzeichnisse
 
 ```text
-model/                         INTERLIS-Modell und XTF-Fixtures
-src/main/java/                 Anwendungscode
-src/generated/java/            durch Cayenne cgen erzeugte Quellen
-src/main/jte/                  JTE-Templates
-src/main/resources/            Konfiguration und statische Assets
-docs/                          aktuelle Projektdokumentation
-scripts/                       reproduzierbare Hilfsabläufe
-.agents/skills/                Coding-Agent-Workflows
+model/                                      INTERLIS-Modell und XTF-Fixtures
+src/main/java/                              Anwendungscode
+src/generated/java/                         durch Cayenne cgen erzeugte Quellen
+build/generated/sources/ech0160/java/       durch XJC erzeugte eCH-0160-Bindings
+src/main/jte/                               JTE-Templates
+src/main/resources/                         Konfiguration und statische Assets
+docs/                                       aktuelle Projektdokumentation
+scripts/                                    reproduzierbare Hilfsabläufe
+.agents/skills/                             Coding-Agent-Workflows
 ```
 
 ## Vor Änderungen
