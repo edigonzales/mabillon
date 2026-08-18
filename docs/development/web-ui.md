@@ -40,6 +40,18 @@ HTMX erhält für strukturierte Fehler ein kompaktes Alert-Fragment; normale Req
 
 ## Design
 
-Neue Seiten verwenden die bestehende Mabillon-Designsprache und vorhandene Komponenten/Tokens: kleine Radien, neutrale Flächen, klare Tabellen/Formulare, sichtbarer Fokus, zurückhaltende Akzentfarbe und keine externen CSS-/Font-CDNs.
+Normative visuelle Referenz ist ili2grails am Commit `3e133a976a0ed1c704f38e81a6493501e0568ec4`. Mabillon bildet dessen `balanced`-Designsprache in eigenem Vanilla CSS ab; Bootstrap gehört nicht zum Runtime-Stack.
+
+Die zentralen Verträge sind:
+
+- Fira Sans Regular/SemiBold aus lokalen Assets,
+- Primärfarbe `#4299E1`, aktive Navigation `#ECF5FC`, Text `#3F4B55`, Rahmen `#D3DDE5`, Tabellenkopf `#EDF2F5` und Hover `#E8F1F7`,
+- 3px-Radien, subtile Referenzschatten und ein 0.5/0.75/1/1.5-rem-Abstandsraster,
+- 64px-Topbar, 272px-Sidebar und höchstens 1440px breiter Inhaltsbereich,
+- ein gemeinsamer `mabillon-*`-Namespace für generische und fachliche Komponenten, Custom Properties, technische Zustände und eigene DOM-Hooks,
+- sichtbarer Tastaturfokus, Reduced Motion, druckbare Seiten und kein horizontaler Seitenoverflow,
+- keine CDN-Fonts, CDN-Icons, externen Stylesheets oder lokal nachgebauten Parallelvarianten.
+
+Die Shell enthält nur reale Funktionen. Die globale Suche sendet `GET /suche?q=…`; Navigation und fachliche Formulare bleiben ohne JavaScript verwendbar. `mabillon.js` ergänzt nur das mobile Shell-Verhalten. HTMX-Fragmente behalten ihre bestehenden fachlichen Grenzen und enthalten keine App Shell.
 
 Siehe [ADR UI-Designsprache](../architecture/0005-ui-design-language.md).

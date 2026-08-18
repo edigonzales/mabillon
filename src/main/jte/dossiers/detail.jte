@@ -7,7 +7,7 @@
     title = dossier.title(),
     active = "dossiers",
     content = @`
-        <p class="breadcrumb"><a href="/">Übersicht</a> / Dossiers</p>
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/">Übersicht</a> / Dossiers</nav>
         @template.dossiers._detail(dossier = dossier, unterlagentypen = unterlagentypen, fachsystemReferenzen = fachsystemReferenzen, journalEntries = journalEntries, csrfToken = csrfToken)
     `
 )

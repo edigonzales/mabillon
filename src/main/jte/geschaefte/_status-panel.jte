@@ -2,16 +2,16 @@
 @param java.util.List<guru.interlis.mabillon.catalog.CatalogEntryView> processStatuses
 @param java.util.List<guru.interlis.mabillon.catalog.CatalogEntryView> resultStatuses
 @param org.springframework.security.web.csrf.CsrfToken csrfToken
-<section id="geschaeft-status-panel" class="status-panel">
-    <div class="section-heading">
+<section id="geschaeft-status-panel" class="mabillon-status-panel">
+    <div class="mabillon-section-heading">
         <h2>Prozessstatus</h2>
         @if (geschaeft.processStatusName() != null)
-            <span class="status-tag">${geschaeft.processStatusName()}</span>
+            <span class="mabillon-status-badge">${geschaeft.processStatusName()}</span>
         @endif
     </div>
-    <p class="muted">Lifecycle: ${geschaeft.lifecycleStatus()}</p>
+    <p class="mabillon-muted">Lifecycle: ${geschaeft.lifecycleStatus()}</p>
     @if (!processStatuses.isEmpty())
-        <form method="post" action="/geschaefte/${geschaeft.number()}/prozessstatus" class="status-form">
+        <form method="post" action="/geschaefte/${geschaeft.number()}/prozessstatus" class="mabillon-status-form">
             <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
             <label for="process-status">Status ändern</label>
             <select id="process-status" name="processStatusCode">
@@ -24,11 +24,11 @@
                 @endfor
             </select>
             <input name="comment" placeholder="Bemerkung (optional)">
-            <button class="button" type="submit">Status speichern</button>
+            <button class="mabillon-button" type="submit">Status speichern</button>
         </form>
     @endif
     @if (!resultStatuses.isEmpty())
-        <form method="post" action="/geschaefte/${geschaeft.number()}/resultat" class="status-form">
+        <form method="post" action="/geschaefte/${geschaeft.number()}/resultat" class="mabillon-status-form">
             <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
             <label for="result-status">Resultat</label>
             <select id="result-status" name="resultStatusCode">
@@ -42,7 +42,7 @@
                 @endfor
             </select>
             <input name="comment" placeholder="Bemerkung (optional)">
-            <button class="button" type="submit">Resultat speichern</button>
+            <button class="mabillon-button" type="submit">Resultat speichern</button>
         </form>
     @endif
 </section>

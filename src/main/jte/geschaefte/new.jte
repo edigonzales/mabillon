@@ -8,8 +8,8 @@
     title = title,
     active = "geschaefte",
     content = @`
-        <div class="page-header"><div><p class="breadcrumb"><a href="/geschaefte">Geschäfte</a> / Neu</p><h1>Neues Geschäft</h1></div></div>
-        <section class="workspace-card form-card"><form method="post" action="/geschaefte" class="form-grid">
+        <div class="mabillon-page-header"><div><nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/geschaefte">Geschäfte</a> / Neu</nav><h1>Neues Geschäft</h1></div></div>
+        <section class="mabillon-tile mabillon-form-tile"><form method="post" action="/geschaefte" class="mabillon-form-grid">
             <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
             <label>Dossier<select name="dossierNumber" required>@for (var value : dossiers)<option value="${value.number()}">${value.number()} · ${value.title()}</option>@endfor</select></label>
             <label>Titel<input name="title" required></label>
@@ -21,7 +21,7 @@
             <label>Eröffnungsdatum<input type="date" name="openingDate"></label>
             <label>Fälligkeit<input type="date" name="dueDate"></label>
             <label>Priorität<input type="number" name="priority" min="0" max="5" value="0"></label>
-            <div class="form-actions"><button class="button" type="submit">Geschäft eröffnen</button><a href="/geschaefte">Abbrechen</a></div>
+            <div class="mabillon-form-actions"><button class="mabillon-button" type="submit">Geschäft eröffnen</button><a href="/geschaefte">Abbrechen</a></div>
         </form></section>
     `
 )

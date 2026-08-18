@@ -6,20 +6,20 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/dossiers/${unterlage.dossierNumber()}">${unterlage.dossierNumber()}</a> / Unterlage</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/dossiers/${unterlage.dossierNumber()}">${unterlage.dossierNumber()}</a> / Unterlage</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">${unterlage.typName() == null ? unterlage.typCode() : unterlage.typName()}</p>
+                <p class="mabillon-eyebrow">${unterlage.typName() == null ? unterlage.typCode() : unterlage.typName()}</p>
                 <h1>${unterlage.title()}</h1>
-                <p class="muted">Status: ${unterlage.status()}${unterlage.aktenrelevant() ? " · aktenrelevant" : ""}</p>
+                <p class="mabillon-muted">Status: ${unterlage.status()}${unterlage.aktenrelevant() ? " · aktenrelevant" : ""}</p>
             </div>
             @if (unterlage.storageUri() != null && unterlage.storageUri().startsWith("mabillon:objects/"))
-                <a class="button" href="/unterlagen/${unterlage.tid().toString()}/download">Herunterladen</a>
+                <a class="mabillon-button" href="/unterlagen/${unterlage.tid().toString()}/download">Herunterladen</a>
             @endif
         </div>
 
-        <section class="workspace-card">
-            <dl class="detail-grid">
+        <section class="mabillon-tile">
+            <dl class="mabillon-detail-grid">
                 <div><dt>Dossier</dt><dd><a href="/dossiers/${unterlage.dossierNumber()}">${unterlage.dossierNumber()}</a></dd></div>
                 <div><dt>Geschäft</dt><dd>${unterlage.geschaeftsnummer() == null ? "–" : unterlage.geschaeftsnummer()}</dd></div>
                 <div><dt>Unterlagendatum</dt><dd>${unterlage.documentDate() == null ? "–" : unterlage.documentDate().toString()}</dd></div>
@@ -37,9 +37,9 @@
         </section>
 
         @if (!unterlage.status().equalsIgnoreCase("Storniert"))
-            <section class="workspace-card">
-                <div class="section-heading"><h2>Metadaten bearbeiten</h2></div>
-                <form method="post" action="/unterlagen/${unterlage.tid().toString()}" class="form-grid">
+            <section class="mabillon-tile">
+                <div class="mabillon-section-heading"><h2>Metadaten bearbeiten</h2></div>
+                <form method="post" action="/unterlagen/${unterlage.tid().toString()}" class="mabillon-form-grid">
                     <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                     <label>Titel<input name="title" value="${unterlage.title()}" required></label>
                     <label>Unterlagentyp-Code<input name="typCode" value="${unterlage.typCode()}" required></label>
@@ -48,49 +48,49 @@
                     <label>Ausgangsdatum<input type="date" name="outgoingDate" value="${unterlage.outgoingDate() == null ? "" : unterlage.outgoingDate().toString()}"></label>
                     <label>Dateiformat<input name="dateiformat" value="${unterlage.dateiformat() == null ? "" : unterlage.dateiformat()}"></label>
                     <label>Bemerkungen<textarea name="bemerkungen">${unterlage.bemerkungen() == null ? "" : unterlage.bemerkungen()}</textarea></label>
-                    <div class="form-actions"><button class="button" type="submit">Metadaten speichern</button></div>
+                    <div class="mabillon-form-actions"><button class="mabillon-button" type="submit">Metadaten speichern</button></div>
                 </form>
             </section>
 
-            <section class="workspace-card">
-                <div class="section-heading"><h2>Geschäftskontext</h2></div>
+            <section class="mabillon-tile">
+                <div class="mabillon-section-heading"><h2>Geschäftskontext</h2></div>
                 @if (unterlage.geschaeftsnummer() == null)
-                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/geschaeft" class="inline-form">
+                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/geschaeft" class="mabillon-inline-form">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                         <label>Geschäftsnummer<input name="geschaeftNumber" required></label>
-                        <button class="button button--quiet" type="submit">Geschäft zuordnen</button>
+                        <button class="mabillon-button mabillon-button--secondary" type="submit">Geschäft zuordnen</button>
                     </form>
                 @else
                     <p><a href="/geschaefte/${unterlage.geschaeftsnummer()}">${unterlage.geschaeftsnummer()}</a></p>
-                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/geschaeft/entfernen" class="inline-form">
+                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/geschaeft/entfernen" class="mabillon-inline-form">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                        <button class="button button--quiet" type="submit">Geschäftszuordnung entfernen</button>
+                        <button class="mabillon-button mabillon-button--secondary" type="submit">Geschäftszuordnung entfernen</button>
                     </form>
                 @endif
             </section>
 
-            <section class="workspace-card">
-                <div class="section-heading"><h2>Lebenszyklus</h2></div>
+            <section class="mabillon-tile">
+                <div class="mabillon-section-heading"><h2>Lebenszyklus</h2></div>
                 @if (unterlage.status().equalsIgnoreCase("In_Arbeit"))
-                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/finalisieren" class="inline-form">
+                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/finalisieren" class="mabillon-inline-form">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                        <button class="button" type="submit">Unterlage finalisieren</button>
+                        <button class="mabillon-button" type="submit">Unterlage finalisieren</button>
                     </form>
                 @endif
                 @if (unterlage.status().equalsIgnoreCase("Final"))
-                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/aktenrelevant-registrieren" class="inline-form">
+                    <form method="post" action="/unterlagen/${unterlage.tid().toString()}/aktenrelevant-registrieren" class="mabillon-inline-form">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                        <button class="button" type="submit">Aktenrelevant registrieren</button>
+                        <button class="mabillon-button" type="submit">Aktenrelevant registrieren</button>
                     </form>
                 @endif
-                <form method="post" action="/unterlagen/${unterlage.tid().toString()}/stornieren" class="form-grid compact-form">
+                <form method="post" action="/unterlagen/${unterlage.tid().toString()}/stornieren" class="mabillon-form-grid mabillon-form-grid--compact">
                     <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                     <label>Stornogrund<input name="reason"></label>
-                    <div class="form-actions"><button class="button button--quiet" type="submit">Unterlage stornieren</button></div>
+                    <div class="mabillon-form-actions"><button class="mabillon-button mabillon-button--secondary" type="submit">Unterlage stornieren</button></div>
                 </form>
             </section>
         @else
-            <section class="workspace-card"><p class="muted">Diese Unterlage ist storniert und kann nicht mehr geändert werden.</p></section>
+            <section class="mabillon-tile"><p class="mabillon-muted">Diese Unterlage ist storniert und kann nicht mehr geändert werden.</p></section>
         @endif
     `
 )

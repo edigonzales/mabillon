@@ -8,17 +8,17 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb">Beteiligte</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel">Beteiligte</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">Geschäftskontakte</p>
+                <p class="mabillon-eyebrow">Geschäftskontakte</p>
                 <h1>${title}</h1>
-                <p class="lead">Personen und Organisationen erfassen und für Geschäftsbeteiligungen verwenden.</p>
+                <p class="mabillon-page-subtitle">Personen und Organisationen erfassen und für Geschäftsbeteiligungen verwenden.</p>
             </div>
-            <a class="button" href="/beteiligte/neu">Beteiligten erfassen</a>
+            <a class="mabillon-button" href="/beteiligte/neu">Beteiligten erfassen</a>
         </div>
-        <section class="workspace-card">
-            <form class="filter-bar" method="get" action="/beteiligte">
+        <section class="mabillon-tile">
+            <form class="mabillon-filter-bar" method="get" action="/beteiligte">
                 <label>Name <input name="name" value="${name == null ? "" : name}"></label>
                 <label>Typ
                     <select name="typ">
@@ -41,10 +41,10 @@
                     </select>
                 </label>
                 <label>Externe Referenz <input name="externeReferenz" value="${externeReferenz == null ? "" : externeReferenz}"></label>
-                <button class="button button--quiet" type="submit">Filtern</button>
+                <button class="mabillon-button mabillon-button--secondary" type="submit">Filtern</button>
             </form>
-            <div class="section-heading"><h2>Treffer</h2><span class="count-badge">${result.totalElements()}</span></div>
-            <ul class="record-list">
+            <div class="mabillon-section-heading"><h2>Treffer</h2><span class="mabillon-count-badge">${result.totalElements()}</span></div>
+            <ul class="mabillon-record-list">
                 @for (var value : result.items())
                     <li>
                         <a href="/beteiligte/${value.tid()}">
@@ -54,13 +54,13 @@
                     </li>
                 @endfor
             </ul>
-            <div class="pagination-bar">
+            <div class="mabillon-pagination-bar">
                 @if (result.page() > 0)
-                    <a class="button button--quiet" href="/beteiligte?page=${result.page() - 1}&name=${name == null ? "" : name}&typ=${typ == null ? "" : typ}&externeReferenz=${externeReferenz == null ? "" : externeReferenz}">Zurück</a>
+                    <a class="mabillon-button mabillon-button--secondary" href="/beteiligte?page=${result.page() - 1}&name=${name == null ? "" : name}&typ=${typ == null ? "" : typ}&externeReferenz=${externeReferenz == null ? "" : externeReferenz}">Zurück</a>
                 @endif
                 <span>Seite ${result.page() + 1}</span>
                 @if (result.hasNext())
-                    <a class="button button--quiet" href="/beteiligte?page=${result.page() + 1}&name=${name == null ? "" : name}&typ=${typ == null ? "" : typ}&externeReferenz=${externeReferenz == null ? "" : externeReferenz}">Weiter</a>
+                    <a class="mabillon-button mabillon-button--secondary" href="/beteiligte?page=${result.page() + 1}&name=${name == null ? "" : name}&typ=${typ == null ? "" : typ}&externeReferenz=${externeReferenz == null ? "" : externeReferenz}">Weiter</a>
                 @endif
             </div>
         </section>

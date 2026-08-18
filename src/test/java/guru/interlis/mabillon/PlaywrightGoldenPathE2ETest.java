@@ -73,8 +73,28 @@ class PlaywrightGoldenPathE2ETest {
 
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+
+            BrowserContext reviewContext = browser.newContext(new Browser.NewContextOptions()
+                    .setBaseURL("http://127.0.0.1:" + port)
+                    .setViewportSize(1280, 720)
+                    .setExtraHTTPHeaders(Map.of("Authorization", authorization)));
+            Page reviewPage = reviewContext.newPage();
+            reviewPage.setDefaultTimeout(15_000);
+            reviewPage.setDefaultNavigationTimeout(20_000);
+            try {
+                verifyIli2GrailsDesignSystem(reviewPage);
+            } catch (Throwable failure) {
+                reviewPage.screenshot(new Page.ScreenshotOptions()
+                        .setPath(PLAYWRIGHT_ROOT.resolve("ui-contract-failure.png"))
+                        .setFullPage(true));
+                throw failure;
+            } finally {
+                reviewContext.close();
+            }
+
             BrowserContext context = browser.newContext(new Browser.NewContextOptions()
                     .setBaseURL("http://127.0.0.1:" + port)
+                    .setViewportSize(1280, 720)
                     .setExtraHTTPHeaders(Map.of("Authorization", authorization)));
             Page page = context.newPage();
             page.setDefaultTimeout(15_000);
@@ -82,6 +102,7 @@ class PlaywrightGoldenPathE2ETest {
 
             try {
                 page.navigate("/");
+                page.evaluate("() => document.fonts.ready");
                 assertThat(page.title()).contains("Mabillon");
                 assertThat(page.locator("body").innerText())
                         .contains("Meine offenen Aufgaben", "Aktive Geschäfte");
@@ -131,6 +152,85 @@ class PlaywrightGoldenPathE2ETest {
                 browser.close();
             }
         }
+    }
+
+    private static void verifyIli2GrailsDesignSystem(Page page) throws IOException {
+        Path uiRoot = PLAYWRIGHT_ROOT.resolve("ui");
+        Files.createDirectories(uiRoot);
+
+        page.navigate("/");
+        page.evaluate("() => document.fonts.ready");
+        assertThat(page.title()).contains("Mabillon");
+        assertThat(page.locator("body").innerText())
+                .contains("Meine offenen Aufgaben", "Aktive Geschäfte");
+        assertThat((Boolean) page.evaluate("() => document.fonts.check('16px \\\"Fira Sans\\\"')")).isTrue();
+        assertThat(css(page.locator("body"), "font-family")).contains("Fira Sans");
+        assertThat(css(page.locator("body"), "background-color")).isEqualTo("rgb(255, 255, 255)");
+        assertThat(css(page.locator(".mabillon-topbar"), "height")).isEqualTo("64px");
+        assertThat(css(page.locator(".mabillon-sidebar"), "width")).isEqualTo("272px");
+        assertThat(css(page.locator(".mabillon-navigation a.mabillon-navigation-link--active"), "background-color"))
+                .isEqualTo("rgb(236, 245, 252)");
+        assertThat(css(page.locator(".mabillon-global-search .mabillon-button"), "background-color"))
+                .isEqualTo("rgb(66, 153, 225)");
+        assertThat(css(page.locator(".mabillon-global-search .mabillon-button"), "border-radius")).isEqualTo("3px");
+        capture(page, uiRoot.resolve("overview.png"));
+
+        Locator globalSearch = page.locator(".mabillon-global-search");
+        globalSearch.locator("input[name='q']").fill("AGI-G-2026-000421");
+        globalSearch.locator("button[type='submit']").click();
+        assertThat(URI.create(page.url()).getQuery()).isEqualTo("q=AGI-G-2026-000421");
+        assertThat(page.locator(".mabillon-main-grid").innerText()).contains("AGI-G-2026-000421");
+
+        page.navigate("/dossiers");
+        assertThat(css(page.locator(".mabillon-table-wrap"), "border-top-color"))
+                .isEqualTo("rgb(211, 221, 229)");
+        assertThat(css(page.locator(".mabillon-table-wrap th").first(), "background-color"))
+                .isEqualTo("rgb(237, 242, 245)");
+        Locator firstResult = page.locator(".mabillon-table-wrap tbody tr").first();
+        firstResult.hover();
+        assertThat(css(firstResult, "background-color")).isEqualTo("rgb(232, 241, 247)");
+        capture(page, uiRoot.resolve("dossiers.png"));
+
+        page.navigate("/geschaefte/AGI-G-2026-000421");
+        capture(page, uiRoot.resolve("geschaeft-detail.png"));
+        page.navigate("/geschaefte/neu");
+        capture(page, uiRoot.resolve("geschaeft-formular.png"));
+        page.navigate("/admin");
+        capture(page, uiRoot.resolve("administration.png"));
+
+        page.setViewportSize(390, 844);
+        page.navigate("/dossiers/neu");
+        page.waitForFunction("() => document.documentElement.classList.contains('mabillon-js-enabled')");
+        assertThat((Boolean) page.evaluate(
+                "() => document.documentElement.scrollWidth === document.documentElement.clientWidth"))
+                .isTrue();
+        Locator formLabels = page.locator(".mabillon-form-grid > label");
+        assertThat(formLabels.nth(1).boundingBox().y).isGreaterThan(formLabels.first().boundingBox().y);
+
+        Locator navigationToggle = page.locator("[data-mabillon-navigation-toggle]");
+        assertThat(navigationToggle.isVisible()).isTrue();
+        navigationToggle.focus();
+        assertThat(css(navigationToggle, "outline-color")).isEqualTo("rgb(66, 153, 225)");
+        navigationToggle.click();
+        Locator navigation = page.locator("[data-mabillon-navigation-panel]");
+        assertThat(navigation.getAttribute("data-mabillon-navigation-open")).isEqualTo("true");
+        page.keyboard().press("Escape");
+        assertThat(navigation.getAttribute("data-mabillon-navigation-open")).isEqualTo("false");
+        assertThat((Boolean) page.evaluate(
+                "() => document.activeElement === document.querySelector('[data-mabillon-navigation-toggle]')"))
+                .isTrue();
+
+        capture(page, uiRoot.resolve("dossier-formular-mobile.png"));
+        page.setViewportSize(1280, 720);
+    }
+
+    private static String css(Locator locator, String property) {
+        return String.valueOf(locator.evaluate(
+                "(element, propertyName) => getComputedStyle(element).getPropertyValue(propertyName)", property)).trim();
+    }
+
+    private static void capture(Page page, Path target) {
+        page.screenshot(new Page.ScreenshotOptions().setPath(target).setFullPage(true));
     }
 
     private static String openDossier(Page page) {

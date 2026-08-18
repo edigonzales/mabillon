@@ -7,52 +7,52 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/admin">Administration</a> / Kataloge</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/admin">Administration</a> / Kataloge</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">Konfiguration</p>
+                <p class="mabillon-eyebrow">Konfiguration</p>
                 <h1>${title}</h1>
-                <p class="lead">Aktive Werte sind für neue Geschäftsdaten auswählbar. Historische Werte bleiben erhalten.</p>
+                <p class="mabillon-page-subtitle">Aktive Werte sind für neue Geschäftsdaten auswählbar. Historische Werte bleiben erhalten.</p>
             </div>
         </div>
         @for (var group : groups)
-            <section class="workspace-card admin-section">
-                <div class="section-heading">
+            <section class="mabillon-tile mabillon-admin-section">
+                <div class="mabillon-section-heading">
                     <h2>${group.type().label()}</h2>
-                    <span class="count-badge">${group.entries().size()}</span>
+                    <span class="mabillon-count-badge">${group.entries().size()}</span>
                 </div>
-                <ul class="record-list">
+                <ul class="mabillon-record-list">
                     @for (var entry : group.entries())
-                        <li class="admin-record">
+                        <li class="mabillon-record-row">
                             <span>
                                 <strong>${entry.name()}</strong>
                                 <span><code>${entry.code()}</code> · ${entry.status()}</span>
                             </span>
-                            <span class="page-actions">
-                                <a class="button button--quiet" href="/admin/kataloge/${group.type().name().toLowerCase()}/${entry.code()}/bearbeiten">Bearbeiten</a>
+                            <span class="mabillon-page-actions">
+                                <a class="mabillon-button mabillon-button--secondary" href="/admin/kataloge/${group.type().name().toLowerCase()}/${entry.code()}/bearbeiten">Bearbeiten</a>
                                 @if (entry.active())
                                     <form method="post" action="/admin/kataloge/${group.type().name().toLowerCase()}/${entry.code()}/deactivate">
                                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                                        <button class="button button--quiet" type="submit">Deaktivieren</button>
+                                        <button class="mabillon-button mabillon-button--secondary" type="submit">Deaktivieren</button>
                                     </form>
                                 @else
                                     <form method="post" action="/admin/kataloge/${group.type().name().toLowerCase()}/${entry.code()}/activate">
                                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                                        <button class="button button--quiet" type="submit">Aktivieren</button>
+                                        <button class="mabillon-button mabillon-button--secondary" type="submit">Aktivieren</button>
                                     </form>
                                 @endif
                             </span>
                         </li>
                     @endfor
                 </ul>
-                <form class="admin-form" method="post" action="/admin/kataloge/${group.type().name().toLowerCase()}">
+                <form class="mabillon-form" method="post" action="/admin/kataloge/${group.type().name().toLowerCase()}">
                     <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                     <h3>${group.type().label()} ergänzen</h3>
                     <label>Code <input name="code" required></label>
                     <label>Name <input name="name" required></label>
                     <label>Beschreibung <textarea name="description"></textarea></label>
                     @if (group.type().name().equals("GESCHAEFTSART"))
-                        <label class="checkbox"><input type="checkbox" name="resultatErforderlich"> Resultat erforderlich</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="resultatErforderlich"> Resultat erforderlich</label>
                     @endif
                     @if (group.type().name().equals("PROZESSSTATUS"))
                         <label>Geschäftsart
@@ -63,8 +63,8 @@
                             </select>
                         </label>
                         <label>Sortierung <input type="number" name="sortierung"></label>
-                        <label class="checkbox"><input type="checkbox" name="initial"> Initialstatus</label>
-                        <label class="checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="initial"> Initialstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
                     @endif
                     @if (group.type().name().equals("RESULTATSTATUS"))
                         <label>Geschäftsart
@@ -75,9 +75,9 @@
                             </select>
                         </label>
                         <label>Sortierung <input type="number" name="sortierung"></label>
-                        <label class="checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
                     @endif
-                    <button class="button" type="submit">Katalogwert anlegen</button>
+                    <button class="mabillon-button" type="submit">Katalogwert anlegen</button>
                 </form>
             </section>
         @endfor

@@ -22,8 +22,27 @@ class SecurityOperationsIntegrationTest extends MabillonIntegrationTestSupport {
     void springBootAndJteRenderTheLocalTemplate() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("class=\"mabillon-topbar\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"global-search\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/suche\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Mabillon</h1>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("AGI-D-2026-000007")));
+    }
+
+    @Test
+    @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
+    void bundledFontsArePublicAndContainTheExpectedAssets() throws Exception {
+        for (String path : new String[] {
+                "/fonts/fira-sans/FiraSans-Regular.woff2",
+                "/fonts/fira-sans/FiraSans-SemiBold.woff2"
+        }) {
+            byte[] content = mockMvc.perform(get(path))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsByteArray();
+            assertThat(content).hasSizeGreaterThan(10_000);
+        }
     }
 
     @Test

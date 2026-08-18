@@ -5,17 +5,17 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb">Meine Aufgaben</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel">Meine Aufgaben</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">Arbeitsvorrat</p>
+                <p class="mabillon-eyebrow">Arbeitsvorrat</p>
                 <h1>${title}</h1>
-                <p class="lead">Offene, persönlich zugewiesene Aufgaben.</p>
+                <p class="mabillon-page-subtitle">Offene, persönlich zugewiesene Aufgaben.</p>
             </div>
         </div>
-        <section class="workspace-card">
-            <div class="section-heading"><h2>Offene Aufgaben</h2><span class="count-badge">${aufgaben.size()}</span></div>
-            <ul class="record-list">
+        <section class="mabillon-tile">
+            <div class="mabillon-section-heading"><h2>Offene Aufgaben</h2><span class="mabillon-count-badge">${aufgaben.size()}</span></div>
+            <ul class="mabillon-record-list">
                 @for (var aufgabe : aufgaben)
                     <li>
                         <a href="/aufgaben/${aufgabe.tid()}">

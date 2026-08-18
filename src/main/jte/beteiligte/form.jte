@@ -6,10 +6,10 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/beteiligte">Beteiligte</a> / ${beteiligter == null ? "Neu" : "Bearbeiten"}</p>
-        <div class="page-header"><div><p class="eyebrow">Geschäftskontakt</p><h1>${title}</h1></div></div>
-        <section class="workspace-card">
-            <form class="admin-form" method="post" action="${beteiligter == null ? "/beteiligte" : "/beteiligte/" + beteiligter.tid()}">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/beteiligte">Beteiligte</a> / ${beteiligter == null ? "Neu" : "Bearbeiten"}</nav>
+        <div class="mabillon-page-header"><div><p class="mabillon-eyebrow">Geschäftskontakt</p><h1>${title}</h1></div></div>
+        <section class="mabillon-tile">
+            <form class="mabillon-form" method="post" action="${beteiligter == null ? "/beteiligte" : "/beteiligte/" + beteiligter.tid()}">
                 <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                 <label>Typ
                     <select name="typ" required>
@@ -37,9 +37,9 @@
                 <label>Telefon <input name="telefon" value="${beteiligter == null || beteiligter.telefon() == null ? "" : beteiligter.telefon()}"></label>
                 <label>Adresse <textarea name="adresse">${beteiligter == null || beteiligter.adresse() == null ? "" : beteiligter.adresse()}</textarea></label>
                 <label>Externe Referenz <input name="externeReferenz" value="${beteiligter == null || beteiligter.externeReferenz() == null ? "" : beteiligter.externeReferenz()}"></label>
-                <div class="page-actions">
-                    <button class="button" type="submit">Speichern</button>
-                    <a class="button button--quiet" href="${beteiligter == null ? "/beteiligte" : "/beteiligte/" + beteiligter.tid()}">Abbrechen</a>
+                <div class="mabillon-page-actions">
+                    <button class="mabillon-button" type="submit">Speichern</button>
+                    <a class="mabillon-button mabillon-button--secondary" href="${beteiligter == null ? "/beteiligte" : "/beteiligte/" + beteiligter.tid()}">Abbrechen</a>
                 </div>
             </form>
         </section>

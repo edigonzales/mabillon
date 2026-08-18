@@ -12,7 +12,7 @@
     title = geschaeft.title(),
     active = "geschaefte",
     content = @`
-        <p class="breadcrumb"><a href="/">Übersicht</a> / Geschäfte</p>
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/">Übersicht</a> / Geschäfte</nav>
         @template.geschaefte._detail(geschaeft = geschaeft, processStatuses = processStatuses, resultStatuses = resultStatuses, aufgabentypen = aufgabentypen, beteiligungen = beteiligungen, beteiligte = beteiligte, aufgaben = aufgaben, fachsystemReferenzen = fachsystemReferenzen, journalEntries = journalEntries, csrfToken = csrfToken)
     `
 )

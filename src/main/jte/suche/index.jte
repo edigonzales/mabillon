@@ -5,9 +5,9 @@
     title = title,
     active = "search",
     content = @`
-        <div class="page-header"><div><p class="breadcrumb">Arbeitsbereich</p><h1>Systemweite Suche</h1><p class="lead">Geschäfte, Dossiers, Beteiligte, Unterlagen und Fachsystemreferenzen strukturiert durchsuchen.</p></div></div>
-        <section class="workspace-card filter-card">
-            <form method="get" action="/suche" class="filter-grid">
+        <div class="mabillon-page-header"><div><nav class="mabillon-breadcrumbs" aria-label="Brotkrümel">Arbeitsbereich</nav><h1>Systemweite Suche</h1><p class="mabillon-page-subtitle">Geschäfte, Dossiers, Beteiligte, Unterlagen und Fachsystemreferenzen strukturiert durchsuchen.</p></div></div>
+        <section class="mabillon-tile mabillon-list-tools">
+            <form method="get" action="/suche" class="mabillon-filter-grid">
                 <label>Freitext<input name="q" value="${criteria.text() == null ? "" : criteria.text()}"></label>
                 <label>Geschäftsnummer<input name="geschaeftsnummer" value="${criteria.geschaeftsnummer() == null ? "" : criteria.geschaeftsnummer()}"></label>
                 <label>Dossiernummer<input name="dossiernummer" value="${criteria.dossiernummer() == null ? "" : criteria.dossiernummer()}"></label>
@@ -18,7 +18,7 @@
                 <label>Prozessstatus<input name="processStatusCode" value="${criteria.processStatusCode() == null ? "" : criteria.processStatusCode()}"></label>
                 <label>Unterlagentitel<input name="unterlagentitel" value="${criteria.unterlagentitel() == null ? "" : criteria.unterlagentitel()}"></label>
                 <label>Fachsystem-ID<input name="fachsystemId" value="${criteria.fachsystemId() == null ? "" : criteria.fachsystemId()}"></label>
-                <button class="button" type="submit">Suchen</button>
+                <button class="mabillon-button" type="submit">Suchen</button>
             </form>
         </section>
         @template.suche._results(result = result)

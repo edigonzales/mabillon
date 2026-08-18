@@ -1,5 +1,10 @@
 package guru.interlis.mabillon.security;
 
+import java.util.function.Supplier;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +16,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +34,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/actuator/health", "/actuator/health/**",
-                                "/mabillon.css", "/mabillon.js", "/htmx-2.0.10.min.js", "/favicon.ico")
+                                "/mabillon.css", "/mabillon.js", "/htmx-2.0.10.min.js", "/favicon.ico",
+                                "/fonts/**")
                         .permitAll()
                         .requestMatchers("/actuator", "/actuator/**").hasRole("MABILLON_ADMIN")
                         .requestMatchers("/admin", "/admin/**").hasRole("MABILLON_ADMIN")
@@ -35,7 +46,9 @@ public class SecurityConfiguration {
                                 "MABILLON_ARCHIVVERANTWORTLICHER"))
                 .httpBasic(httpBasic -> {})
                 .formLogin(form -> form.disable())
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "default-src 'self'; script-src 'self'; style-src 'self'; "
@@ -44,6 +57,28 @@ public class SecurityConfiguration {
                         .frameOptions(frame -> frame.deny())
                         .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.NO_REFERRER)));
         return http.build();
+    }
+
+    private static final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+
+        private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
+        private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
+
+        @Override
+        public void handle(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                Supplier<CsrfToken> csrfToken) {
+            xor.handle(request, response, csrfToken);
+            csrfToken.get();
+        }
+
+        @Override
+        public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+            String headerValue = request.getHeader(csrfToken.getHeaderName());
+            CsrfTokenRequestHandler delegate = StringUtils.hasText(headerValue) ? plain : xor;
+            return delegate.resolveCsrfTokenValue(request, csrfToken);
+        }
     }
 
     @Bean

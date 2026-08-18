@@ -7,19 +7,19 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/admin/kataloge">Kataloge</a> / ${entry.code()}</p>
-        <div class="page-header"><div><p class="eyebrow">${entry.type().label()}</p><h1>${title}</h1></div></div>
-        <section class="workspace-card">
-            <form class="admin-form" method="post" action="/admin/kataloge/${entry.type().name().toLowerCase()}/${entry.code()}">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/admin/kataloge">Kataloge</a> / ${entry.code()}</nav>
+        <div class="mabillon-page-header"><div><p class="mabillon-eyebrow">${entry.type().label()}</p><h1>${title}</h1></div></div>
+        <section class="mabillon-tile">
+            <form class="mabillon-form" method="post" action="/admin/kataloge/${entry.type().name().toLowerCase()}/${entry.code()}">
                 <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                 <label>Code <input value="${entry.code()}" disabled></label>
                 <label>Name <input name="name" required value="${entry.name()}"></label>
                 <label>Beschreibung <textarea name="description">${entry.description() == null ? "" : entry.description()}</textarea></label>
                 @if (entry.type().name().equals("GESCHAEFTSART"))
                     @if (entry.resultatErforderlich())
-                        <label class="checkbox"><input type="checkbox" name="resultatErforderlich" checked> Resultat erforderlich</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="resultatErforderlich" checked> Resultat erforderlich</label>
                     @else
-                        <label class="checkbox"><input type="checkbox" name="resultatErforderlich"> Resultat erforderlich</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="resultatErforderlich"> Resultat erforderlich</label>
                     @endif
                 @endif
                 @if (entry.type().name().equals("PROZESSSTATUS") || entry.type().name().equals("RESULTATSTATUS"))
@@ -38,21 +38,21 @@
                 @endif
                 @if (entry.type().name().equals("PROZESSSTATUS"))
                     @if (entry.initial())
-                        <label class="checkbox"><input type="checkbox" name="initial" checked> Initialstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="initial" checked> Initialstatus</label>
                     @else
-                        <label class="checkbox"><input type="checkbox" name="initial"> Initialstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="initial"> Initialstatus</label>
                     @endif
                 @endif
                 @if (entry.type().name().equals("PROZESSSTATUS") || entry.type().name().equals("RESULTATSTATUS"))
                     @if (entry.terminal())
-                        <label class="checkbox"><input type="checkbox" name="terminal" checked> Terminalstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="terminal" checked> Terminalstatus</label>
                     @else
-                        <label class="checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
+                        <label class="mabillon-checkbox"><input type="checkbox" name="terminal"> Terminalstatus</label>
                     @endif
                 @endif
-                <div class="page-actions">
-                    <button class="button" type="submit">Speichern</button>
-                    <a class="button button--quiet" href="/admin/kataloge">Abbrechen</a>
+                <div class="mabillon-page-actions">
+                    <button class="mabillon-button" type="submit">Speichern</button>
+                    <a class="mabillon-button mabillon-button--secondary" href="/admin/kataloge">Abbrechen</a>
                 </div>
             </form>
         </section>

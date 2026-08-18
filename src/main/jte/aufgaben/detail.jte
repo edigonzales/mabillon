@@ -8,35 +8,35 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/aufgaben">Meine Aufgaben</a> / ${aufgabe.title()}</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/aufgaben">Meine Aufgaben</a> / ${aufgabe.title()}</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">${aufgabe.typName() == null ? "Aufgabe" : aufgabe.typName()}</p>
+                <p class="mabillon-eyebrow">${aufgabe.typName() == null ? "Aufgabe" : aufgabe.typName()}</p>
                 <h1>${aufgabe.title()}</h1>
-                <p class="lead"><a href="/geschaefte/${aufgabe.geschaeftsnummer()}">${aufgabe.geschaeftsnummer()}</a> · ${aufgabe.status()}</p>
+                <p class="mabillon-page-subtitle"><a href="/geschaefte/${aufgabe.geschaeftsnummer()}">${aufgabe.geschaeftsnummer()}</a> · ${aufgabe.status()}</p>
             </div>
         </div>
-        <div class="admin-grid">
-            <section class="workspace-card admin-section">
-                <div class="section-heading"><h2>Aufgabe bearbeiten</h2></div>
+        <div class="mabillon-admin-grid">
+            <section class="mabillon-tile mabillon-admin-section">
+                <div class="mabillon-section-heading"><h2>Aufgabe bearbeiten</h2></div>
                 @if (aufgabe.open())
-                    <form class="admin-form" method="post" action="/aufgaben/${aufgabe.tid()}">
+                    <form class="mabillon-form" method="post" action="/aufgaben/${aufgabe.tid()}">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                         <label>Titel <input name="title" required value="${aufgabe.title()}"></label>
                         <label>Beschreibung <textarea name="description">${aufgabe.description() == null ? "" : aufgabe.description()}</textarea></label>
                         <label>Fällig am <input type="date" name="dueDate" value="${aufgabe.dueDate() == null ? "" : aufgabe.dueDate().toString()}"></label>
                         <label>Priorität <input type="number" min="0" max="5" name="priority" value="${aufgabe.priority() == null ? "0" : aufgabe.priority().toString()}"></label>
-                        <button class="button" type="submit">Speichern</button>
+                        <button class="mabillon-button" type="submit">Speichern</button>
                     </form>
                 @else
-                    <p class="muted">Abgeschlossene Aufgaben können nicht mehr bearbeitet werden.</p>
+                    <p class="mabillon-muted">Abgeschlossene Aufgaben können nicht mehr bearbeitet werden.</p>
                 @endif
             </section>
-            <section class="workspace-card admin-section">
-                <div class="section-heading"><h2>Zuweisung</h2></div>
+            <section class="mabillon-tile mabillon-admin-section">
+                <div class="mabillon-section-heading"><h2>Zuweisung</h2></div>
                 <p>Benutzer: <strong>${aufgabe.assignedUsername() == null ? "–" : aufgabe.assignedUsername()}</strong><br>Organisationseinheit: <strong>${aufgabe.assignedOrganisationseinheit() == null ? "–" : aufgabe.assignedOrganisationseinheit()}</strong></p>
                 @if (aufgabe.open())
-                    <form class="admin-form" method="post" action="/aufgaben/${aufgabe.tid()}/delegate">
+                    <form class="mabillon-form" method="post" action="/aufgaben/${aufgabe.tid()}/delegate">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                         <label>An Benutzer
                             <select name="username" required>
@@ -46,9 +46,9 @@
                                 @endfor
                             </select>
                         </label>
-                        <button class="button button--quiet" type="submit">An Benutzer delegieren</button>
+                        <button class="mabillon-button mabillon-button--secondary" type="submit">An Benutzer delegieren</button>
                     </form>
-                    <form class="admin-form" method="post" action="/aufgaben/${aufgabe.tid()}/delegate">
+                    <form class="mabillon-form" method="post" action="/aufgaben/${aufgabe.tid()}/delegate">
                         <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
                         <label>An Organisationseinheit
                             <select name="organisationseinheit" required>
@@ -58,7 +58,7 @@
                                 @endfor
                             </select>
                         </label>
-                        <button class="button button--quiet" type="submit">An Organisationseinheit delegieren</button>
+                        <button class="mabillon-button mabillon-button--secondary" type="submit">An Organisationseinheit delegieren</button>
                     </form>
                 @endif
             </section>

@@ -87,7 +87,7 @@ class Phase11ValidationErrorIntegrationTest {
                         .param("responsible", "anna.mueller"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("role=\"alert\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("app-header"))));
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("class=\"mabillon-topbar\""))));
     }
 
     @Test

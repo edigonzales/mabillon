@@ -31,7 +31,9 @@ class SecurityConfigurationTest {
                 "/mabillon.css",
                 "/mabillon.js",
                 "/htmx-2.0.10.min.js",
-                "/favicon.ico"
+                "/favicon.ico",
+                "/fonts/fira-sans/FiraSans-Regular.woff2",
+                "/fonts/fira-sans/FiraSans-SemiBold.woff2"
         }) {
             assertAllowed(path, null);
         }
@@ -126,7 +128,9 @@ class SecurityConfigurationTest {
                 "/mabillon.css",
                 "/mabillon.js",
                 "/htmx-2.0.10.min.js",
-                "/favicon.ico"
+                "/favicon.ico",
+                "/fonts/fira-sans/FiraSans-Regular.woff2",
+                "/fonts/fira-sans/FiraSans-SemiBold.woff2"
         })
         String ok() {
             return "ok";

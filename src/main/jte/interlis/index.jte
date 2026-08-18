@@ -7,16 +7,16 @@
     title = title,
     active = active,
     content = @`
-        <p class="breadcrumb"><a href="/admin">Administration</a> / INTERLIS</p>
-        <div class="page-header">
+        <nav class="mabillon-breadcrumbs" aria-label="Brotkrümel"><a href="/admin">Administration</a> / INTERLIS</nav>
+        <div class="mabillon-page-header">
             <div>
-                <p class="eyebrow">Datenaustausch</p>
+                <p class="mabillon-eyebrow">Datenaustausch</p>
                 <h1>${title}</h1>
-                <p class="lead">XTF wird vor dem Import und nach dem Export mit ilivalidator geprüft. Die Importreihenfolge ist Kataloge, Stammdaten, Geschäftsdaten.</p>
+                <p class="mabillon-page-subtitle">XTF wird vor dem Import und nach dem Export mit ilivalidator geprüft. Die Importreihenfolge ist Kataloge, Stammdaten, Geschäftsdaten.</p>
             </div>
         </div>
         @if (result != null)
-            <section class="notice ${result.successful() ? "notice--success" : "notice--error"}" aria-live="polite">
+            <section class="mabillon-notice ${result.successful() ? "mabillon-notice--success" : "mabillon-notice--error"}" aria-live="polite">
                 @for (var message : result.messages())
                     <p>${message}</p>
                 @endfor
@@ -27,25 +27,25 @@
                 @endif
             </section>
         @endif
-        <section class="workspace-card">
-            <div class="section-heading">
+        <section class="mabillon-tile">
+            <div class="mabillon-section-heading">
                 <h2>Topics</h2>
-                <span class="count-badge">${scopes.size()}</span>
+                <span class="mabillon-count-badge">${scopes.size()}</span>
             </div>
-            <div class="record-list">
+            <div class="mabillon-record-list">
                 @for (var scope : scopes)
-                    <div class="admin-record">
+                    <div class="mabillon-record-row">
                         <span>
                             <strong>${scope.label()}</strong>
                             <span>Basket ${scope.qualifiedTopic()}</span>
                         </span>
-                        <span class="inline-actions">
+                        <span class="mabillon-inline-actions">
                             <form method="post" action="/admin/interlis/import/${scope.name().toLowerCase()}" enctype="multipart/form-data">
                                 <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
-                                <label class="file-input">XTF wählen <input type="file" name="file" accept=".xtf,application/xml,text/xml" required></label>
-                                <button class="button" type="submit">Importieren</button>
+                                <label class="mabillon-file-input">XTF wählen <input type="file" name="file" accept=".xtf,application/xml,text/xml" required></label>
+                                <button class="mabillon-button" type="submit">Importieren</button>
                             </form>
-                            <a class="button button--quiet" href="/admin/interlis/export/${scope.name().toLowerCase()}">Exportieren</a>
+                            <a class="mabillon-button mabillon-button--secondary" href="/admin/interlis/export/${scope.name().toLowerCase()}">Exportieren</a>
                         </span>
                     </div>
                 @endfor

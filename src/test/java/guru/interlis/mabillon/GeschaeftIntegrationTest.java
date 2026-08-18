@@ -63,12 +63,14 @@ class GeschaeftIntegrationTest extends MabillonIntegrationTestSupport {
     void normalHttpAndHtmxUseTheSameReadOnlyUseCase() throws Exception {
         mockMvc.perform(get("/dossiers/AGI-D-2026-000007"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("class=\"mabillon-topbar\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/suche\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"dossier-detail\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Gemeinde Musterwil")));
         mockMvc.perform(get("/geschaefte/AGI-G-2026-000421").header("HX-Request", "true"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"geschaeft-detail\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("app-header"))));
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("class=\"mabillon-topbar\""))));
     }
 
     @Test
