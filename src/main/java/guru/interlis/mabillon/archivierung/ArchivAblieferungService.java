@@ -31,7 +31,6 @@ import guru.interlis.mabillon.security.CurrentActor;
 import guru.interlis.mabillon.security.Permission;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -55,7 +54,6 @@ public final class ArchivAblieferungService {
     private final CurrentActor currentActor;
     private final Clock clock;
     private final DataQualityService dataQualityService;
-    private final String journalFallbackUsername;
 
     public ArchivAblieferungService(
             CayenneUnitOfWork unitOfWork,
@@ -64,8 +62,7 @@ public final class ArchivAblieferungService {
             AuthorizationService authorizationService,
             CurrentActor currentActor,
             Clock clock,
-            DataQualityService dataQualityService,
-            @Value("${mabillon.security.journal-fallback-username:anna.mueller}") String journalFallbackUsername) {
+            DataQualityService dataQualityService) {
         this.unitOfWork = unitOfWork;
         this.numberingService = numberingService;
         this.journalService = journalService;
@@ -73,7 +70,6 @@ public final class ArchivAblieferungService {
         this.currentActor = currentActor;
         this.clock = clock;
         this.dataQualityService = dataQualityService;
-        this.journalFallbackUsername = journalFallbackUsername;
     }
 
     public ArchivAblieferungView create(CreateArchivAblieferungCommand command) {
@@ -91,7 +87,7 @@ public final class ArchivAblieferungService {
             delivery.setBemerkung(command.bemerkung());
             delivery.setAstatus(DRAFT);
             delivery.setErstelltam(LocalDateTime.now(clock));
-            delivery.setBenutzer(actorOrFallback(context));
+            delivery.setBenutzer(requireActor(context));
             delivery.setTBasket(businessBasket(context));
             delivery.setTIliTid(UUID.randomUUID());
             record(context, EreignisObjektTyp.ArchivAblieferung, number.value(), EreignisTyp.Erstellt,
@@ -296,13 +292,13 @@ public final class ArchivAblieferungService {
         }
     }
 
-    private Benutzer actorOrFallback(ObjectContext context) {
-        Benutzer actor = ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(currentActor.username()))
-                .selectFirst(context);
-        if (actor != null) {
-            return actor;
+    private Benutzer requireActor(ObjectContext context) {
+        String username = currentActor.id().value();
+        Benutzer actor = ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(username)).selectFirst(context);
+        if (actor == null) {
+            throw new IllegalStateException("Archivakteur ist kein fachlicher Benutzer: " + username);
         }
-        return ObjectSelect.query(Benutzer.class).where(Benutzer.USERNAME.eq(journalFallbackUsername)).selectFirst(context);
+        return actor;
     }
 
     private long businessBasket(ObjectContext context) {
