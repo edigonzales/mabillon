@@ -70,6 +70,13 @@ public final class ArchivierungController {
         return "redirect:/archivierung/" + number;
     }
 
+    @PostMapping("/{number}/dossiers/{dossierNumber}/entfernen")
+    String removeDossier(@PathVariable String number, @PathVariable String dossierNumber) {
+        archivAblieferungService.removeDossier(
+                ArchivAblieferungNumber.parse(number), DossierNumber.parse(dossierNumber));
+        return "redirect:/archivierung/" + number;
+    }
+
     @PostMapping("/{number}/bereit")
     String ready(@PathVariable String number) {
         archivAblieferungService.markReady(ArchivAblieferungNumber.parse(number));
