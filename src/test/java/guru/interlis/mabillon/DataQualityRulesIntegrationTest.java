@@ -75,15 +75,19 @@ class DataQualityRulesIntegrationTest extends MabillonIntegrationTestSupport {
         aufgabeService.create(new CreateAufgabeCommand(
                 GeschaeftNumber.parse(taskBusiness.number()), "Offene DQ-Aufgabe", null,
                 "RUECKFRAGE", null, 1, "anna.mueller", null));
-        unitOfWork.write(context -> ObjectSelect.query(Geschaeft.class)
-                .where(Geschaeft.GESCHAEFTSNUMMER.eq(taskBusiness.number())).selectFirst(context)
-                .setLifecyclestatus("Abgeschlossen"));
+        unitOfWork.write(context -> {
+            ObjectSelect.query(Geschaeft.class)
+                    .where(Geschaeft.GESCHAEFTSNUMMER.eq(taskBusiness.number())).selectFirst(context)
+                    .setLifecyclestatus("Abgeschlossen");
+        });
         assertRule(dataQualityService.checkGeschaeft(GeschaeftNumber.parse(taskBusiness.number())), "DQ-006");
 
         GeschaeftView openBusiness = newBusiness("DQ-007");
-        unitOfWork.write(context -> ObjectSelect.query(Dossier.class)
-                .where(Dossier.DOSSIERNUMMER.eq(openBusiness.dossierNumber())).selectFirst(context)
-                .setAstatus("Geschlossen"));
+        unitOfWork.write(context -> {
+            ObjectSelect.query(Dossier.class)
+                    .where(Dossier.DOSSIERNUMMER.eq(openBusiness.dossierNumber())).selectFirst(context)
+                    .setAstatus("Geschlossen");
+        });
         assertRule(dataQualityService.checkDossier(DossierNumber.parse(openBusiness.dossierNumber())), "DQ-007");
     }
 
@@ -146,9 +150,11 @@ class DataQualityRulesIntegrationTest extends MabillonIntegrationTestSupport {
         ArchivAblieferungNumber deliveryNumber = ArchivAblieferungNumber.parse(delivery.deliveryNumber());
         archivAblieferungService.addDossier(deliveryNumber, dossierNumber);
 
-        unitOfWork.write(context -> ObjectSelect.query(Dossier.class)
-                .where(Dossier.DOSSIERNUMMER.eq(dossierNumber.value())).selectFirst(context)
-                .setAstatus("Offen"));
+        unitOfWork.write(context -> {
+            ObjectSelect.query(Dossier.class)
+                    .where(Dossier.DOSSIERNUMMER.eq(dossierNumber.value())).selectFirst(context)
+                    .setAstatus("Offen");
+        });
 
         assertRule(dataQualityService.checkArchiveDelivery(deliveryNumber), "DQ-013");
     }
