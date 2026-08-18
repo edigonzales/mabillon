@@ -1,6 +1,7 @@
 package guru.interlis.mabillon;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -79,8 +80,9 @@ class AdministrationIntegrationTest extends MabillonIntegrationTestSupport {
         assertThat(processStatus.initial()).isTrue();
         assertThat(processStatus.terminal()).isTrue();
 
-        mockMvc.perform(post("/admin/kataloge/prozessstatus/P11_FINAL_INITIAL/deactivate").with(csrf()))
-                .andExpect(status().is4xxClientError());
+        assertThatThrownBy(() -> catalogService.deactivate(CatalogType.PROZESSSTATUS, "P11_FINAL_INITIAL"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Initialstatus");
 
         mockMvc.perform(post("/admin/kataloge/geschaeftsart/P11_FINAL_TYPE/deactivate").with(csrf()))
                 .andExpect(status().is3xxRedirection());
