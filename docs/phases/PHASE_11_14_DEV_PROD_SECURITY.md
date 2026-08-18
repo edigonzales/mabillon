@@ -24,7 +24,7 @@ SPRING_PROFILES_ACTIVE=prod
 
 The compose definition no longer requires `MABILLON_SECURITY_ADMIN_PASSWORD`; production/container startup therefore cannot be interpreted as enabling a local Mabillon administrator.
 
-Tests use `spring.profiles.default=test`. This makes the local test identities available to the normal integration/Playwright suite while allowing `@ActiveProfiles("prod")` to replace the default cleanly.
+The Gradle `Test` tasks set `SPRING_PROFILES_DEFAULT=test`. This activates the local test identities for the normal integration/Playwright suite without adding a test-specific `application.properties` that would shadow the application's normal JTE, Actuator and other runtime configuration. Tests using `@ActiveProfiles("prod")` still replace the default cleanly.
 
 For explicit local development, start Mabillon with the `dev` profile, for example by setting:
 
