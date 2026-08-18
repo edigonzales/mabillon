@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
+import guru.interlis.mabillon.catalog.CatalogCreateCommand;
 import guru.interlis.mabillon.catalog.CatalogType;
 import guru.interlis.mabillon.registraturplan.RegistraturplanQueryService;
 import guru.interlis.mabillon.stammdaten.BenutzerService;
@@ -80,13 +81,24 @@ class AdministrationIntegrationTest extends MabillonIntegrationTestSupport {
         assertThat(processStatus.initial()).isTrue();
         assertThat(processStatus.terminal()).isTrue();
 
-        assertThatThrownBy(() -> catalogService.deactivate(CatalogType.PROZESSSTATUS, "P11_FINAL_INITIAL"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Initialstatus");
-
         mockMvc.perform(post("/admin/kataloge/geschaeftsart/P11_FINAL_TYPE/deactivate").with(csrf()))
                 .andExpect(status().is3xxRedirection());
         assertThat(catalogService.get(CatalogType.GESCHAEFTSART, "P11_FINAL_TYPE").active()).isFalse();
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "MABILLON_ADMIN")
+    void preventsDeactivatingOnlyInitialProcessStatus() {
+        catalogService.create(new CatalogCreateCommand(
+                CatalogType.GESCHAEFTSART, "P11_INVARIANT_TYPE", "Invariant Type", null,
+                null, null, false, false, false));
+        catalogService.create(new CatalogCreateCommand(
+                CatalogType.PROZESSSTATUS, "P11_ONLY_INITIAL", "Only Initial", null,
+                "P11_INVARIANT_TYPE", 10, true, false, false));
+
+        assertThatThrownBy(() -> catalogService.deactivate(CatalogType.PROZESSSTATUS, "P11_ONLY_INITIAL"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Initialstatus");
     }
 
     @Test
