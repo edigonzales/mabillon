@@ -29,6 +29,8 @@ Bei Korrekturbedarf kann die Ablieferung in `Korrektur_erforderlich`, bei Ablehn
 
 Ein SIP ist kein blosses ZIP der Dateien. Mabillon erzeugt einen strukturierten Paketbaum nach dem konfigurierten Archivprofil. Beim eCH-0160-Profil gehören mindestens Metadaten, XSDs und Content zusammen.
 
+Die `metadata.xml` wird aus den versionierten eCH-0160-XSDs über daraus generierte Jakarta-XML-Binding-Typen erzeugt und bereits beim Schreiben gegen das Schema validiert. Das fertige SIP wird anschliessend nochmals unabhängig validiert.
+
 Jeder Erzeugungsversuch besitzt unter anderem:
 
 - Laufnummer und Status,
