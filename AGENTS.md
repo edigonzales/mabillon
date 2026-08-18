@@ -1,298 +1,133 @@
-# AGENTS.md – Verbindliche Anweisung für den Mabillon Coding Agent
+# AGENTS.md – Arbeitsregeln für Mabillon
 
-Diese Datei ist vor jeder Änderung zu lesen. Die vollständige fachliche und technische Spezifikation steht in `MABILLON_IMPLEMENTATION_SPEC.md`.
+Diese Datei enthält die verbindlichen Leitplanken für Coding Agents. Fachliches und technisches Wissen wird nicht hier dupliziert, sondern in der normalen Projektdokumentation gepflegt.
 
-## 0.1 Projekt-Skills
+## 1. Vor jeder Änderung
 
-Projektlokale Skills liegen unter `.agents/skills` und sind für Codex und OpenCode bestimmt. Nutze sie passend zum Auftrag; bei Implementierungsarbeit ist `mabillon-phase-workflow` immer relevant.
+1. Lies `docs/README.md` und die für den Auftrag relevanten Dokumente.
+2. Prüfe den bestehenden Code und die zugehörigen Tests, bevor du eine Lösung entwirfst.
+3. Identifiziere die betroffenen Fachregeln, Berechtigungen, Persistenz- und Schnittstellenverträge.
+4. Wähle die kleinste kohärente Änderung, die das Problem vollständig löst.
 
-Verfügbare Skills:
+Bei Widersprüchen gilt in dieser Reihenfolge:
 
-- `mabillon-phase-workflow`: Phasengates, Scope und Reporting.
-- `mabillon-domain-model`: GEVER-Domäneninvarianten und Use-Case-Zuordnung.
-- `mabillon-interlis-ili2pg`: INTERLIS, ili2pg 5.5.2, Schemaimport, XTF/TID/BID/Basket.
-- `mabillon-cayenne-mcp`: Cayenne 5.0-M2 DB-first, Modeler MCP und cgen.
-- `mabillon-spring-jte-htmx`: Spring MVC/JTE/HTMX HTML-first-Konventionen.
-- `mabillon-ui-design`: normative ili2grails-Designsprache.
-- `mabillon-testing`: Testpyramide, PostgreSQL/Testcontainers, Golden Path.
-- `mabillon-archive-sip`: Aussonderung, Archivablieferung, SIP und Validierung.
+1. aktuelles fachliches INTERLIS-Modell für persistente Fachdaten,
+2. akzeptierte ADRs und aktuelle Projektdokumentation,
+3. bestehende explizite Fachregeln und Tests,
+4. Agent-Skills.
 
-Bei Widerspruch gilt: diese `AGENTS.md` vor `MABILLON_IMPLEMENTATION_SPEC.md` vor Skill.
+## 2. Nicht verhandelbare Architekturregeln
 
-## 1. Primärer Auftrag
+- Produkt: **Mabillon – Einfache und transparente Geschäftsverwaltung**.
+- Java-Basispaket: `guru.interlis.mabillon`.
+- Modularer Monolith, keine Microservices ohne begründete Architekturentscheidung.
+- Fachliches persistentes Schema beginnt im INTERLIS-Modell `model/SO_AGI_GEVER_20260707.ili`.
+- INTERLIS-Tools werden über die in Gradle aufgelösten Java APIs verwendet; keine zweite lokale JAR-Toolchain einführen.
+- PostgreSQL-Schema `mabillon` enthält fachliche Daten; `mabillon_app` ist rein technischen Anwendungstabellen vorbehalten.
+- Cayenne wird DB-first eingesetzt. Generierte Basisklassen niemals manuell ändern.
+- Controller enthalten keine Fachlogik und geben keine Cayenne-Objekte an JTE weiter.
+- Schreibende Use Cases verwenden einen kurzen Cayenne-`ObjectContext`/`CayenneUnitOfWork`; Fachänderung und Journalereignis committen atomar.
+- Kein `ObjectContext` in HTTP-Sessions oder globalem mutablem Zustand.
+- HTMX ist progressive enhancement; normale HTTP-Flows bleiben fachlich gleichwertig.
+- Security wird nicht nur im Controller, sondern im Service Layer über Permissions durchgesetzt.
+- Audit-Akteure müssen eindeutig aus der authentifizierten fachlichen Identität bestimmt werden; bei fehlender Zuordnung fail closed.
 
-Implementiere **Mabillon – Einfache und transparente Geschäftsverwaltung** phasenweise gemäss Spezifikation. Arbeite immer nur an der aktuell vom Benutzer freigegebenen Phase.
+## 3. Zentrale Fachinvarianten
 
-## 1.1 Produkt- und Code-Naming
+Die kanonischen Regeln stehen unter `docs/domain/`.
 
-Verbindlich:
+Besonders wichtig:
 
-```text
-Produkt: Mabillon
-Claim: Einfache und transparente Geschäftsverwaltung
-Gradle group: guru.interlis
-Java base package: guru.interlis.mabillon
-Artifact/Repository: mabillon
-DB schemas: mabillon, mabillon_app
-```
+- Ein Geschäft gehört zu genau einem Dossier.
+- Eine Unterlage gehört zu genau einem Dossier.
+- Hat eine Unterlage einen Geschäftskontext, muss das Geschäft zum selben Dossier gehören.
+- Prozess- und Resultatstatus müssen zur Geschäftsart passen.
+- Abschlussregeln dürfen nicht umgangen oder stillschweigend repariert werden.
+- Aktenrelevante registrierte Unterlagen werden im normalen Fachprozess nicht physisch gelöscht.
+- Journal/Audit ist fachlicher Bestandteil jeder dafür vorgesehenen Änderung.
 
-Das bestehende INTERLIS-Modell `SO_AGI_GEVER_20260707` wird nicht allein aus Branding-Gründen umbenannt. Modell-/URI-/XTF-Naming nur nach expliziter Freigabe ändern.
+## 4. INTERLIS und Cayenne
 
-## 2. Harte Phasenregel
-
-**Du darfst niemals selbstständig die nächste Phase beginnen.**
-
-Am Ende jeder Phase:
-
-1. alle Acceptance Criteria prüfen,
-2. alle Unit-/Integration-/MVC-/E2E-Tests der Phase ausführen,
-3. vollständigen Build ausführen,
-4. INTERLIS/DB/Cayenne-Konsistenz prüfen, falls betroffen,
-5. `docs/phases/PHASE_N_REPORT.md` erstellen,
-6. Status `SUCCESS` nur bei vollständig grünem Gate setzen,
-7. dem Benutzer Bericht geben,
-8. STOPP.
-
-Erst eine neue explizite Benutzeranweisung erlaubt die nächste Phase.
-
-## 3. Source of Truth
-
-Fachliches persistentes Modell:
+Bei Änderungen am fachlichen Datenmodell gilt:
 
 ```text
-model/SO_AGI_GEVER_20260707.ili
+INTERLIS ändern
+-> ili2c validieren
+-> frisches Referenzschema via ili2pg Java API erzeugen
+-> Schemaänderung prüfen
+-> Cayenne DB Import
+-> cgen
+-> Generated Diff prüfen
+-> Integrationstests
 ```
 
-Pipeline:
+Details: `docs/interfaces/interlis.md`, `docs/development/interlis-model-workflow.md`, `docs/development/cayenne.md`.
 
-```text
-INTERLIS
-→ ili2c 5.6.8
-→ ili2pg 5.5.2 --schemaimport
-→ PostgreSQL schema mabillon
-→ Cayenne DB Import
-→ Cayenne DataMap
-→ cgen
-→ Java
-```
+## 5. Tests
 
-Keine fachliche DB-Spalte direkt per Flyway erfinden.
+Testing gehört zur Implementierung.
 
-Verbindliche lokale INTERLIS-Toolchain:
+- Business Rules: positiver sowie relevante negative/boundary Fälle.
+- Schreibende Persistenz-Use-Cases: echtes PostgreSQL + Cayenne.
+- Web/Formulare: Spring MVC inkl. Validation und Authorization.
+- Kritische User Journeys: Playwright Java.
+- INTERLIS: Modell-/XTF-Validierung, Import/Export und semantischer Roundtrip.
+- Tests müssen unabhängig von Ausführungsreihenfolge und gemeinsamem mutablem Persistenzzustand sein.
 
-```text
-ili2pg 5.5.2:
-/Users/stefan/apps/ili2pg-5.5.2/ili2pg-5.5.2.jar
+Verboten sind insbesondere: failing Tests löschen, `@Disabled` als Problemlösung, Assertions abschwächen, H2 als Ersatz für PostgreSQL oder Persistenz mocken, wenn Mapping/SQL selbst geprüft werden muss.
 
-ili2c 5.6.8:
-/Users/stefan/apps/ili2c-5.6.8/ili2c.jar
+Details: `docs/development/testing.md`.
 
-ilivalidator 1.15.0:
-/Users/stefan/apps/ilivalidator-1.15.0/ilivalidator-1.15.0.jar
-```
+## 6. Generated Code und Fehlerdiagnose
 
-Overrides: `ILI2PG_JAR`, `ILI2C_JAR`, `ILIVALIDATOR_JAR`.
-
-Jede `.ili`-Änderung wird vor Schema-/Cayenne-Arbeiten mit ili2c validiert. Jeder positive XTF-Input wird vor Import und jeder erzeugte XTF-Output nach Export mit ilivalidator validiert. Bei einem Validierungsfehler wird nicht importiert bzw. der Export nicht als erfolgreich ausgeliefert.
-
-Schemaimport verwendet sicher `--createTidCol --createBasketCol`. Jeder reguläre XTF-Import verwendet sicher `--importTid --importBid`. Der korrekte Optionsname ist `--createBasketCol`, nicht `--createBaskeCol`.
-
-Rein technische Tabellen dürfen in `mabillon_app` liegen, wenn die Spezifikation sie erlaubt.
-
-## 4. Cayenne MCP
-
-Cayenne 5.0-M2 Modeler MCP ist Teil des vorgesehenen lokalen Agent-Workflows.
-
-Bei Mappingänderungen:
-
-1. DB aus aktuellem `.ili` frisch erzeugen.
-2. MCP: Projekt öffnen.
-3. MCP: DB Import.
-4. Mapping-Diff prüfen.
-5. MCP: cgen.
-6. Generated-Diff prüfen.
-7. kompilieren/testen.
-
-Ein unerwarteter Diff ist ein Diagnosegrund, kein Anlass zum blinden Patchen.
-
-## 5. Generated Code
-
-Generierte Basisklassen niemals manuell ändern.
-
-Wenn generierter Code falsch ist, Ursache in dieser Reihenfolge prüfen:
+Wenn generierter Cayenne-Code oder Mapping falsch ist, untersuche die Ursache in dieser Reihenfolge:
 
 1. INTERLIS,
-2. ili2pg Mapping/Optionen,
-3. PostgreSQL-Schema/FKs,
-4. Cayenne DB Import,
-5. cgen-Konfiguration.
+2. ili2pg/DB-Schema/FKs,
+3. Cayenne DB Import/DataMap,
+4. cgen-Konfiguration.
 
-## 6. Technologie
+Unerwartete Diffs sind Diagnosegründe, nicht Anlass für Blind-Patches.
 
-Verbindlich:
+## 7. Scope-Disziplin
 
-```text
-Java 25
-Spring Boot 4.1.0
-Spring MVC
-JTE
-HTMX 2.x (initial 2.0.10)
-Vanilla CSS / Mabillon-Designsprache
-PostgreSQL
-Apache Cayenne 5.0-M2
-Gradle Groovy DSL
-JUnit Jupiter
-AssertJ
-Testcontainers PostgreSQL
-```
+Nicht ohne ausdrückliche Produkt-/Architekturentscheidung einführen:
 
-Nicht ohne Freigabe ersetzen.
-
-## 7. Architektur
-
-Feature Packages, modularer Monolith.
-
-Controller enthalten keine Fachlogik.
-
-Controller erhalten/liefern Form-/View-Modelle.
-
-Cayenne-Objekte nicht an Templates geben.
-
-Kein `ObjectContext` in HTTP Session.
-
-Schreibende Use Cases verwenden `CayenneUnitOfWork` und committen Fachänderung + Journal atomar.
-
-## 8. Tests
-
-Keine Phase ohne ausreichende Tests.
-
-Verboten:
-
-- failing Test löschen,
-- `@Disabled` als Problemlösung,
-- Assertions abschwächen, damit Build grün wird,
-- H2 statt PostgreSQL,
-- Integrationstest durch Mock ersetzen, wenn Mapping/SQL geprüft werden muss.
-
-Für jede Business Rule:
-
-- mindestens positiver Test,
-- mindestens relevanter negativer Test.
-
-Für jeden schreibenden Use Case:
-
-- PostgreSQL+Cayenne Integrationstest.
-
-Für kritische UI-Flows:
-
-- MVC-Test,
-- ab vorgesehener Phase Playwright E2E.
-
-## 9. Nomenklatur-Golden-Path
-
-Referenzfall:
-
-```text
-Gemeinde Musterwil
-"Im alten Boden" → "Bodenrain"
-```
-
-Dieser Fall muss als durchgängiges Fixture erhalten bleiben.
-
-## 10. Dossier/Geschäft/Unterlage-Regel
-
-```text
-Dossier = Akte
-Geschäft = bearbeiteter Vorgang
-Unterlage = Aktenstück
-```
-
-- Geschäft gehört zu genau einem Dossier.
-- Unterlage gehört zu genau einem Dossier.
-- Unterlage kann optional ein Geschäft als Geschäftskontext haben.
-- Wenn Geschäft gesetzt ist, muss es zum selben Dossier gehören.
-
-Diese Regel darf weder im UI noch im Import umgangen werden.
-
-## 11. Keine Scope-Erweiterung
-
-Nicht eigenmächtig implementieren:
-
-- BPMN,
+- BPMN-/Workflow-Engine,
 - Dokumentversionierung,
-- React/Vue/Angular,
-- Elasticsearch,
-- Mailserverintegration,
-- OCR,
-- KI,
-- komplexe ACL,
+- SPA-Frameworks,
+- Elasticsearch/OpenSearch,
+- automatische Mailboxintegration,
+- OCR/KI-Klassifikation,
+- komplexe Record-Level-ACL,
 - elektronische Signaturen,
 - Microservices.
 
-Wenn eine solche Funktion nötig erscheint: STOPP und begründe sie dem Benutzer.
+Der aktuelle Produktumfang und bewusste Abgrenzungen stehen in `docs/product/scope.md`.
 
-## 12. HTMX
+## 8. Änderung abschliessen
 
-HTMX ist progressive enhancement.
+Vor Abschluss einer Änderung:
 
-Businesslogik ist identisch für HTMX und normale Requests.
+1. gezielte Tests ausführen,
+2. relevante vollständige Tests ausführen,
+3. INTERLIS/DB/Cayenne-Konsistenz prüfen, falls betroffen,
+4. Diff auf unbeabsichtigte Änderungen prüfen,
+5. aktuelle Dokumentation anpassen, wenn Verhalten, Architektur, Betrieb oder Schnittstellen geändert wurden.
 
-Normale HTTP-Fallbacks bevorzugen.
+Die Git-Historie dokumentiert die Entstehung. Aktive Dokumentation beschreibt den aktuellen Zustand.
 
-Keine unnötigen JS-Komponenten bauen.
+## 9. Projekt-Skills
 
-## 12.1 Designsprache
+Projektlokale Skills liegen unter `.agents/skills`:
 
-Die normative UI-Referenz ist `edigonzales/ili2grails` auf Commit `3e133a976a0ed1c704f38e81a6493501e0568ec4`, insbesondere `ili-modern.css` und die fünf Mockups unter `mockups/`.
+- `mabillon-development-workflow`
+- `mabillon-domain-model`
+- `mabillon-interlis-ili2pg`
+- `mabillon-cayenne-mcp`
+- `mabillon-spring-jte-htmx`
+- `mabillon-ui-design`
+- `mabillon-testing`
+- `mabillon-archive-sip`
 
-- Struktur, Dichte, Neutralpalette, kleine Radien, subtile Schatten, Form-/Tabellen-/Filtermuster übernehmen.
-- Bootstrap ist **keine** Pflichtabhängigkeit; bevorzugt Vanilla CSS.
-- Keine Utility-Class-Suppe.
-- Keine externen Font-/CSS-CDNs.
-- Bei UI-Arbeit Skill `mabillon-ui-design` lesen.
-
-## 13. Sicherheit
-
-- Permission Checks auch im Service Layer.
-- Keine Pfade aus Originaldateinamen.
-- Keine DB-/OID-Information als Berechtigungsersatz.
-- Keine Passwörter/Tokens in Logs.
-- Uploads serverseitig validieren.
-
-## 14. Archiv/SIP
-
-SIP ist kein „ZIP Download“.
-
-Vor SIP-Implementierung:
-
-- gültiges Zielprofil verifizieren,
-- XSD/Validierungsanforderungen festlegen,
-- Testfixture definieren.
-
-Ungültige oder unvollständige Dossiers dürfen keine ablieferungsbereite SIP-Ausgabe erzeugen.
-
-## 15. Änderungsdisziplin
-
-Vor Änderung:
-
-- relevanten Use Case lesen,
-- betroffene Klassen identifizieren,
-- betroffene Tests benennen.
-
-Nach Änderung:
-
-- gezielte Tests,
-- vollständiger Phase-Build,
-- Diff reviewen.
-
-Keine massenhaften „Cleanup“-Refactorings ausserhalb des Phase-Scopes.
-
-## 16. Wenn etwas unklar ist
-
-Falls die Spezifikation zwei plausible fachliche Interpretationen zulässt und die Wahl Datenmodell/API dauerhaft beeinflusst:
-
-- nicht raten,
-- keine spätere Phase anfangen,
-- die Unsicherheit im Phasenbericht markieren und Benutzerentscheidung einholen.
-
-Bei kleinen implementierungsinternen Details darf die einfachste robuste Variante gewählt und dokumentiert werden.
+Skills sind kurze Arbeitsanweisungen und verweisen auf die kanonische Dokumentation; sie ersetzen diese nicht.

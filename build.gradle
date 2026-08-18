@@ -54,7 +54,7 @@ dependencies {
 
 tasks.register('verifyInterlisDependencies') {
     group = 'verification'
-    description = 'Fails when shared INTERLIS runtime dependencies drift from the approved Phase-11 baseline.'
+    description = 'Fails when shared INTERLIS runtime dependencies drift from the approved dependency baseline.'
     doLast {
         def expected = [
                 'ch.interlis:ili2pg'       : '5.5.1',
