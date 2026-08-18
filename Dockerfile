@@ -3,7 +3,7 @@ FROM eclipse-temurin:25-jre
 WORKDIR /opt/mabillon
 
 COPY build/libs/mabillon-*.jar app.jar
-COPY docs/archive docs/archive
+COPY docs/interfaces/archive docs/interfaces/archive
 
 RUN mkdir -p /opt/mabillon/data /opt/mabillon/sips \
     && useradd --system --uid 10001 --create-home mabillon \

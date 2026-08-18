@@ -1,32 +1,23 @@
-# ADR 0002: Cayenne DB-first persistence mapping
+# ADR 0002: Cayenne DB-first Persistence Mapping
 
 ## Status
 
-Accepted for Phase 0.
+Accepted
 
-## Context
+## Kontext
 
-The PostgreSQL schema is generated from INTERLIS. Cayenne must represent the
-actual generated tables, foreign keys, basket metadata, and transfer IDs
-without introducing a second hand-authored domain mapping.
+Das PostgreSQL-Schema wird aus INTERLIS erzeugt. Cayenne soll die tatsächlich generierten Tabellen, Fremdschlüssel, Basket-Metadaten und Transferidentitäten abbilden, ohne ein zweites handgepflegtes Domänenmapping einzuführen.
 
-## Decision
+## Entscheidung
 
-Apache Cayenne 5.0-M2 is used DB-first. For a model change, the project first
-creates a fresh PostgreSQL schema with ili2pg, then runs Cayenne Modeler DB
-Import, reviews the mapping diff, runs cgen, and reviews generated-code
-changes. Generated Cayenne base classes are never edited manually. Application
-behavior belongs in feature packages and explicit service/use-case classes.
+Apache Cayenne 5.0-M2 wird DB-first verwendet. Bei einer Modelländerung wird zuerst ein frisches PostgreSQL-Referenzschema mit ili2pg erzeugt. Danach folgen Cayenne DB Import, Review des DataMap-Diffs und cgen.
 
-The HTTP layer does not expose Cayenne objects to templates and never stores an
-`ObjectContext` in the HTTP session. Write use cases use a unit of work so the
-business change and its journal entry commit atomically.
+Generierte Cayenne-Basisklassen werden nie manuell geändert. Fachverhalten gehört in Feature Packages und explizite Application Services.
 
-## Consequences
+Die Webschicht exponiert keine Cayenne-Objekte an Templates und speichert keinen `ObjectContext` in der HTTP-Session. Schreibende Use Cases verwenden einen Unit of Work, damit Fachänderung und Journalereignis atomar committen oder gemeinsam zurückrollen.
 
-- Schema or mapping surprises are treated as diagnostics, not patched around.
-- `t_id`, `t_ili_tid`, and `t_basket` remain technical identities and are not
-  used as business numbers.
-- The Phase 0 MCP smoke test is a mandatory gate; unavailable Modeler MCP is a
-  blocker rather than an invitation to replace the prescribed verification
-  silently.
+## Konsequenzen
+
+- Unerwartete Schema-/Mappingänderungen werden an der Quelle diagnostiziert.
+- `t_id`, `t_ili_tid` und `t_basket` bleiben technische Identitäten/Metadaten und werden nicht als Fachnummern verwendet.
+- Cayenne ist Persistenztechnologie, nicht Anwendungsarchitektur.

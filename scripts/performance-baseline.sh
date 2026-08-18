@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Runs the Phase 10 baseline against a disposable clone of the configured
+# Runs the performance baseline against a disposable clone of the configured
 # PostgreSQL database. The source database is never modified.
 PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
@@ -116,7 +116,7 @@ SQL
 
 echo "Running representative SQL plans; report: ${REPORT}"
 {
-  echo "Mabillon Phase 10 performance baseline"
+  echo "Mabillon performance baseline"
   echo "database=${PERFORMANCE_DB} host=${PGHOST} port=${PGPORT}"
   date -u '+timestamp=%Y-%m-%dT%H:%M:%SZ'
   echo
