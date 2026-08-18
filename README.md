@@ -53,7 +53,21 @@ Der Einstieg in die Projektdokumentation ist [`docs/README.md`](docs/README.md).
 
 ## Entwicklung
 
-Die Integrationstests verwenden PostgreSQL über Testcontainers. Ein erster vollständiger Check ist:
+Die lokale Entwicklungsumgebung mit PostgreSQL/PostGIS, INTERLIS-Schema und Testdaten wird vorbereitet mit:
+
+```bash
+source scripts/dev-up.sh
+./gradlew bootRun
+```
+
+`dev-up.sh` startet nur die Infrastruktur und setzt die benötigten Umgebungsvariablen; `bootRun` bleibt ein separater manueller Schritt. Für einen frischen lokalen Stand:
+
+```bash
+source scripts/dev-up.sh --reset
+./gradlew bootRun
+```
+
+Ein vollständiger Testlauf ist:
 
 ```bash
 ./gradlew test
