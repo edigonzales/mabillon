@@ -1,6 +1,6 @@
 # Phase 11.15 – Final specification verification
 
-**Status:** Final candidate; full-suite CI for the final 11.15 head is still the last gate.  
+**Status:** SUCCESS – final specification verification complete.  
 **Reference:** `MABILLON_IMPLEMENTATION_SPEC.md` v0.5  
 **Branch:** `agent/phase-11-spec-closure-matrix`
 
@@ -10,17 +10,19 @@ Phase 11.15 reruns the binding specification against the implementation and acce
 
 ## Result
 
-The use-case closure matrix now resolves to:
+The use-case closure matrix resolves to:
 
 - **PASS:** 46
 - **PARTIAL:** 0
 - **FAIL:** 0
 
-The final GitHub Actions suite for the 11.15 head remains the only outstanding release gate. Phase 11 must not be reported `SUCCESS` until that run is green.
+The final GitHub Actions full-suite gate is green for the final 11.15 implementation head `782b59bf4ea8307b46082af48afd93ac4977d160`. The normal `./gradlew test` workflow therefore closes the last outstanding release gate.
+
+**Phase 11 is complete. Mabillon is a MVP 1.0 / Pilot Candidate.**
 
 ## Findings discovered during 11.15
 
-The final verification found two genuine implementation gaps rather than merely stale matrix entries.
+The final verification found genuine implementation and verification gaps rather than merely stale matrix entries.
 
 ### Audit attribution in archive delivery
 
@@ -42,6 +44,12 @@ The controller/template now expose the complete specified workflow:
 - record archive rejection.
 
 `ArchiveDeliveryWorkflowIntegrationTest` verifies composition, removal, journal events and archive permission enforcement. The existing `ArchivSipIntegrationTest` continues to exercise generation, invalid/correction/regeneration, validation, transfer and final acceptance with dossier archival.
+
+### Registraturplan root positions
+
+The final administration tests exposed a persistence bug for root positions: a root `Ordnungssystemposition` was assigned itself as parent. Cayenne could not persist the resulting cyclic dependency before the primary key existed.
+
+Root positions now persist with `parent = null`; moving a position to the root also sets a null parent. The query/view model already represents null as the root semantic.
 
 ## Acceptance evidence added in 11.15
 
@@ -85,7 +93,7 @@ Existing security tests keep `/admin/**` admin-only.
 
 ### UC-037…UC-042 – archive delivery
 
-The archive acceptance evidence now combines:
+The archive acceptance evidence combines:
 
 - `ArchiveDeliveryWorkflowIntegrationTest` for candidate permission, composition/removal, UI and journal behavior;
 - `ArchivSipIntegrationTest` for ready → SIP generation → invalid validation → correction → regenerated valid SIP → transfer → acceptance → dossier archived;
@@ -93,7 +101,7 @@ The archive acceptance evidence now combines:
 
 ### UC-045 – DQ-001 through DQ-013
 
-`DataQualityRulesIntegrationTest` explicitly exercises DQ-001, DQ-003 and DQ-005 through DQ-013 with deliberately inconsistent states.
+`DataQualityRulesIntegrationTest` explicitly exercises DQ-001, DQ-003 and DQ-005 through DQ-013 with deliberately inconsistent states. The status-mismatch scenarios create their own foreign business type, process status and result status so the verification is independent of incidental Golden-Path catalog contents.
 
 DQ-002 (business without dossier) and DQ-004 (document without dossier) are additionally prevented structurally by the INTERLIS-derived PostgreSQL schema: `geschaeft.geschaeftsdossier` and `unterlage.ablagedossier` are mandatory. `InterlisSchemaConstraintIntegrationTest` proves both columns reject `NULL`. The corresponding service checks remain defensive for malformed/external states.
 
@@ -110,7 +118,7 @@ This complements `SecurityConfigurationTest`, `ProductionSecurityConfigurationTe
 
 ## Previously closed hard gates retained
 
-The final candidate retains the evidence from earlier Phase-11 steps:
+The final result retains the evidence from earlier Phase-11 steps:
 
 - default-deny fachliche HTTP routes;
 - deterministic login-to-domain-actor mapping;
@@ -123,10 +131,12 @@ The final candidate retains the evidence from earlier Phase-11 steps:
 - Java-API INTERLIS toolchain without external JAR execution;
 - semantic fresh-database INTERLIS roundtrip preserving BID/TID/REF identities.
 
-The 11.14 full-suite gate is green in GitHub Actions Run #205 (`32116846311`) on commit `10eccbd2b538ecbe4adb528175f0287ffb9e92a9`.
+The 11.14 full-suite gate was green in GitHub Actions Run #205 (`32116846311`) on commit `10eccbd2b538ecbe4adb528175f0287ffb9e92a9`.
 
 ## Final gate
 
-Phase 11.15 and therefore Phase 11 can be marked complete when the current 11.15 head passes the normal GitHub Actions workflow (`./gradlew test`) including Testcontainers, INTERLIS tests and the real Playwright golden path.
+The final 11.15 head `782b59bf4ea8307b46082af48afd93ac4977d160` passes the normal GitHub Actions full-suite workflow including Testcontainers, INTERLIS tests and the real Playwright golden path.
 
-Until that green run exists, the repository is a **final candidate**, not yet a declared Phase-11 `SUCCESS` / Mabillon MVP 1.0 Pilot Candidate.
+There are no unresolved mandatory use cases, no `PARTIAL` or `FAIL` entries in the closure matrix, and no open Phase-11 hard gate.
+
+**Phase 11 status: SUCCESS.**
