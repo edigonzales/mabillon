@@ -3,32 +3,36 @@ package guru.interlis.mabillon.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
-import org.springframework.http.HttpMethod;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("MABILLON_ADMIN")
-                        .requestMatchers("/admin/**").hasRole("MABILLON_ADMIN")
-                        .requestMatchers("/archivierung/**").authenticated()
-                        .requestMatchers(HttpMethod.POST,
-                                "/dossiers", "/dossiers/**", "/geschaefte", "/geschaefte/**",
-                                "/aufgaben", "/aufgaben/**", "/beteiligungen", "/beteiligungen/**",
-                                "/fachsystem-referenzen", "/fachsystem-referenzen/**")
-                        .authenticated()
-                        .anyRequest().permitAll())
+                        .requestMatchers(
+                                "/actuator/health", "/actuator/health/**",
+                                "/mabillon.css", "/mabillon.js", "/htmx-2.0.10.min.js", "/favicon.ico")
+                        .permitAll()
+                        .requestMatchers("/actuator", "/actuator/**").hasRole("MABILLON_ADMIN")
+                        .requestMatchers("/admin", "/admin/**").hasRole("MABILLON_ADMIN")
+                        .anyRequest().hasAnyRole(
+                                "MABILLON_SACHBEARBEITER",
+                                "MABILLON_ADMIN",
+                                "MABILLON_GEVER_VERANTWORTLICHER",
+                                "MABILLON_ARCHIVVERANTWORTLICHER"))
                 .httpBasic(httpBasic -> {})
                 .formLogin(form -> form.disable())
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
@@ -43,6 +47,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Profile({"dev", "test"})
     UserDetailsService devUsers(
             @Value("${mabillon.security.admin-username:admin}") String adminUsername,
             @Value("${mabillon.security.admin-password:admin}") String adminPassword,
@@ -57,5 +62,13 @@ public class SecurityConfiguration {
                         .password("{noop}" + sachbearbeiterPassword)
                         .roles("MABILLON_SACHBEARBEITER")
                         .build());
+    }
+
+    @Bean
+    @Profile("!dev & !test")
+    UserDetailsService noLocalUsers() {
+        return username -> {
+            throw new UsernameNotFoundException("Local Mabillon users are disabled outside dev/test profiles.");
+        };
     }
 }

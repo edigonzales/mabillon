@@ -12,6 +12,7 @@ RUN mkdir -p /opt/mabillon/data /opt/mabillon/sips \
 USER mabillon
 
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75" \
+    SPRING_PROFILES_ACTIVE=prod \
     MABILLON_ENVIRONMENT=production \
     MABILLON_STORAGE_ROOT=/opt/mabillon/data \
     MABILLON_SIP_ROOT=/opt/mabillon/sips \

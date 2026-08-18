@@ -1,7 +1,8 @@
 package guru.interlis.mabillon.beteiligung;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
@@ -12,6 +13,8 @@ import guru.interlis.mabillon.query.SearchPage;
 import guru.interlis.mabillon.security.AuthorizationService;
 import guru.interlis.mabillon.security.Permission;
 import org.apache.cayenne.ObjectContext;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +49,20 @@ public final class BeteiligterService {
         });
     }
 
+    public List<BeteiligterView> findPotentialDuplicates(CreateBeteiligterCommand command) {
+        authorizationService.require(Permission.EDIT_GESCHAEFT);
+        requireType(command.typ());
+        return unitOfWork.read(context -> ObjectSelect.query(Beteiligter.class)
+                .where(Beteiligter.TYP.eq(command.typ()))
+                .and(duplicateCandidateExpression(command))
+                .orderBy(Beteiligter.ANAME.asc())
+                .select(context).stream()
+                .filter(value -> isPotentialDuplicate(value, command))
+                .limit(10)
+                .map(this::toView)
+                .toList());
+    }
+
     public BeteiligterView update(UpdateBeteiligterCommand command) {
         authorizationService.require(Permission.EDIT_GESCHAEFT);
         requireType(command.typ());
@@ -67,19 +84,28 @@ public final class BeteiligterService {
     }
 
     public SearchPage<BeteiligterView> search(BeteiligterSearchCriteria criteria, int page, int size) {
-        if (criteria == null) {
-            criteria = BeteiligterSearchCriteria.empty();
-        }
-        final BeteiligterSearchCriteria filter = criteria;
+        requirePage(page, size);
+        BeteiligterSearchCriteria filter = criteria == null ? BeteiligterSearchCriteria.empty() : criteria;
         return unitOfWork.read(context -> {
-            List<BeteiligterView> values = ObjectSelect.query(Beteiligter.class).select(context).stream()
-                    .filter(value -> containsIgnoreCase(value.getAname(), filter.name()))
-                    .filter(value -> filter.typ() == null || filter.typ().equals(value.getTyp()))
-                    .filter(value -> contains(value.getExternereferenz(), filter.externeReferenz()))
-                    .sorted(Comparator.comparing(Beteiligter::getAname))
+            ObjectSelect<Beteiligter> query = ObjectSelect.query(Beteiligter.class);
+            addFilter(query, filter.name() == null ? null : Beteiligter.ANAME.containsIgnoreCase(filter.name()));
+            addFilter(query, filter.typ() == null ? null : Beteiligter.TYP.eq(filter.typ()));
+            addFilter(query, filter.externeReferenz() == null ? null
+                    : Beteiligter.EXTERNEREFERENZ.contains(filter.externeReferenz()));
+
+            long total = query.selectCount(context);
+            long offset = (long) page * size;
+            if (offset >= total) {
+                return new SearchPage<>(List.of(), page, size, total);
+            }
+            List<BeteiligterView> items = query
+                    .orderBy(Beteiligter.ANAME.asc())
+                    .offset(Math.toIntExact(offset))
+                    .limit(size)
+                    .select(context).stream()
                     .map(this::toView)
                     .toList();
-            return page(values, page, size);
+            return new SearchPage<>(items, page, size, total);
         });
     }
 
@@ -115,27 +141,63 @@ public final class BeteiligterService {
         }
     }
 
+    private Expression duplicateCandidateExpression(CreateBeteiligterCommand command) {
+        List<Expression> candidates = new ArrayList<>();
+        if (command.externeReferenz() != null && !command.externeReferenz().isBlank()) {
+            candidates.add(Beteiligter.EXTERNEREFERENZ.containsIgnoreCase(command.externeReferenz().trim()));
+        }
+        if (command.email() != null && !command.email().isBlank()) {
+            candidates.add(Beteiligter.EMAIL.containsIgnoreCase(command.email().trim()));
+        }
+        String normalizedName = normalized(command.name());
+        if (!normalizedName.isBlank()) {
+            candidates.add(Beteiligter.ANAME.containsIgnoreCase(normalizedName.split(" ")[0]));
+        }
+        return ExpressionFactory.or(candidates.toArray(Expression[]::new));
+    }
+
+    private boolean isPotentialDuplicate(Beteiligter value, CreateBeteiligterCommand command) {
+        if (sameNonBlank(value.getExternereferenz(), command.externeReferenz())
+                || sameNonBlank(value.getEmail(), command.email())) {
+            return true;
+        }
+        if (!normalized(value.getAname()).equals(normalized(command.name()))) {
+            return false;
+        }
+        if ("Person".equals(command.typ())) {
+            return normalized(value.getVorname()).equals(normalized(command.vorname()));
+        }
+        return true;
+    }
+
     private BeteiligterView toView(Beteiligter value) {
         return new BeteiligterView(value.getTIliTid(), value.getTyp(), value.getAname(), value.getVorname(),
                 value.getOrganisation(), value.getEmail(), value.getTelefon(), value.getAdresse(),
                 value.getExternereferenz());
     }
 
-    private static boolean contains(String value, String filter) {
-        return filter == null || (value != null && value.contains(filter));
+    private static <T> void addFilter(ObjectSelect<T> query, Expression expression) {
+        if (expression == null) {
+            return;
+        }
+        if (query.getWhere() == null) {
+            query.where(expression);
+        } else {
+            query.and(expression);
+        }
     }
 
-    private static boolean containsIgnoreCase(String value, String filter) {
-        return filter == null || (value != null && value.toLowerCase(java.util.Locale.ROOT)
-                .contains(filter.toLowerCase(java.util.Locale.ROOT)));
-    }
-
-    private static <T> SearchPage<T> page(List<T> values, int page, int size) {
+    private static void requirePage(int page, int size) {
         if (page < 0 || size < 1) {
             throw new IllegalArgumentException("Ungültige Seitendaten.");
         }
-        int from = Math.min(page * size, values.size());
-        int to = Math.min(from + size, values.size());
-        return new SearchPage<>(values.subList(from, to), page, size, values.size());
+    }
+
+    private static boolean sameNonBlank(String left, String right) {
+        return right != null && !right.isBlank() && left != null && left.equalsIgnoreCase(right.trim());
+    }
+
+    private static String normalized(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 }

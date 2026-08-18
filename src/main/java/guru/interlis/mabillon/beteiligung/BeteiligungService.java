@@ -47,6 +47,7 @@ public final class BeteiligungService {
 
     public BeteiligungView add(AddBeteiligungCommand command) {
         authorizationService.require(Permission.EDIT_GESCHAEFT);
+        requireValidDates(command.gueltigVon(), command.gueltigBis());
         return unitOfWork.write(context -> {
             Geschaeft business = findBusiness(context, command.geschaeftNumber());
             Beteiligter party = ObjectSelect.query(Beteiligter.class)
@@ -75,15 +76,13 @@ public final class BeteiligungService {
 
     public BeteiligungView update(UpdateBeteiligungCommand command) {
         authorizationService.require(Permission.EDIT_GESCHAEFT);
+        requireValidDates(command.gueltigVon(), command.gueltigBis());
         return unitOfWork.write(context -> {
             Beteiligung value = find(context, command.tid());
             if (value == null) {
                 throw new IllegalArgumentException("Unbekannte Beteiligung: " + command.tid());
             }
-            if (command.gueltigVon() != null && command.gueltigBis() != null
-                    && command.gueltigBis().isBefore(command.gueltigVon())) {
-                throw new IllegalArgumentException("Gültig-bis darf nicht vor Gültig-von liegen.");
-            }
+            requireOpenBusiness(value.getGeschaeft());
             value.setRollenbezeichnung(command.rollenbezeichnung());
             value.setGueltigvon(command.gueltigVon());
             value.setGueltigbis(command.gueltigBis());
@@ -100,9 +99,8 @@ public final class BeteiligungService {
             if (value == null) {
                 throw new IllegalArgumentException("Unbekannte Beteiligung: " + command.tid());
             }
-            if (value.getGueltigvon() != null && command.endDate().isBefore(value.getGueltigvon())) {
-                throw new IllegalArgumentException("Enddatum darf nicht vor Gültig-von liegen.");
-            }
+            requireOpenBusiness(value.getGeschaeft());
+            requireValidDates(value.getGueltigvon(), command.endDate());
             value.setGueltigbis(command.endDate());
             record(value, EreignisTyp.Geaendert, "Beteiligung beendet.", context);
         });
@@ -141,6 +139,12 @@ public final class BeteiligungService {
     private void requireParty(Beteiligter party) {
         if (party == null) {
             throw new IllegalArgumentException("Unbekannter Beteiligter.");
+        }
+    }
+
+    private static void requireValidDates(LocalDate validFrom, LocalDate validUntil) {
+        if (validFrom != null && validUntil != null && validUntil.isBefore(validFrom)) {
+            throw new IllegalArgumentException("Gültig-bis darf nicht vor Gültig-von liegen.");
         }
     }
 

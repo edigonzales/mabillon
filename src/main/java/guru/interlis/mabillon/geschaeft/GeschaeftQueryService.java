@@ -1,13 +1,18 @@
 package guru.interlis.mabillon.geschaeft;
 
-import java.util.Optional;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import guru.interlis.mabillon.numbering.GeschaeftNumber;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
+import guru.interlis.mabillon.persistence.cayenne.Benutzer;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
+import guru.interlis.mabillon.persistence.cayenne.Geschaeftsart;
+import guru.interlis.mabillon.persistence.cayenne.Organisationseinheit;
+import guru.interlis.mabillon.persistence.cayenne.Prozessstatus;
 import guru.interlis.mabillon.query.SearchPage;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -51,52 +56,38 @@ public final class GeschaeftQueryService {
     }
 
     public SearchPage<GeschaeftView> search(GeschaeftSearchCriteria criteria, int page, int size) {
-        if (criteria == null) {
-            criteria = GeschaeftSearchCriteria.empty();
-        }
-        final GeschaeftSearchCriteria filter = criteria;
+        requirePage(page, size);
+        GeschaeftSearchCriteria filter = criteria == null ? GeschaeftSearchCriteria.empty() : criteria;
         return unitOfWork.read(context -> {
-            List<GeschaeftView> matches = ObjectSelect.query(Geschaeft.class).select(context).stream()
-                    .filter(business -> contains(business.getGeschaeftsnummer(), filter.number()))
-                    .filter(business -> containsIgnoreCase(business.getTitel(), filter.title()))
-                    .filter(business -> filter.geschaeftsartCode() == null
-                            || business.getGeschaeftsart() != null
-                            && filter.geschaeftsartCode().equals(business.getGeschaeftsart().getAcode()))
-                    .filter(business -> filter.processStatusCode() == null
-                            || business.getProzessstatus() != null
-                            && filter.processStatusCode().equals(business.getProzessstatus().getAcode()))
-                    .filter(business -> filter.lifecycleStatus() == null
-                            || filter.lifecycleStatus().equalsIgnoreCase(business.getLifecyclestatus()))
-                    .filter(business -> filter.verantwortlicherUsername() == null
-                            || business.getBenutzer() != null
-                            && filter.verantwortlicherUsername().equals(business.getBenutzer().getUsername()))
-                    .filter(business -> filter.organisationseinheitKuerzel() == null
-                            || business.getOrganisationseinheit() != null
-                            && filter.organisationseinheitKuerzel().equals(
-                            business.getOrganisationseinheit().getKuerzel()))
-                    .filter(business -> filter.dueFrom() == null || business.getFaelligam() != null
-                            && !business.getFaelligam().isBefore(filter.dueFrom()))
-                    .filter(business -> filter.dueTo() == null || business.getFaelligam() != null
-                            && !business.getFaelligam().isAfter(filter.dueTo()))
-                    .sorted(Comparator.comparing(Geschaeft::getGeschaeftsnummer))
+            ObjectSelect<Geschaeft> query = searchQuery(filter);
+            long total = query.selectCount(context);
+            long offset = (long) page * size;
+            if (offset >= total) {
+                return new SearchPage<>(List.of(), page, size, total);
+            }
+            List<GeschaeftView> items = query
+                    .orderBy(Geschaeft.GESCHAEFTSNUMMER.asc())
+                    .offset(Math.toIntExact(offset))
+                    .limit(size)
+                    .select(context).stream()
                     .map(this::toView)
                     .toList();
-            return page(matches, page, size);
+            return new SearchPage<>(items, page, size, total);
         });
     }
 
     public List<GeschaeftView> activeForUser(String username, int limit) {
-        if (limit < 1) {
-            throw new IllegalArgumentException("limit muss positiv sein.");
+        if (username == null || username.isBlank() || limit < 1) {
+            throw new IllegalArgumentException("Benutzer und limit sind erforderlich.");
         }
-        return unitOfWork.read(context -> ObjectSelect.query(Geschaeft.class).select(context).stream()
-                .filter(business -> business.getBenutzer() != null
-                        && username.equals(business.getBenutzer().getUsername()))
-                .filter(business -> !"Abgeschlossen".equalsIgnoreCase(business.getLifecyclestatus())
-                        && !"Archiviert".equalsIgnoreCase(business.getLifecyclestatus())
-                        && !"Vernichtet".equalsIgnoreCase(business.getLifecyclestatus()))
-                .sorted(Comparator.comparing(Geschaeft::getGeschaeftsnummer).reversed())
+        return unitOfWork.read(context -> ObjectSelect.query(Geschaeft.class)
+                .where(Geschaeft.BENUTZER.dot(Benutzer.USERNAME).eq(username))
+                .and(Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Abgeschlossen"))
+                .and(Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Archiviert"))
+                .and(Geschaeft.LIFECYCLESTATUS.nlikeIgnoreCase("Vernichtet"))
+                .orderBy(Geschaeft.GESCHAEFTSNUMMER.desc())
                 .limit(limit)
+                .select(context).stream()
                 .map(this::toView)
                 .toList());
     }
@@ -105,14 +96,43 @@ public final class GeschaeftQueryService {
         if (username == null || username.isBlank() || limit < 1) {
             throw new IllegalArgumentException("Benutzer und limit sind erforderlich.");
         }
-        return unitOfWork.read(context -> ObjectSelect.query(Geschaeft.class).select(context).stream()
-                .filter(business -> business.getBenutzer() != null
-                        && username.equals(business.getBenutzer().getUsername()))
-                .sorted(Comparator.comparing(Geschaeft::getGeaendertam,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(limit)
-                .map(this::toView)
-                .toList());
+        return unitOfWork.read(context -> {
+            List<Geschaeft> values = new ArrayList<>(ObjectSelect.query(Geschaeft.class)
+                    .where(Geschaeft.BENUTZER.dot(Benutzer.USERNAME).eq(username))
+                    .and(Geschaeft.GEAENDERTAM.isNotNull())
+                    .orderBy(Geschaeft.GEAENDERTAM.desc())
+                    .limit(limit)
+                    .select(context));
+            if (values.size() < limit) {
+                values.addAll(ObjectSelect.query(Geschaeft.class)
+                        .where(Geschaeft.BENUTZER.dot(Benutzer.USERNAME).eq(username))
+                        .and(Geschaeft.GEAENDERTAM.isNull())
+                        .orderBy(Geschaeft.GESCHAEFTSNUMMER.asc())
+                        .limit(limit - values.size())
+                        .select(context));
+            }
+            return values.stream().map(this::toView).toList();
+        });
+    }
+
+    private static ObjectSelect<Geschaeft> searchQuery(GeschaeftSearchCriteria filter) {
+        ObjectSelect<Geschaeft> query = ObjectSelect.query(Geschaeft.class);
+        addFilter(query, filter.number() == null ? null : Geschaeft.GESCHAEFTSNUMMER.contains(filter.number()));
+        addFilter(query, filter.title() == null ? null : Geschaeft.TITEL.containsIgnoreCase(filter.title()));
+        addFilter(query, filter.geschaeftsartCode() == null ? null
+                : Geschaeft.GESCHAEFTSART.dot(Geschaeftsart.ACODE).eq(filter.geschaeftsartCode()));
+        addFilter(query, filter.processStatusCode() == null ? null
+                : Geschaeft.PROZESSSTATUS.dot(Prozessstatus.ACODE).eq(filter.processStatusCode()));
+        addFilter(query, filter.lifecycleStatus() == null ? null
+                : Geschaeft.LIFECYCLESTATUS.likeIgnoreCase(filter.lifecycleStatus()));
+        addFilter(query, filter.verantwortlicherUsername() == null ? null
+                : Geschaeft.BENUTZER.dot(Benutzer.USERNAME).eq(filter.verantwortlicherUsername()));
+        addFilter(query, filter.organisationseinheitKuerzel() == null ? null
+                : Geschaeft.ORGANISATIONSEINHEIT.dot(Organisationseinheit.KUERZEL)
+                        .eq(filter.organisationseinheitKuerzel()));
+        addFilter(query, filter.dueFrom() == null ? null : Geschaeft.FAELLIGAM.gte(filter.dueFrom()));
+        addFilter(query, filter.dueTo() == null ? null : Geschaeft.FAELLIGAM.lte(filter.dueTo()));
+        return query;
     }
 
     private GeschaeftView toView(Geschaeft geschaeft) {
@@ -130,25 +150,24 @@ public final class GeschaeftQueryService {
                 geschaeft.getResultatstatus() == null ? null : geschaeft.getResultatstatus().getAcode());
     }
 
-    private static boolean contains(String value, String filter) {
-        return filter == null || (value != null && value.contains(filter));
+    private static <T> void addFilter(ObjectSelect<T> query, Expression expression) {
+        if (expression == null) {
+            return;
+        }
+        if (query.getWhere() == null) {
+            query.where(expression);
+        } else {
+            query.and(expression);
+        }
+    }
+
+    private static void requirePage(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("Ungültige Seitendaten.");
+        }
     }
 
     private static boolean isManagedContent(String storageUri) {
         return storageUri != null && storageUri.startsWith("mabillon:objects/");
-    }
-
-    private static boolean containsIgnoreCase(String value, String filter) {
-        return filter == null || (value != null && value.toLowerCase(java.util.Locale.ROOT)
-                .contains(filter.toLowerCase(java.util.Locale.ROOT)));
-    }
-
-    private static <T> SearchPage<T> page(List<T> values, int page, int size) {
-        if (page < 0 || size < 1) {
-            throw new IllegalArgumentException("Ungültige Seitendaten.");
-        }
-        int from = Math.min(page * size, values.size());
-        int to = Math.min(from + size, values.size());
-        return new SearchPage<>(values.subList(from, to), page, size, values.size());
     }
 }

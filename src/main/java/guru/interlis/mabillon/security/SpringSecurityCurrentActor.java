@@ -2,8 +2,10 @@ package guru.interlis.mabillon.security;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,14 +14,26 @@ import org.springframework.stereotype.Component;
 @Component
 public final class SpringSecurityCurrentActor implements CurrentActor {
 
+    private final Map<String, String> principalMappings;
+
+    public SpringSecurityCurrentActor(
+            @Value("${mabillon.security.admin-username:admin}") String adminUsername,
+            @Value("${mabillon.security.admin-actor-username:anna.mueller}") String adminActorUsername,
+            @Value("${mabillon.security.sachbearbeiter-username:sachbearbeiter}") String sachbearbeiterUsername,
+            @Value("${mabillon.security.sachbearbeiter-actor-username:a.keller}") String sachbearbeiterActorUsername) {
+        this.principalMappings = Map.of(
+                adminUsername, adminActorUsername,
+                sachbearbeiterUsername, sachbearbeiterActorUsername);
+    }
+
     @Override
     public ActorId id() {
-        return new ActorId(authentication().getName());
+        return new ActorId(actorUsername());
     }
 
     @Override
     public String username() {
-        return authentication().getName();
+        return actorUsername();
     }
 
     @Override
@@ -42,6 +56,11 @@ public final class SpringSecurityCurrentActor implements CurrentActor {
             }
         });
         return Set.copyOf(roles);
+    }
+
+    private String actorUsername() {
+        String principal = authentication().getName();
+        return principalMappings.getOrDefault(principal, principal);
     }
 
     private Authentication authentication() {

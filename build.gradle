@@ -30,6 +30,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'gg.jte:jte-spring-boot-starter-4:3.2.4'
     implementation 'org.apache.cayenne:cayenne:5.0-M2'
+
+    // One coherent INTERLIS toolchain. ili2pg 5.5.1 and ilivalidator 1.15.0
+    // both use the ili2c 5.6.8 / iox-ili 1.24.4 generation.
+    implementation 'ch.interlis:ili2pg:5.5.1'
+    implementation 'ch.interlis:ili2db:5.5.1'
+    implementation 'ch.interlis:ilivalidator:1.15.0'
+    implementation 'ch.interlis:ili2c-tool:5.6.8'
+    implementation 'ch.interlis:ili2c-core:5.6.8'
+    implementation 'ch.interlis:iox-ili:1.24.4'
+    implementation 'ch.interlis:iox-api:1.0.4'
+    implementation 'ch.ehi:ehibasics:1.4.1'
     runtimeOnly 'org.postgresql:postgresql:42.7.7'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -37,9 +48,81 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:postgresql:1.21.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'com.microsoft.playwright:playwright:1.61.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.register('verifyInterlisDependencies') {
+    group = 'verification'
+    description = 'Fails when shared INTERLIS runtime dependencies drift from the approved Phase-11 baseline.'
+    doLast {
+        def expected = [
+                'ch.interlis:ili2pg'       : '5.5.1',
+                'ch.interlis:ili2db'       : '5.5.1',
+                'ch.interlis:ilivalidator' : '1.15.0',
+                'ch.interlis:ili2c-tool'   : '5.6.8',
+                'ch.interlis:ili2c-core'   : '5.6.8',
+                'ch.interlis:iox-ili'      : '1.24.4',
+                'ch.interlis:iox-api'      : '1.0.4',
+                'ch.ehi:ehibasics'         : '1.4.1'
+        ]
+        def resolved = [:]
+        configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id
+            resolved["${id.group}:${id.name}"] = id.version
+        }
+        expected.each { module, version ->
+            if (resolved[module] != version) {
+                throw new GradleException("INTERLIS dependency drift: ${module} expected ${version}, resolved ${resolved[module]}")
+            }
+        }
+        logger.lifecycle('INTERLIS dependency baseline: ' + expected.collect { k, v -> "${k}:${v}" }.join(', '))
+    }
+}
+
+tasks.register('interlisTool', JavaExec) {
+    group = 'verification'
+    description = 'Runs Mabillon INTERLIS tooling through the in-process Java APIs.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'guru.interlis.mabillon.interlis.InterlisToolCli'
+    doFirst {
+        def operation = providers.gradleProperty('interlisOperation').orNull
+        if (operation == null || operation.isBlank()) {
+            throw new GradleException('Missing -PinterlisOperation')
+        }
+        args operation
+        def file = providers.gradleProperty('interlisFile').orNull
+        if (file != null && !file.isBlank()) {
+            args file
+        }
+    }
+}
+
+tasks.register('playwrightInstall', JavaExec) {
+    group = 'verification'
+    description = 'Installs Chromium required by the Playwright Java E2E test.'
+    classpath = configurations.testRuntimeClasspath
+    mainClass = 'com.microsoft.playwright.CLI'
+    args 'install'
+    if ('true'.equalsIgnoreCase(System.getenv('CI'))) {
+        args '--with-deps'
+    }
+    args 'chromium'
 }
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    dependsOn tasks.named('verifyInterlisDependencies')
+    // Activate local test identities by default without shadowing the main
+    // application.properties. Tests using @ActiveProfiles (for example prod)
+    // still replace this default profile explicitly.
+    environment 'SPRING_PROFILES_DEFAULT', 'test'
+    // Child fixture scripts use exactly the runtime classpath already resolved
+    // for this build instead of installing or resolving a second toolchain.
+    environment 'MABILLON_RUNTIME_CLASSPATH', sourceSets.main.runtimeClasspath.asPath
+    // CI installs Chromium explicitly in the preceding workflow step. Prevent
+    // Playwright.create() from downloading unused Firefox/WebKit binaries.
+    if ('true'.equalsIgnoreCase(System.getenv('CI'))) {
+        environment 'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD', '1'
+    }
 }

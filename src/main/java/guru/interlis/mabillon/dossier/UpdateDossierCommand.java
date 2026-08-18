@@ -1,5 +1,10 @@
 package guru.interlis.mabillon.dossier;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import guru.interlis.mabillon.domain.FieldError;
+import guru.interlis.mabillon.domain.ValidationException;
 import guru.interlis.mabillon.numbering.DossierNumber;
 
 public record UpdateDossierCommand(
@@ -10,8 +15,9 @@ public record UpdateDossierCommand(
         String remarks) {
 
     public UpdateDossierCommand {
-        if (number == null || title == null || title.isBlank()) {
-            throw new IllegalArgumentException("number und title dürfen nicht leer sein.");
-        }
+        List<FieldError> errors = new ArrayList<>();
+        if (number == null) errors.add(new FieldError("number", "required", "Dossier ist erforderlich."));
+        if (title == null || title.isBlank()) errors.add(new FieldError("title", "required", "Titel ist erforderlich."));
+        if (!errors.isEmpty()) throw new ValidationException(errors);
     }
 }

@@ -1,6 +1,8 @@
 package guru.interlis.mabillon.security;
 
-public final class AuthorizationException extends RuntimeException {
+import guru.interlis.mabillon.domain.MabillonException;
+
+public final class AuthorizationException extends MabillonException {
 
     public AuthorizationException(String message) {
         super(message);

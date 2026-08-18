@@ -7,6 +7,8 @@ public interface DocumentStorage {
 
     StagedDocument stage(DocumentUpload upload) throws IOException;
 
+    StoredDocument describe(StagedDocument staged, StorageTarget target) throws IOException;
+
     StoredDocument commit(StagedDocument staged, StorageTarget target) throws IOException;
 
     InputStream open(String storageUri) throws IOException;

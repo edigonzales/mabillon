@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 import guru.interlis.mabillon.interlis.ExchangeResult;
@@ -20,8 +19,8 @@ import guru.interlis.mabillon.interlis.ImportXtfRequest;
 import guru.interlis.mabillon.interlis.InterlisExchangeException;
 import guru.interlis.mabillon.interlis.InterlisExchangeService;
 import guru.interlis.mabillon.interlis.InterlisModelValidator;
-import guru.interlis.mabillon.interlis.ProcessBuilderInterlisModelValidator;
-import guru.interlis.mabillon.interlis.ProcessBuilderXtfValidator;
+import guru.interlis.mabillon.interlis.JavaApiInterlisModelValidator;
+import guru.interlis.mabillon.interlis.JavaApiXtfValidator;
 import guru.interlis.mabillon.interlis.SchemaImportRequest;
 import guru.interlis.mabillon.interlis.ValidateRequest;
 import guru.interlis.mabillon.interlis.ValidationResult;
@@ -128,9 +127,9 @@ class InterlisExchangeServiceTest {
     }
 
     @Test
-    void localToolAdaptersValidateModelAndPositiveXtf() {
-        InterlisModelValidator modelValidator = new ProcessBuilderInterlisModelValidator();
-        XtfValidator xtfValidator = new ProcessBuilderXtfValidator();
+    void javaApiAdaptersValidateModelAndPositiveXtf() {
+        InterlisModelValidator modelValidator = new JavaApiInterlisModelValidator();
+        XtfValidator xtfValidator = new JavaApiXtfValidator();
 
         assertThat(modelValidator.validate(Path.of("model/SO_AGI_GEVER_20260707.ili")).valid()).isTrue();
         assertThat(xtfValidator.validate(Path.of(

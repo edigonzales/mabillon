@@ -14,6 +14,7 @@ import guru.interlis.mabillon.journal.JournalService;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Benutzer;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
+import guru.interlis.mabillon.persistence.cayenne.Ereignis;
 import guru.interlis.mabillon.persistence.cayenne.Geschaeft;
 import guru.interlis.mabillon.persistence.cayenne.Unterlage;
 import guru.interlis.mabillon.persistence.cayenne.Unterlagentyp;
@@ -27,13 +28,14 @@ import guru.interlis.mabillon.storage.StagedDocument;
 import guru.interlis.mabillon.storage.StorageTarget;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.ObjectSelect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public final class UnterlageService {
 
     private static final String ACTIVE = "aktiv";
+    private static final String IN_PROGRESS = "In_Arbeit";
+    private static final String FINAL = "Final";
     private static final String REGISTERED = "Registriert";
     private static final String CANCELLED = "Storniert";
 
@@ -43,7 +45,6 @@ public final class UnterlageService {
     private final AuthorizationService authorizationService;
     private final CurrentActor currentActor;
     private final Clock clock;
-    private final String journalFallbackUsername;
 
     public UnterlageService(
             CayenneUnitOfWork unitOfWork,
@@ -51,34 +52,34 @@ public final class UnterlageService {
             JournalService journalService,
             AuthorizationService authorizationService,
             CurrentActor currentActor,
-            Clock clock,
-            @Value("${mabillon.security.journal-fallback-username:anna.mueller}") String journalFallbackUsername) {
+            Clock clock) {
         this.unitOfWork = unitOfWork;
         this.storage = storage;
         this.journalService = journalService;
         this.authorizationService = authorizationService;
         this.currentActor = currentActor;
         this.clock = clock;
-        this.journalFallbackUsername = journalFallbackUsername;
     }
 
     public UnterlageView register(RegisterUnterlageCommand command, DocumentUpload upload) {
         authorizationService.require(Permission.EDIT_UNTERLAGE);
         StagedDocument staged = null;
+        boolean databaseCommitted = false;
+        UUID tid = UUID.randomUUID();
         try {
             if (upload != null) {
                 staged = stage(upload);
             }
-            StagedDocument stagedDocument = staged;
-            return unitOfWork.write(context -> {
+            StorageTarget target = new StorageTarget(command.dossierNumber().value());
+            StoredDocument planned = staged == null ? null : describe(staged, target);
+            StoredDocument plannedDocument = planned;
+            UnterlageView result = unitOfWork.write(context -> {
                 Dossier dossier = findDossier(context, command.dossierNumber().value());
                 requireEditableDossier(dossier);
                 Geschaeft business = command.geschaeftNumber() == null
                         ? null : findBusiness(context, command.geschaeftNumber().value());
                 requireBusinessContext(dossier, business);
                 Unterlagentyp type = findActiveType(context, command.typCode());
-                StoredDocument stored = stagedDocument == null ? null : commit(stagedDocument,
-                        new StorageTarget(dossier.getDossiernummer()));
                 Unterlage value = context.newObject(Unterlage.class);
                 value.setTitel(command.title().trim());
                 value.setUnterlagentyp(type);
@@ -86,48 +87,104 @@ public final class UnterlageService {
                 value.setEingangsdatum(command.incomingDate());
                 value.setAusgangsdatum(command.outgoingDate());
                 value.setRegistriertam(LocalDateTime.now(clock));
-                value.setBenutzer(findActorOrFallback(context));
+                value.setBenutzer(findActor(context));
                 value.setAktenrelevant(command.aktenrelevant());
-                value.setAstatus(REGISTERED);
-                value.setDateiname(stored == null ? null : stored.originalFilename());
-                value.setMimetype(stored == null ? null : stored.mimeType());
-                value.setDateigroesse(stored == null ? null : stored.size());
-                value.setStorageuri(stored == null ? null : stored.storageUri());
-                value.setHashsha256(stored == null ? null : stored.sha256());
+                value.setAstatus(command.aktenrelevant() ? REGISTERED : IN_PROGRESS);
+                value.setDateiname(plannedDocument == null ? null : plannedDocument.originalFilename());
+                value.setMimetype(plannedDocument == null ? null : plannedDocument.mimeType());
+                value.setDateigroesse(plannedDocument == null ? null : plannedDocument.size());
+                value.setStorageuri(plannedDocument == null ? null : plannedDocument.storageUri());
+                value.setHashsha256(plannedDocument == null ? null : plannedDocument.sha256());
                 value.setDateiformat(command.dateiformat());
                 value.setBemerkungen(command.bemerkungen());
                 value.setDossier(dossier);
                 value.setGeschaeft(business);
                 value.setTBasket(dossier.getTBasket());
-                value.setTIliTid(UUID.randomUUID());
+                value.setTIliTid(tid);
                 journalService.record(context, new JournalCommand(
-                        EreignisObjektTyp.Unterlage, value.getTIliTid().toString(),
+                        EreignisObjektTyp.Unterlage, tid.toString(),
                         EreignisTyp.Unterlage_registriert, "Unterlage registriert.",
                         currentActor.id(), Instant.now(clock)));
                 return UnterlageQueryService.toView(value);
             });
+            databaseCommitted = true;
+
+            if (staged != null) {
+                StoredDocument committed = commit(staged, target);
+                if (!planned.equals(committed)) {
+                    throw new IllegalStateException("Finale Ablage weicht von der geplanten Ablage ab.");
+                }
+            }
+            return result;
         } catch (RuntimeException failure) {
+            if (databaseCommitted) {
+                compensateRegistration(tid, failure);
+            }
             discardQuietly(staged, failure);
             throw failure;
         }
     }
 
+    public UnterlageView updateMetadata(UpdateUnterlageCommand command) {
+        authorizationService.require(Permission.EDIT_UNTERLAGE);
+        return unitOfWork.write(context -> {
+            Unterlage document = requireMutableDocument(context, command.tid());
+            document.setTitel(command.title().trim());
+            document.setUnterlagentyp(findActiveType(context, command.typCode()));
+            document.setUnterlagendatum(command.documentDate());
+            document.setEingangsdatum(command.incomingDate());
+            document.setAusgangsdatum(command.outgoingDate());
+            document.setDateiformat(command.dateiformat());
+            document.setBemerkungen(command.bemerkungen());
+            record(context, document, EreignisTyp.Geaendert, "Unterlagenmetadaten geändert.");
+            return UnterlageQueryService.toView(document);
+        });
+    }
+
     public UnterlageView assignToGeschaeft(AssignUnterlageCommand command) {
         authorizationService.require(Permission.EDIT_UNTERLAGE);
         return unitOfWork.write(context -> {
-            Unterlage document = find(context, command.tid());
-            if (document == null) {
-                throw new IllegalArgumentException("Unbekannte Unterlage: " + command.tid());
-            }
+            Unterlage document = requireMutableDocument(context, command.tid());
             Geschaeft business = findBusiness(context, command.geschaeftNumber().value());
             requireBusinessContext(document.getDossier(), business);
-            if (CANCELLED.equalsIgnoreCase(document.getAstatus())) {
-                throw new DomainRuleViolationException("Stornierte Unterlagen können nicht zugeordnet werden.");
-            }
             document.setGeschaeft(business);
-            journalService.record(context, new JournalCommand(
-                    EreignisObjektTyp.Unterlage, document.getTIliTid().toString(), EreignisTyp.Geaendert,
-                    "Unterlage einem Geschäft zugeordnet.", currentActor.id(), Instant.now(clock)));
+            record(context, document, EreignisTyp.Geaendert, "Unterlage einem Geschäft zugeordnet.");
+            return UnterlageQueryService.toView(document);
+        });
+    }
+
+    public UnterlageView unassignFromGeschaeft(UUID tid) {
+        authorizationService.require(Permission.EDIT_UNTERLAGE);
+        return unitOfWork.write(context -> {
+            Unterlage document = requireMutableDocument(context, tid);
+            if (document.getGeschaeft() == null) {
+                return UnterlageQueryService.toView(document);
+            }
+            document.setGeschaeft(null);
+            record(context, document, EreignisTyp.Geaendert, "Unterlage vom Geschäft gelöst.");
+            return UnterlageQueryService.toView(document);
+        });
+    }
+
+    public UnterlageView finalizeUnterlage(UUID tid) {
+        authorizationService.require(Permission.EDIT_UNTERLAGE);
+        return unitOfWork.write(context -> {
+            Unterlage document = requireMutableDocument(context, tid);
+            requireStatus(document, IN_PROGRESS, "Nur Unterlagen in Arbeit können finalisiert werden.");
+            document.setAstatus(FINAL);
+            record(context, document, EreignisTyp.Status_geaendert, "Unterlage finalisiert.");
+            return UnterlageQueryService.toView(document);
+        });
+    }
+
+    public UnterlageView registerAktenrelevant(UUID tid) {
+        authorizationService.require(Permission.EDIT_UNTERLAGE);
+        return unitOfWork.write(context -> {
+            Unterlage document = requireMutableDocument(context, tid);
+            requireStatus(document, FINAL, "Nur finale Unterlagen können aktenrelevant registriert werden.");
+            document.setAktenrelevant(true);
+            document.setAstatus(REGISTERED);
+            record(context, document, EreignisTyp.Unterlage_registriert, "Unterlage aktenrelevant registriert.");
             return UnterlageQueryService.toView(document);
         });
     }
@@ -135,17 +192,39 @@ public final class UnterlageService {
     public UnterlageView cancel(UUID tid, String reason) {
         authorizationService.require(Permission.EDIT_UNTERLAGE);
         return unitOfWork.write(context -> {
-            Unterlage document = find(context, tid);
-            if (document == null) {
-                throw new IllegalArgumentException("Unbekannte Unterlage: " + tid);
-            }
+            Unterlage document = requireMutableDocument(context, tid);
             document.setAstatus(CANCELLED);
-            journalService.record(context, new JournalCommand(
-                    EreignisObjektTyp.Unterlage, document.getTIliTid().toString(), EreignisTyp.Geaendert,
-                    reason == null || reason.isBlank() ? "Unterlage storniert." : "Unterlage storniert: " + reason,
-                    currentActor.id(), Instant.now(clock)));
+            record(context, document, EreignisTyp.Status_geaendert,
+                    reason == null || reason.isBlank() ? "Unterlage storniert." : "Unterlage storniert: " + reason.trim());
             return UnterlageQueryService.toView(document);
         });
+    }
+
+    private Unterlage requireMutableDocument(ObjectContext context, UUID tid) {
+        Unterlage document = find(context, tid);
+        if (document == null) {
+            throw new IllegalArgumentException("Unbekannte Unterlage: " + tid);
+        }
+        if (CANCELLED.equalsIgnoreCase(document.getAstatus())) {
+            throw new DomainRuleViolationException("Stornierte Unterlagen können nicht mehr geändert werden.");
+        }
+        requireEditableDossier(document.getDossier());
+        if (document.getGeschaeft() != null) {
+            requireBusinessContext(document.getDossier(), document.getGeschaeft());
+        }
+        return document;
+    }
+
+    private void requireStatus(Unterlage document, String expected, String message) {
+        if (!expected.equalsIgnoreCase(document.getAstatus())) {
+            throw new DomainRuleViolationException(message);
+        }
+    }
+
+    private void record(ObjectContext context, Unterlage document, EreignisTyp type, String message) {
+        journalService.record(context, new JournalCommand(
+                EreignisObjektTyp.Unterlage, document.getTIliTid().toString(), type,
+                message, currentActor.id(), Instant.now(clock)));
     }
 
     private StagedDocument stage(DocumentUpload upload) {
@@ -156,11 +235,37 @@ public final class UnterlageService {
         }
     }
 
+    private StoredDocument describe(StagedDocument staged, StorageTarget target) {
+        try {
+            return storage.describe(staged, target);
+        } catch (IOException failure) {
+            throw new IllegalStateException("Finale Dateiablage konnte nicht geplant werden.", failure);
+        }
+    }
+
     private StoredDocument commit(StagedDocument staged, StorageTarget target) {
         try {
             return storage.commit(staged, target);
         } catch (IOException failure) {
             throw new IllegalStateException("Datei konnte nicht endgültig abgelegt werden.", failure);
+        }
+    }
+
+    private void compensateRegistration(UUID tid, RuntimeException original) {
+        try {
+            unitOfWork.write(context -> {
+                ObjectSelect.query(Ereignis.class)
+                        .where(Ereignis.OBJEKTID.eq(tid.toString()))
+                        .select(context).stream()
+                        .filter(event -> EreignisObjektTyp.Unterlage.name().equals(event.getObjekttyp()))
+                        .forEach(context::deleteObject);
+                Unterlage document = find(context, tid);
+                if (document != null) {
+                    context.deleteObject(document);
+                }
+            });
+        } catch (RuntimeException compensationFailure) {
+            original.addSuppressed(compensationFailure);
         }
     }
 
@@ -206,17 +311,19 @@ public final class UnterlageService {
         return type;
     }
 
-    private Benutzer findActorOrFallback(ObjectContext context) {
+    private Benutzer findActor(ObjectContext context) {
         Benutzer actor = ObjectSelect.query(Benutzer.class)
                 .where(Benutzer.USERNAME.eq(currentActor.username())).selectFirst(context);
-        if (actor != null) {
-            return actor;
+        if (actor == null) {
+            throw new IllegalStateException("Registrierender ist kein fachlicher Benutzer: " + currentActor.username());
         }
-        return ObjectSelect.query(Benutzer.class)
-                .where(Benutzer.USERNAME.eq(journalFallbackUsername)).selectFirst(context);
+        return actor;
     }
 
     private void requireEditableDossier(Dossier dossier) {
+        if (dossier == null) {
+            throw new IllegalArgumentException("Dossier ist erforderlich.");
+        }
         if ("Geschlossen".equalsIgnoreCase(dossier.getAstatus())
                 || "Archiviert".equalsIgnoreCase(dossier.getAstatus())
                 || "Vernichtet".equalsIgnoreCase(dossier.getAstatus())) {

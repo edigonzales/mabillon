@@ -59,6 +59,31 @@ public final class OrganisationseinheitService {
         });
     }
 
+    public OrganisationseinheitView update(OrganisationseinheitUpdateCommand command) {
+        authorizationService.require(Permission.MANAGE_MASTERDATA);
+        return unitOfWork.write(context -> {
+            Organisationseinheit entity = find(context, command.kuerzel());
+            if (entity == null) {
+                throw new IllegalArgumentException("Unbekanntes Organisationskürzel: " + command.kuerzel());
+            }
+            Organisationseinheit parent = null;
+            if (command.uebergeordneteEinheit() != null && !command.uebergeordneteEinheit().isBlank()) {
+                parent = find(context, command.uebergeordneteEinheit());
+                if (parent == null) {
+                    throw new IllegalArgumentException("Unbekanntes übergeordnetes Kürzel: "
+                            + command.uebergeordneteEinheit());
+                }
+                if (parent == entity) {
+                    throw new IllegalArgumentException("Eine Organisationseinheit kann nicht sich selbst untergeordnet sein.");
+                }
+            }
+            entity.setAname(command.name());
+            entity.setBeschreibung(command.beschreibung());
+            entity.setOrganisationseinheit(parent);
+            return toView(entity);
+        });
+    }
+
     public void deactivate(String kuerzel) {
         authorizationService.require(Permission.MANAGE_MASTERDATA);
         unitOfWork.write(context -> {

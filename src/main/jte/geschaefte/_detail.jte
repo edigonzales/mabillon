@@ -124,7 +124,32 @@
         @else
             <ul class="record-list">
                 @for (var beteiligung : beteiligungen)
-                    <li><span><strong>${beteiligung.beteiligterName()}</strong><span>${beteiligung.rollenName()}${beteiligung.rollenbezeichnung() == null ? "" : " · " + beteiligung.rollenbezeichnung()}</span></span></li>
+                    <li class="admin-record">
+                        <span>
+                            <strong><a href="/beteiligte/${beteiligung.beteiligterTid().toString()}">${beteiligung.beteiligterName()}</a></strong>
+                            <span>${beteiligung.rollenName()}${beteiligung.rollenbezeichnung() == null ? "" : " · " + beteiligung.rollenbezeichnung()}</span>
+                            <span>${beteiligung.gueltigVon() == null ? "" : "gültig ab " + beteiligung.gueltigVon().toString()}${beteiligung.gueltigBis() == null ? "" : " · bis " + beteiligung.gueltigBis().toString()}</span>
+                        </span>
+                        @if (!geschaeft.lifecycleStatus().equalsIgnoreCase("Abgeschlossen"))
+                            <details>
+                                <summary>Bearbeiten</summary>
+                                <form method="post" action="/beteiligungen/${beteiligung.tid().toString()}" class="form-grid compact-form">
+                                    <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
+                                    <label>Rollenbezeichnung<input name="rollenbezeichnung" value="${beteiligung.rollenbezeichnung() == null ? "" : beteiligung.rollenbezeichnung()}"></label>
+                                    <label>Gültig von<input type="date" name="gueltigVon" value="${beteiligung.gueltigVon() == null ? "" : beteiligung.gueltigVon().toString()}"></label>
+                                    <label>Gültig bis<input type="date" name="gueltigBis" value="${beteiligung.gueltigBis() == null ? "" : beteiligung.gueltigBis().toString()}"></label>
+                                    <label>Bemerkung<textarea name="bemerkung">${beteiligung.bemerkung() == null ? "" : beteiligung.bemerkung()}</textarea></label>
+                                    <div class="form-actions"><button class="button button--quiet" type="submit">Beteiligung speichern</button></div>
+                                </form>
+                                <form method="post" action="/beteiligungen/${beteiligung.tid().toString()}/end" class="inline-form">
+                                    <input type="hidden" name="${csrfToken.getParameterName()}" value="${csrfToken.getToken()}">
+                                    <input type="hidden" name="geschaeftNumber" value="${geschaeft.number()}">
+                                    <label>Enddatum<input type="date" name="endDate" required></label>
+                                    <button class="button button--quiet" type="submit">Beteiligung beenden</button>
+                                </form>
+                            </details>
+                        @endif
+                    </li>
                 @endfor
             </ul>
         @endif

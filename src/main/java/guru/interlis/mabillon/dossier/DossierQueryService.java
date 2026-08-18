@@ -1,13 +1,15 @@
 package guru.interlis.mabillon.dossier;
 
-import java.util.Optional;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import guru.interlis.mabillon.numbering.DossierNumber;
 import guru.interlis.mabillon.persistence.CayenneUnitOfWork;
 import guru.interlis.mabillon.persistence.cayenne.Dossier;
+import guru.interlis.mabillon.persistence.cayenne.Ordnungssystemposition;
+import guru.interlis.mabillon.persistence.cayenne.Organisationseinheit;
 import guru.interlis.mabillon.query.SearchPage;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.ObjectSelect;
 import org.springframework.stereotype.Service;
 
@@ -52,31 +54,38 @@ public final class DossierQueryService {
     }
 
     public SearchPage<DossierView> search(DossierSearchCriteria criteria, int page, int size) {
-        if (criteria == null) {
-            criteria = DossierSearchCriteria.empty();
-        }
-        final DossierSearchCriteria filter = criteria;
+        requirePage(page, size);
+        DossierSearchCriteria filter = criteria == null ? DossierSearchCriteria.empty() : criteria;
         return unitOfWork.read(context -> {
-            List<DossierView> matches = ObjectSelect.query(Dossier.class).select(context).stream()
-                    .filter(dossier -> contains(dossier.getDossiernummer(), filter.number()))
-                    .filter(dossier -> containsIgnoreCase(dossier.getTitel(), filter.title()))
-                    .filter(dossier -> filter.status() == null || filter.status().equalsIgnoreCase(dossier.getAstatus()))
-                    .filter(dossier -> filter.registraturplanPositionCode() == null
-                            || dossier.getOrdnungssystemposition() != null
-                            && filter.registraturplanPositionCode().equals(dossier.getOrdnungssystemposition().getAcode()))
-                    .filter(dossier -> filter.federfuehrungKuerzel() == null
-                            || dossier.getOrganisationseinheit() != null
-                            && filter.federfuehrungKuerzel().equals(dossier.getOrganisationseinheit().getKuerzel()))
-                    .filter(dossier -> filter.openedFrom() == null || !dossier.getEroeffnetam().isBefore(filter.openedFrom()))
-                    .filter(dossier -> filter.openedTo() == null || !dossier.getEroeffnetam().isAfter(filter.openedTo()))
-                    .filter(dossier -> filter.closedFrom() == null || dossier.getGeschlossenam() != null
-                            && !dossier.getGeschlossenam().isBefore(filter.closedFrom()))
-                    .filter(dossier -> filter.closedTo() == null || dossier.getGeschlossenam() != null
-                            && !dossier.getGeschlossenam().isAfter(filter.closedTo()))
-                    .sorted(Comparator.comparing(Dossier::getDossiernummer))
+            ObjectSelect<Dossier> query = ObjectSelect.query(Dossier.class);
+            addFilter(query, filter.number() == null ? null : Dossier.DOSSIERNUMMER.contains(filter.number()));
+            addFilter(query, filter.title() == null ? null : Dossier.TITEL.containsIgnoreCase(filter.title()));
+            addFilter(query, filter.status() == null ? null : Dossier.ASTATUS.likeIgnoreCase(filter.status()));
+            addFilter(query, filter.registraturplanPositionCode() == null ? null
+                    : Dossier.ORDNUNGSSYSTEMPOSITION.dot(Ordnungssystemposition.ACODE)
+                            .eq(filter.registraturplanPositionCode()));
+            addFilter(query, filter.federfuehrungKuerzel() == null ? null
+                    : Dossier.ORGANISATIONSEINHEIT.dot(Organisationseinheit.KUERZEL)
+                            .eq(filter.federfuehrungKuerzel()));
+            addFilter(query, filter.openedFrom() == null ? null : Dossier.EROEFFNETAM.gte(filter.openedFrom()));
+            addFilter(query, filter.openedTo() == null ? null : Dossier.EROEFFNETAM.lte(filter.openedTo()));
+            addFilter(query, filter.closedFrom() == null ? null : Dossier.GESCHLOSSENAM.gte(filter.closedFrom()));
+            addFilter(query, filter.closedTo() == null ? null : Dossier.GESCHLOSSENAM.lte(filter.closedTo()));
+
+            long total = query.selectCount(context);
+            long offset = (long) page * size;
+            if (offset >= total) {
+                return new SearchPage<>(List.of(), page, size, total);
+            }
+
+            List<DossierView> items = query
+                    .orderBy(Dossier.DOSSIERNUMMER.asc())
+                    .offset(Math.toIntExact(offset))
+                    .limit(size)
+                    .select(context).stream()
                     .map(this::toView)
                     .toList();
-            return page(matches, page, size);
+            return new SearchPage<>(items, page, size, total);
         });
     }
 
@@ -94,25 +103,24 @@ public final class DossierQueryService {
                         .toList());
     }
 
-    private static boolean contains(String value, String filter) {
-        return filter == null || (value != null && value.contains(filter));
+    private static <T> void addFilter(ObjectSelect<T> query, Expression expression) {
+        if (expression == null) {
+            return;
+        }
+        if (query.getWhere() == null) {
+            query.where(expression);
+        } else {
+            query.and(expression);
+        }
+    }
+
+    private static void requirePage(int page, int size) {
+        if (page < 0 || size < 1) {
+            throw new IllegalArgumentException("Ungültige Seitendaten.");
+        }
     }
 
     private static boolean isManagedContent(String storageUri) {
         return storageUri != null && storageUri.startsWith("mabillon:objects/");
-    }
-
-    private static boolean containsIgnoreCase(String value, String filter) {
-        return filter == null || (value != null && value.toLowerCase(java.util.Locale.ROOT)
-                .contains(filter.toLowerCase(java.util.Locale.ROOT)));
-    }
-
-    private static <T> SearchPage<T> page(List<T> values, int page, int size) {
-        if (page < 0 || size < 1) {
-            throw new IllegalArgumentException("Ungültige Seitendaten.");
-        }
-        int from = Math.min(page * size, values.size());
-        int to = Math.min(from + size, values.size());
-        return new SearchPage<>(values.subList(from, to), page, size, values.size());
     }
 }
