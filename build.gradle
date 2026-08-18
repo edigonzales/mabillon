@@ -37,8 +37,9 @@ dependencies {
     implementation 'gg.jte:jte-spring-boot-starter-4:3.2.4'
     implementation 'org.apache.cayenne:cayenne:5.0-M2'
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.4'
-    runtimeOnly 'com.sun.xml.bind:jaxb-impl:4.0.9'
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime:4.0.9'
     xjc 'com.sun.xml.bind:jaxb-xjc:4.0.9'
+    xjc 'org.glassfish.jaxb:jaxb-runtime:4.0.9'
 
     // One coherent INTERLIS toolchain. ili2pg 5.5.1 and ilivalidator 1.15.0
     // both use the ili2c 5.6.8 / iox-ili 1.24.4 generation.
@@ -67,6 +68,7 @@ tasks.register('generateEch0160Bindings', JavaExec) {
     classpath = configurations.xjc
     mainClass = 'com.sun.tools.xjc.XJCFacade'
     inputs.files(fileTree(ech0160XsdRoot) { include '*.xsd' })
+    inputs.property('jaxbVersion', '4.0.9')
     outputs.dir(ech0160GeneratedSources)
     doFirst {
         def outputDir = ech0160GeneratedSources.get().asFile
