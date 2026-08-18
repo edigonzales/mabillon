@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDate;
 
 import guru.interlis.mabillon.archivierung.CreateArchivAblieferungCommand;
+import guru.interlis.mabillon.geschaeft.GeschaeftView;
 import guru.interlis.mabillon.journal.EreignisTyp;
 import guru.interlis.mabillon.numbering.GeschaeftNumber;
 import guru.interlis.mabillon.persistence.cayenne.Archivablieferung;
@@ -28,7 +29,7 @@ class GeschaeftAuditIntegrationTest extends MabillonIntegrationTestSupport {
     @Test
     @WithMockUser(username = "sachbearbeiter", roles = "MABILLON_SACHBEARBEITER")
     void updatesBusinessWithoutChangingIdentityAndAttributesJournalToMappedActor() throws Exception {
-        var before = geschaeftQueryService.findByNumber("AGI-G-2026-000421").orElseThrow();
+        GeschaeftView before = newBusiness("UC-009 audit update");
 
         mockMvc.perform(post("/geschaefte/{number}", before.number())
                         .with(csrf())
