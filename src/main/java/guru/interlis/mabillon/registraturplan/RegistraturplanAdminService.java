@@ -86,7 +86,7 @@ public final class RegistraturplanAdminService {
             position.setTIliTid(UUID.randomUUID());
             position.setOrdnungssystem(plan);
             position.setOrganisationseinheit(organisationseinheit);
-            position.setOrdnungssystemposition(parent == null ? position : parent);
+            position.setOrdnungssystemposition(parent);
             return toView(position);
         });
     }
@@ -123,7 +123,7 @@ public final class RegistraturplanAdminService {
             if (newParent != null && createsCycle(position, newParent)) {
                 throw new IllegalStateException("Die Verschiebung würde einen Registraturplan-Zyklus erzeugen.");
             }
-            position.setOrdnungssystemposition(newParent == null ? position : newParent);
+            position.setOrdnungssystemposition(newParent);
         });
     }
 
