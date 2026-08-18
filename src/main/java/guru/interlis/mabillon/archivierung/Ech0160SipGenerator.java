@@ -222,7 +222,7 @@ public final class Ech0160SipGenerator implements SipGenerator {
 
             PaketSIP packet = new PaketSIP();
             packet.setPaketTyp(PaketTyp.fromValue("SIP"));
-            packet.setSchemaVersion(SchemaVersion.fromValue(profile.archiveProfileVersion()));
+            packet.setSchemaVersion(profile.archiveProfileVersion());
             packet.setInhaltsverzeichnis(contents);
             packet.setAblieferung(delivery);
 
