@@ -175,6 +175,7 @@ class PlaywrightGoldenPathE2ETest {
         assertThat(css(page.locator(".mabillon-global-search .mabillon-button"), "background-color"))
                 .isEqualTo("rgb(66, 153, 225)");
         assertThat(css(page.locator(".mabillon-global-search .mabillon-button"), "border-radius")).isEqualTo("3px");
+        assertThat(css(page.locator(".mabillon-search-control input"), "border-left-width")).isEqualTo("0px");
         capture(page, uiRoot.resolve("overview.png"));
 
         Locator globalSearch = page.locator(".mabillon-global-search");
