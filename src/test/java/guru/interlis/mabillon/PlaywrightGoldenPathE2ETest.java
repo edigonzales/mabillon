@@ -163,6 +163,8 @@ class PlaywrightGoldenPathE2ETest {
         assertThat(page.title()).contains("Mabillon");
         assertThat(page.locator("body").innerText())
                 .contains("Meine offenen Aufgaben", "Aktive Geschäfte");
+        assertThat(page.locator(".mabillon-summary-grid[aria-label='Meine Arbeit']").count()).isZero();
+        assertThat(page.locator(".mabillon-dashboard-grid .mabillon-tile").count()).isEqualTo(3);
         assertThat((Boolean) page.evaluate("() => document.fonts.check('16px \\\"Fira Sans\\\"')")).isTrue();
         assertThat(css(page.locator("body"), "font-family")).contains("Fira Sans");
         assertThat(css(page.locator("body"), "background-color")).isEqualTo("rgb(255, 255, 255)");

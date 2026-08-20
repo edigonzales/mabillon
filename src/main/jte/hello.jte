@@ -25,11 +25,6 @@
                 </a>
             </section>
         @else
-            <section class="mabillon-summary-grid" aria-label="Meine Arbeit">
-                <div class="mabillon-summary-card"><span class="mabillon-summary-label">Offene Aufgaben</span><strong>${work.openTasks().size()}</strong><span>mir zugewiesen</span></div>
-                <div class="mabillon-summary-card"><span class="mabillon-summary-label">Überfällig</span><strong>${work.overdueTasks().size()}</strong><span>bitte prüfen</span></div>
-                <div class="mabillon-summary-card"><span class="mabillon-summary-label">Aktive Geschäfte</span><strong>${work.activeBusinesses().size()}</strong><span>in meiner Verantwortung</span></div>
-            </section>
             <div class="mabillon-dashboard-grid">
                 <section class="mabillon-tile">
                     <div class="mabillon-section-heading"><h2>Meine offenen Aufgaben</h2><span class="mabillon-count-badge">${work.openTasks().size()}</span></div>
