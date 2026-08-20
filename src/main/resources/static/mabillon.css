@@ -644,7 +644,7 @@ a.mabillon-summary-card:hover {
     border-radius: var(--mabillon-radius);
     background: var(--mabillon-color-primary);
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 400;
     line-height: 1.5;
     text-align: center;
     text-decoration: none;
@@ -781,11 +781,23 @@ textarea {
     border-radius: var(--mabillon-radius);
     background: var(--mabillon-neutral-surface);
     color: var(--mabillon-neutral-ink);
+    font-size: 1rem;
+    font-weight: 400;
 }
 
 textarea {
     min-height: 6.25rem;
     resize: vertical;
+}
+
+select:not([multiple]) {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%233F4B55' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem 0.75rem;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
@@ -799,7 +811,7 @@ textarea:focus {
 input:disabled,
 select:disabled,
 textarea:disabled {
-    background: var(--mabillon-neutral-header);
+    background-color: var(--mabillon-neutral-header);
     color: var(--mabillon-neutral-muted);
     opacity: 1;
 }
@@ -828,7 +840,7 @@ textarea:disabled {
     align-content: end;
     gap: 0.35rem;
     min-width: 0;
-    font-size: 0.875rem;
+    font-size: 1rem;
 }
 
 .mabillon-form-grid {

@@ -192,6 +192,16 @@ class PlaywrightGoldenPathE2ETest {
         Locator firstResult = page.locator(".mabillon-table-wrap tbody tr").first();
         firstResult.hover();
         assertThat(css(firstResult, "background-color")).isEqualTo("rgb(232, 241, 247)");
+        Locator filterGrid = page.locator(".mabillon-filter-grid");
+        assertThat(css(filterGrid.locator("label").first(), "font-size")).isEqualTo("16px");
+        assertThat(css(filterGrid.locator("label").first(), "font-weight")).isEqualTo("600");
+        assertThat(css(filterGrid.locator("input").first(), "font-weight")).isEqualTo("400");
+        Locator firstSelect = filterGrid.locator("select").first();
+        assertThat(css(firstSelect, "font-weight")).isEqualTo("400");
+        assertThat(css(firstSelect, "appearance")).isEqualTo("none");
+        assertThat(css(firstSelect, "padding-right")).isEqualTo("36px");
+        assertThat(css(firstSelect, "background-size")).isEqualTo("16px 12px");
+        assertThat(css(firstSelect, "background-image")).isNotEqualTo("none");
         capture(page, uiRoot.resolve("dossiers.png"));
 
         page.navigate("/geschaefte/AGI-G-2026-000421");
@@ -223,6 +233,8 @@ class PlaywrightGoldenPathE2ETest {
                 "() => document.activeElement === document.querySelector('[data-mabillon-navigation-toggle]')"))
                 .isTrue();
 
+        page.navigate("/geschaefte/neu");
+        capture(page, uiRoot.resolve("geschaeft-formular-mobile.png"));
         capture(page, uiRoot.resolve("dossier-formular-mobile.png"));
         page.setViewportSize(1280, 720);
     }
